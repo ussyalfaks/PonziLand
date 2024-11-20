@@ -5,6 +5,9 @@ use starknet::ContractAddress;
 pub struct land {
     #[key]
     pub location: u64, // 64 x 64 land
-    pub remaining: u8,
-    pub can_move: bool,
+    pub block_date_bought: u64,
+    pub owner: ContractAddress,
+    pub sell_price: u64,
+    pub token_used: ContractAddress,
+    pub pool_key: ContractAddress, // The Liquidity Pool Key
 }
