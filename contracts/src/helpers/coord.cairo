@@ -112,6 +112,6 @@ mod coord_test {
         assert_eq!(down(0), GRID_WIDTH); // Down of top-left corner
         assert_eq!(down(1), GRID_WIDTH + 1); // Down of (0, 1)
         assert_eq!(down(GRID_WIDTH), 2 * GRID_WIDTH); // Down of (1, 0)
-        assert_eq!(down(GRID_WIDTH + 1), 2 * GRID_WIDTH); // Down of (1, 1)
+        assert_eq!(down(GRID_WIDTH + 1), 2 * GRID_WIDTH + 1); // Down of (1, 1)
     }
 }
