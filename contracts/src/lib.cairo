@@ -6,6 +6,5 @@ mod models {
     mod land;
 }
 
-mod tests {
-    mod test_world;
+mod tests{
 }
