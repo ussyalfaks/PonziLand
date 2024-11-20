@@ -1,0 +1,34 @@
+
+name: Test contracts
+
+on:
+    push:
+      branches:
+        - "main"
+    pull_request:
+      branches:
+        - "main"
+
+permissions:
+  contents: read
+
+jobs:
+  slot-deployment:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v4
+
+      - id: setup-dojo
+        uses: runelabsxyz/setup-dojo@main
+        with:
+          version: "v1.0.1"
+
+      - name: Build contract
+        working-directory: ./contracts
+        run: sozo build 
+
+      - name: Test contract
+        working-directory: ./contracts
+        run: sozo test
