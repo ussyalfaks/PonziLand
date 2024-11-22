@@ -4,7 +4,8 @@ use starknet::ContractAddress;
 #[dojo::model]
 pub struct land {
     #[key]
-    pub location: u64, // 64 x 64 land
-    pub remaining: u8,
-    pub can_move: bool,
+    pub index: u64, // 64 x 64 land => value from 0 to 4095
+    pub sell_price: u128,
+    pub sell_token: ContractAddress,
+    pub liquidity_pool: ContractAddress, // must be a pair between sell_token and main_currency(stark / eth / usdc / lords)
 }
