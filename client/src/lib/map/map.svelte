@@ -23,8 +23,8 @@
     function handleWheel(event: WheelEvent) {
         event.preventDefault();
         const delta = event.deltaY > 0 ? 0.9 : 1.1;
-        // Limit scale between 0.5 and 3
-        const newScale = Math.max(0.5, Math.min(3, scale * delta));
+        // Changed max scale from 3 to 5 to allow more zoom
+        const newScale = Math.max(0.5, Math.min(5, scale * delta));
         
         if (newScale !== scale) {
             scale = newScale;
