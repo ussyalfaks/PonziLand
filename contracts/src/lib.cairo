@@ -14,3 +14,8 @@ mod tests{
 }
 
 mod consts;
+
+mod tokens{
+    mod erc20;
+    mod main_currency;
+}
