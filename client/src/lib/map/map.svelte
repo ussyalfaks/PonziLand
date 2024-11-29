@@ -1,4 +1,6 @@
 <script lang="ts">
+    import Tile from './tile.svelte';
+
     const MAP_SIZE = 64;
     const TILE_SIZE = 32;
     let scale = 1;
@@ -91,6 +93,7 @@
         </div>
 
         <!-- Map container -->
+        <!-- svelte-ignore a11y_no_interactive_element_to_noninteractive_role -->
         <button 
             class="map-container"
             role="application"
@@ -105,7 +108,7 @@
             {#each tiles as row, y}
                 <div class="row">
                     {#each row as tile, x}
-                        <div class="tile {tile.type}" data-x={x} data-y={y}></div>
+                        <Tile type={tile.type} />
                     {/each}
                 </div>
             {/each}
@@ -119,16 +122,6 @@
         margin: 32px 0 0 32px;
         width: calc(100% - 64px);
         height: calc(100% - 64px);
-    }
-
-    .corner-block {
-        position: absolute;
-        top: -32px;
-        left: -32px;
-        width: 32px;
-        height: 32px;
-        background: #1a1a1a;  /* Dark background */
-        z-index: 11;  /* Above the coordinate bars */
     }
 
     .column-numbers {
@@ -194,15 +187,5 @@
 
     .row {
         display: flex;
-    }
-
-    .tile {
-        width: 32px;
-        height: 32px;
-        border: 1px solid #ccc;
-    }
-
-    .grass {
-        background-color: #90EE90;
     }
 </style>
