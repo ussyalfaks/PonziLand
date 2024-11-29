@@ -4,8 +4,10 @@ use starknet::ContractAddress;
 #[dojo::model]
 pub struct land {
     #[key]
-    pub index: u64, // 64 x 64 land => value from 0 to 4095
-    pub sell_price: u128,
-    pub sell_token: ContractAddress,
-    pub liquidity_pool: ContractAddress, // must be a pair between sell_token and main_currency(stark / eth / usdc / lords)
+    pub location: u64, // 64 x 64 land
+    pub block_date_bought: u64,
+    pub owner: ContractAddress,
+    pub sell_price: u64,
+    pub token_used: ContractAddress,
+    pub pool_key: ContractAddress, // The Liquidity Pool Key
 }
