@@ -1,11 +1,15 @@
 <script lang="ts">
     const MAP_SIZE = 64;
+    const TILE_SIZE = 32;
     let scale = 1;
     let offsetX = 0;
     let offsetY = 0;
     let isDragging = false;
     let startX = 0;
     let startY = 0;
+    
+    // Add container ref to get dimensions
+    let mapWrapper: HTMLElement;
 
     const tiles = Array(MAP_SIZE).fill(null).map(() => 
         Array(MAP_SIZE).fill(null).map(() => ({
@@ -17,7 +21,14 @@
     function handleWheel(event: WheelEvent) {
         event.preventDefault();
         const delta = event.deltaY > 0 ? 0.9 : 1.1;
-        scale = Math.max(0.2, Math.min(3, scale * delta));
+        // Limit scale between 0.5 and 3
+        const newScale = Math.max(0.5, Math.min(3, scale * delta));
+        
+        if (newScale !== scale) {
+            scale = newScale;
+            // Adjust position after scale change to stay within bounds
+            constrainOffset();
+        }
     }
 
     function handleMouseDown(event: MouseEvent) {
@@ -28,9 +39,33 @@
 
     function handleMouseMove(event: MouseEvent) {
         if (isDragging) {
-            offsetX = event.clientX - startX;
-            offsetY = event.clientY - startY;
+            const newOffsetX = event.clientX - startX;
+            const newOffsetY = event.clientY - startY;
+            
+            // Update offsets within constraints
+            updateOffsets(newOffsetX, newOffsetY);
         }
+    }
+
+    function updateOffsets(newX: number, newY: number) {
+        if (!mapWrapper) return;
+
+        const mapWidth = MAP_SIZE * TILE_SIZE * scale;
+        const mapHeight = MAP_SIZE * TILE_SIZE * scale;
+        const containerWidth = mapWrapper.clientWidth;
+        const containerHeight = mapWrapper.clientHeight;
+
+        // Calculate bounds
+        const minX = Math.min(0, containerWidth - mapWidth);
+        const minY = Math.min(0, containerHeight - mapHeight);
+
+        // Constrain the offsets
+        offsetX = Math.max(minX, Math.min(0, newX));
+        offsetY = Math.max(minY, Math.min(0, newY));
+    }
+
+    function constrainOffset() {
+        updateOffsets(offsetX, offsetY);
     }
 
     function handleMouseUp() {
@@ -38,8 +73,9 @@
     }
 </script>
 
-<div class="map-wrapper">
-    <!-- Column numbers - scale and translate -->
+<div class="map-wrapper" bind:this={mapWrapper}>
+    
+    <!-- Column numbers -->
     <div class="column-numbers" style="transform: translateX({offsetX}px) scale({scale})">
         {#each Array(MAP_SIZE) as _, i}
             <div class="coordinate">{i + 1}</div>
@@ -47,7 +83,7 @@
     </div>
 
     <div class="map-with-rows">
-        <!-- Row numbers - scale and translate -->
+        <!-- Row numbers -->
         <div class="row-numbers" style="transform: translateY({offsetY}px) scale({scale})">
             {#each Array(MAP_SIZE) as _, i}
                 <div class="coordinate">{i + 1}</div>
@@ -85,6 +121,16 @@
         height: calc(100% - 64px);
     }
 
+    .corner-block {
+        position: absolute;
+        top: -32px;
+        left: -32px;
+        width: 32px;
+        height: 32px;
+        background: #1a1a1a;  /* Dark background */
+        z-index: 11;  /* Above the coordinate bars */
+    }
+
     .column-numbers {
         display: flex;
         position: absolute;
@@ -94,6 +140,7 @@
         padding-left: 0;
         z-index: 10;
         transform-origin: 0 0;
+        background: #2a2a2a;  /* Dark grey background */
     }
 
     .row-numbers {
@@ -106,6 +153,7 @@
         padding-top: 0;
         z-index: 10;
         transform-origin: 0 0;
+        background: #2a2a2a;  /* Dark grey background */
     }
 
     .row-numbers .coordinate {
@@ -122,7 +170,7 @@
         align-items: center;
         justify-content: center;
         font-size: 12px;
-        color: #666;
+        color: #fff;
         flex-shrink: 0;
     }
 
