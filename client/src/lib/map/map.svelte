@@ -78,17 +78,21 @@
 <div class="map-wrapper" bind:this={mapWrapper}>
     
     <!-- Column numbers -->
-    <div class="column-numbers" style="transform: translateX({offsetX}px) scale({scale})">
+    <div class="column-numbers" style="left: {offsetX}px">
         {#each Array(MAP_SIZE) as _, i}
-            <div class="coordinate">{i + 1}</div>
+            <div class="coordinate" style="width: {TILE_SIZE * scale}px">
+                {i + 1}
+            </div>
         {/each}
     </div>
 
     <div class="map-with-rows">
         <!-- Row numbers -->
-        <div class="row-numbers" style="transform: translateY({offsetY}px) scale({scale})">
+        <div class="row-numbers" style="top: {offsetY}px">
             {#each Array(MAP_SIZE) as _, i}
-                <div class="coordinate">{i + 1}</div>
+                <div class="coordinate" style="height: {TILE_SIZE * scale}px">
+                    {i + 1}
+                </div>
             {/each}
         </div>
 
@@ -158,7 +162,7 @@
 
     .coordinate {
         width: 32px;
-        height: 24px;
+        height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
