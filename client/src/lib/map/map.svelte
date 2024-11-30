@@ -23,8 +23,8 @@
     function handleWheel(event: WheelEvent) {
         event.preventDefault();
         const delta = event.deltaY > 0 ? 0.9 : 1.1;
-        // Limit scale between 0.5 and 3
-        const newScale = Math.max(0.5, Math.min(3, scale * delta));
+        // Changed max scale from 3 to 5 to allow more zoom
+        const newScale = Math.max(0.5, Math.min(5, scale * delta));
         
         if (newScale !== scale) {
             scale = newScale;
@@ -78,17 +78,21 @@
 <div class="map-wrapper" bind:this={mapWrapper}>
     
     <!-- Column numbers -->
-    <div class="column-numbers" style="transform: translateX({offsetX}px) scale({scale})">
+    <div class="column-numbers" style="left: {offsetX}px">
         {#each Array(MAP_SIZE) as _, i}
-            <div class="coordinate">{i + 1}</div>
+            <div class="coordinate" style="width: {TILE_SIZE * scale}px">
+                {i + 1}
+            </div>
         {/each}
     </div>
 
     <div class="map-with-rows">
         <!-- Row numbers -->
-        <div class="row-numbers" style="transform: translateY({offsetY}px) scale({scale})">
+        <div class="row-numbers" style="top: {offsetY}px">
             {#each Array(MAP_SIZE) as _, i}
-                <div class="coordinate">{i + 1}</div>
+                <div class="coordinate" style="height: {TILE_SIZE * scale}px">
+                    {i + 1}
+                </div>
             {/each}
         </div>
 
@@ -158,7 +162,7 @@
 
     .coordinate {
         width: 32px;
-        height: 24px;
+        height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;

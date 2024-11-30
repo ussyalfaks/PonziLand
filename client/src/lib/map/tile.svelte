@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts">    
     let { type } = $props<{
         type: string
     }>()
@@ -10,10 +10,11 @@
     .tile {
         width: 32px;
         height: 32px;
-        border: 1px solid #ccc;
+        border: 1px solid #44656b;
     }
 
     .grass {
-        background-color: #90EE90;
+        background-image: url('/tiles/grass.jpg');
+        background-size: cover;
     }
 </style>
