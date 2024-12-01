@@ -1,8 +1,18 @@
+use starknet::ContractAddress;
+
+use dojo::world::WorldStorage;
 
 // define the interface
 #[starknet::interface]
 trait IActions<T> {
-    fn buy(ref self: T);
+    fn buy(
+        ref self: T,
+        liquidity_pool: ContractAddress,
+        token_for_sale: ContractAddress,
+        sell_price: u64,
+        location_land: u64,
+        amount_to_stake: u64
+    );
     fn claim(ref self: T);
     fn nuke(ref self: T);
     fn bid(ref self: T);
@@ -11,24 +21,93 @@ trait IActions<T> {
 // dojo decorator
 #[dojo::contract]
 pub mod actions {
-    use super::{IActions};
-    use starknet::{ContractAddress, get_caller_address};
+    use super::{IActions, WorldStorage};
+    use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
+    use dojo::model::{ModelStorage, ModelValueStorage};
+    use ponzi_land::models::land::Land;
+
+    use ponzi_land::components::payable::PayableComponent;
+
+
+    component!(path: PayableComponent, storage: payable, event: PayableEvent);
+    impl PayableInternalImpl = PayableComponent::InternalImpl<ContractState>;
+
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        #[flat]
+        PayableEvent: PayableComponent::Event,
+    }
+
+    // Storage
+    #[storage]
+    struct Storage {
+        #[substorage(v0)]
+        payable: PayableComponent::Storage,
+    }
 
     #[abi(embed_v0)]
     impl ActionsImpl of IActions<ContractState> {
         //inputs: LP, token to sell for, price
-        fn buy(ref self: ContractState ) {
-            //do shit
+        fn buy(
+            ref self: ContractState,
+            liquidity_pool: ContractAddress,
+            token_for_sale: ContractAddress,
+            sell_price: u64,
+            location_land: u64,
+            amount_to_stake: u64
+        ) {
+            let mut world = self.world_default();
+            let caller = get_caller_address();
+            let mut land: Land = world.read_model(location_land);
+
+            //find the way to ask better this
+            assert(land.location != 0, 'land not exists');
+            assert(sell_price > 0, 'has to be more than 0');
+
+            //if we want validate this we have to add this in the params
+            // assert(land.token_used == token_foy_buy,'is not the same token')
+            // assert(land.sell_price == amount_for_buy, 'is not the same amount')
+
+            //find the way to validate the liquidity pool for the new token_for_sale
+            //some assert();
+
+            self.payable._pay(caller, land.owner, land.sell_price.into());
+            self.payable._refund_of_stake(land.owner);
+
+            self.payable._stake(caller,token_address,amount_to_stake);
+
+            land.owner = caller;
+            land.block_date_bought = get_block_timestamp();
+            land.sell_price = sell_price;
+            land.pool_key = liquidity_pool;
+            land.token_used = token_for_sale;
+
+            world.write_model(@land);
+
+
         }
-        fn claim(ref self:ContractState) {
-            //do shit
+
+        fn claim(ref self: ContractState) { //do shit
         }
-        fn nuke(ref self: ContractState) {
-            // nuke all land wherer the LP is smaller than the sell price
+
+        fn nuke(
+            ref self: ContractState
+        ) { // nuke all land wherer the LP is smaller than the sell price
         }
+
         //inputs: LP, token to sell for, price, Bid offer(in a main currency(Lords?))
         fn bid(ref self: ContractState) { // to buy fresh unowned land
-            // bid on a land
+        // bid on a land
+        }
+    }
+
+
+    #[generate_trait]
+    impl InternalImpl of InternalTrait {
+        /// This function is handy since the ByteArray can't be const.
+        fn world_default(self: @ContractState) -> WorldStorage {
+            self.world(@"ponzi_land")
         }
     }
 }

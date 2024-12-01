@@ -10,12 +10,15 @@ mod helpers {
     mod coord;
 }
 
-mod tests{
+mod tests {}
+
+mod components {
+    mod payable;
 }
 
 mod consts;
 
-mod tokens{
+mod tokens {
     mod erc20;
     mod main_currency;
 }
