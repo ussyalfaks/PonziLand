@@ -20,7 +20,7 @@
             const landData = mockLandData[index];
             return {
                 type: landData.owner ? 'house' : 'grass',
-                // Add other tile properties as needed
+                owner: landData.owner,
             };
         })
     );
@@ -117,7 +117,7 @@
             {#each tiles as row, y}
                 <div class="row">
                     {#each row as tile, x}
-                        <Tile type={tile.type} />
+                        <Tile type={tile.type} location={x + y * MAP_SIZE} owner={tile.owner} />
                     {/each}
                 </div>
             {/each}

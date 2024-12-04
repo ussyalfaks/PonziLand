@@ -1,10 +1,23 @@
 <script lang="ts">    
-    let { type } = $props<{
-        type: string
+
+    import { tileHUD } from '$lib/stores';
+
+    let { type, location, owner } = $props<{
+        type: string;
+        location: number;
+        owner: string | null;
     }>()
+
+    function handleClick() {
+        console.log('clicked');
+        $tileHUD = {
+            location: location,
+            owner: owner
+        };
+    }
 </script>
 
-<div class="tile {type}"></div>
+<div on:click={handleClick} class="tile {type}"></div>
 
 <style>
     .tile {
