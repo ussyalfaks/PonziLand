@@ -17,4 +17,13 @@
         background-image: url('/tiles/grass.jpg');
         background-size: cover;
     }
+
+    .house {
+        background-image: 
+            url('/tiles/house_1.png'),
+            url('/tiles/grass.jpg'); 
+        background-size: contain, cover;
+        background-repeat: no-repeat, repeat;
+        background-position: center, center;
+    }
 </style>

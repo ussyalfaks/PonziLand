@@ -1,5 +1,6 @@
 <script lang="ts">
     import Tile from './tile.svelte';
+    import { mockLandData } from '$lib/api/land';
 
     const MAP_SIZE = 64;
     const TILE_SIZE = 32;
@@ -13,11 +14,15 @@
     // Add container ref to get dimensions
     let mapWrapper: HTMLElement;
 
-    const tiles = Array(MAP_SIZE).fill(null).map(() => 
-        Array(MAP_SIZE).fill(null).map(() => ({
-            type: 'grass', // default tile type
-            // Add other tile properties as needed
-        }))
+    const tiles = Array(MAP_SIZE).fill(null).map((_, row) => 
+        Array(MAP_SIZE).fill(null).map((_, col) => {
+            const index = row * MAP_SIZE + col;
+            const landData = mockLandData[index];
+            return {
+                type: landData.owner ? 'house' : 'grass',
+                // Add other tile properties as needed
+            };
+        })
     );
 
     function handleWheel(event: WheelEvent) {

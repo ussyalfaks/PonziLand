@@ -13,11 +13,23 @@
 // }
 
 // Mock data for testing/development
-export const mockLandData = Array.from({ length: 64 * 64 }, (_, index) => ({
-    location: index, // 0 to 4095 (64*64 - 1)
-    block_date_bought: Math.floor(Date.now() / 1000) - Math.floor(Math.random() * 10000000), // Random past timestamp
-    owner: `0x${Math.random().toString(16).slice(2, 42)}`, // Random address
-    sell_price: Math.floor(Math.random() * 1000000), // Random price
-    token_used: ['LORDS', 'ETH', 'STARK'][Math.floor(Math.random() * 3)], // Random token
-    pool_key: ['pool_lords', 'pool_eth', 'pool_stark'][Math.floor(Math.random() * 3)], // Random pool
-}));
+export const mockLandData = Array.from({ length: 64 * 64 }, (_, index) => {
+    // 30% chance of land being occupied
+    const isOccupied = Math.random() < 0.3;
+    
+    return isOccupied ? {
+        location: index,
+        block_date_bought: Math.floor(Date.now() / 1000) - Math.floor(Math.random() * 10000000),
+        owner: `0x${Math.random().toString(16).slice(2, 42)}`,
+        sell_price: Math.floor(Math.random() * 1000000),
+        token_used: ['LORDS', 'ETH', 'STARK'][Math.floor(Math.random() * 3)],
+        pool_key: ['pool_lords', 'pool_eth', 'pool_stark'][Math.floor(Math.random() * 3)]
+    } : {
+        location: index,
+        block_date_bought: 0,
+        owner: null,
+        sell_price: 0,
+        token_used: null,
+        pool_key: null
+    };
+});
