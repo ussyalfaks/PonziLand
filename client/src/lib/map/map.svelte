@@ -1,6 +1,7 @@
 <script lang="ts">
     import Tile from './tile.svelte';
     import { mockLandData } from '$lib/api/land';
+    import { mousePosCoords } from '$lib/stores';
 
     const MAP_SIZE = 64;
     const TILE_SIZE = 32;
@@ -51,6 +52,24 @@
             
             // Update offsets within constraints
             updateOffsets(newOffsetX, newOffsetY);
+        }
+
+        // Calculate tile coordinates
+        if (mapWrapper) {
+            const rect = mapWrapper.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left - offsetX;
+            const mouseY = event.clientY - rect.top - offsetY;
+            
+            // Convert to tile coordinates
+            const tileX = Math.floor(mouseX / (TILE_SIZE * scale));
+            const tileY = Math.floor(mouseY / (TILE_SIZE * scale));
+            
+            // Update store if coordinates are within bounds
+            if (tileX >= 0 && tileX < MAP_SIZE && tileY >= 0 && tileY < MAP_SIZE) {
+                $mousePosCoords = { x: tileX + 1, y: tileY + 1 };
+            } else {
+                $mousePosCoords = null;
+            }
         }
     }
 
