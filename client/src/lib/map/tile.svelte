@@ -2,17 +2,21 @@
 
     import { tileHUD } from '$lib/stores';
 
-    let { type, location, owner } = $props<{
+    let { type, location, owner, sellPrice, tokenUsed } = $props<{
         type: string;
         location: number;
         owner: string | null;
+        sellPrice: number;
+        tokenUsed: string | null;
     }>()
 
     function handleClick() {
         console.log('clicked');
         $tileHUD = {
             location: location,
-            owner: owner
+            owner: owner,
+            sellPrice: sellPrice,
+            tokenUsed: tokenUsed
         };
     }
 </script>

@@ -22,5 +22,8 @@
             <p>Location: ({Math.floor($tileHUD.location % 64) + 1}, {Math.floor($tileHUD.location / 64) + 1})</p>
             <p>Owner: {$tileHUD.owner ?? 'Unclaimed'}</p>
         </div>
+        <button class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+            Buy for {$tileHUD.sellPrice} {$tileHUD.tokenUsed}
+        </button>
     </div>
 {/if}
