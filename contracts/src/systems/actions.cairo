@@ -22,10 +22,10 @@ trait IActions<T> {
 #[dojo::contract]
 pub mod actions {
     use super::{IActions, WorldStorage};
-    use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
+    use starknet::{ContractAddress, get_caller_address, get_block_timestamp, get_contract_address};
     use dojo::model::{ModelStorage, ModelValueStorage};
     use ponzi_land::models::land::Land;
-
+    use ponzi_land::tests::setup::{setup, setup::{create_setup, deploy_erc20, RECIPIENT}};
     use ponzi_land::components::payable::PayableComponent;
 
 
@@ -62,20 +62,19 @@ pub mod actions {
             let mut land: Land = world.read_model(location_land);
 
             //find the way to ask better this
-            assert(land.location != 0, 'land not exists');
+            // assert(land.block_date_bought != 0, 'land not exists');
             assert(sell_price > 0, 'has to be more than 0');
+            self.payable._validate(caller, token_for_sale, land.sell_price);
 
-            //if we want validate this we have to add this in the params
-            // assert(land.token_used == token_foy_buy,'is not the same token')
-            // assert(land.sell_price == amount_for_buy, 'is not the same amount')
-
-            //find the way to validate the liquidity pool for the new token_for_sale
-            //some assert();
+            // //find the way to validate the liquidity pool for the new token_for_sale
+            // //some assert();
 
             self.payable._pay(caller, land.owner, land.sell_price.into());
-            self.payable._refund_of_stake(land.owner);
 
-            self.payable._stake(caller,token_address,amount_to_stake);
+            //we have to see in what moment we do the stake for the first sell
+            // self.payable._refund_of_stake(land.owner);
+
+            self.payable._stake(caller, token_for_sale, amount_to_stake);
 
             land.owner = caller;
             land.block_date_bought = get_block_timestamp();
@@ -84,8 +83,6 @@ pub mod actions {
             land.token_used = token_for_sale;
 
             world.write_model(@land);
-
-
         }
 
         fn claim(ref self: ContractState) { //do shit

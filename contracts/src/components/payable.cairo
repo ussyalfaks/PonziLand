@@ -35,6 +35,7 @@ mod PayableComponent {
         const ERC20_STAKE_FAILED: felt252 = 'ERC20: stake failed';
         const ERC20_PAY_FAILED: felt252 = 'ERC20: pay failed';
         const ERC20_REFUND_FAILED: felt252 = 'ERC20: refund of stake failed';
+        const ERC20_NOT_SUFFICIENT_AMOUNT: felt252 = 'ERC20: not sufficient amount';
     }
 
     #[derive(Drop, Serde, starknet::Store)]
@@ -64,45 +65,30 @@ mod PayableComponent {
         TContractState, +HasComponent<TContractState>
     > of InternalTrait<TContractState> {
         fn _initialize(ref self: ComponentState<TContractState>, token_address: ContractAddress) {
-            // [Storage] Set token address
+            // Set token_dispatcher
             self.token_dispatcher.write(IERC20CamelDispatcher { contract_address: token_address });
         }
 
         fn _pay(
             self: @ComponentState<TContractState>,
-            seller: ContractAddress,
             buyer: ContractAddress,
-            amount: u64
+            seller: ContractAddress,
+            amount: u256
         ) {
-            // [Check] Amount is not null, otherwise return
-            if amount == 0 {
-                return;
-            }
+            let status = self.token_dispatcher.read().transferFrom(buyer, seller, amount);
 
-            // [Interaction] Transfer
-            // let contract = get_contract_address();
-            // let erc20 = IERC20Dispatcher { contract_address: self.token_address.read() };
-
-            let status = self.token_dispatcher.read().transferFrom(buyer, seller, amount.into());
-
-            // [Check] Status
             assert(status, errors::ERC20_PAY_FAILED);
         }
 
         fn _refund_of_stake(ref self: ComponentState<TContractState>, recipient: ContractAddress) {
-            // [Interaction] Transfer
-            // let erc20 = IERC20Dispatcher { contract_address:  };
-            // let status = erc20.transfer(recipient, amount);
-
             let info_of_stake = self.stake_balance.read(recipient);
             self._initialize(info_of_stake.token_address);
-            assert(info_of_stake.amount > 0, 'has to be more than 0');
+            assert(info_of_stake.amount > 0, 'not balance in stake');
             let status = self
                 .token_dispatcher
                 .read()
                 .transfer(recipient, info_of_stake.amount.into());
 
-            // [Check] Status
             assert(status, errors::ERC20_REFUND_FAILED);
         }
 
@@ -114,14 +100,23 @@ mod PayableComponent {
         ) {
             let contract = get_contract_address();
             self._initialize(token_address);
-            let stake_info = StakeInfo{
-                token_address,
-                amount
-            };
+            let stake_info = StakeInfo { token_address, amount };
             let status = self.token_dispatcher.read().transferFrom(staker, contract, amount.into());
             assert(status, errors::ERC20_STAKE_FAILED);
 
-            self.stake_balance.write(staker,stake_info);
+            self.stake_balance.write(staker, stake_info);
+        }
+
+        fn _validate(
+            ref self: ComponentState<TContractState>,
+            buyer: ContractAddress,
+            token_address: ContractAddress,
+            amount: u64
+        ) {
+            self._initialize(token_address);
+            let buyer_balance = self.token_dispatcher.read().balanceOf(buyer);
+
+            assert(buyer_balance >= amount.into(), errors::ERC20_NOT_SUFFICIENT_AMOUNT);
         }
     }
 }
