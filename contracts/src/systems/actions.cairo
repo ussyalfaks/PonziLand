@@ -16,7 +16,7 @@ trait IActions<T> {
     fn claim(ref self: T);
     fn nuke(ref self: T);
     fn bid(ref self: T);
-    fn get_stake_balance(self:@T,staker:ContractAddress) -> u64;
+    fn get_stake_balance(self: @T, staker: ContractAddress) -> u64;
 }
 
 // dojo decorator
@@ -26,7 +26,6 @@ pub mod actions {
     use starknet::{ContractAddress, get_caller_address, get_block_timestamp, get_contract_address};
     use dojo::model::{ModelStorage, ModelValueStorage};
     use ponzi_land::models::land::Land;
-    use ponzi_land::tests::setup::{setup, setup::{create_setup, deploy_erc20, RECIPIENT}};
     use ponzi_land::components::payable::PayableComponent;
     use ponzi_land::helpers::coord::is_valid_position;
 
@@ -95,17 +94,16 @@ pub mod actions {
         }
 
         //inputs: LP, token to sell for, price, Bid offer(in a main currency(Lords?))
-       
+
         //In this function we want to use the auction logic and then reuse the buy function?
 
         fn bid(ref self: ContractState) { // to buy fresh unowned land
         // bid on a land
         }
 
-        fn get_stake_balance(self : @ContractState, staker:ContractAddress)-> u64 {
-             self.payable.stake_balance.read(staker).amount
+        fn get_stake_balance(self: @ContractState, staker: ContractAddress) -> u64 {
+            self.payable.stake_balance.read(staker).amount
         }
-
     }
 
 
