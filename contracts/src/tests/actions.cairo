@@ -29,7 +29,7 @@ fn FIRST_OWNER() -> ContractAddress {
 }
 
 #[test]
-fn test_actions() {
+fn test_buy_action() {
     let (mut world, actions_system, erc20) = create_setup();
     set_contract_address(RECIPIENT());
 
@@ -49,10 +49,36 @@ fn test_actions() {
     world.write_model_test(@land);
 
     actions_system.buy(NEW_LIQUIDITY_POOL(), erc20.contract_address, 10, 11, 12);
+    let stake_balance = actions_system.get_stake_balance(RECIPIENT());
 
     let mut land: Land = world.read_model(11);
     assert(land.owner == RECIPIENT(),'has to be a new owner');
     assert(land.pool_key == NEW_LIQUIDITY_POOL(),'has to be a new lp');
     assert(land.sell_price == 10, 'has to be a new price');
+    assert(stake_balance == 12,'error with stake_balance')
+}
+
+#[test]
+#[should_panic]
+fn test_invalid_land(){
+    let (mut world, actions_system, erc20) = create_setup();
+    set_contract_address(RECIPIENT());
+
+    let mut land: Land = world.read_model(11);
+
+    //permisions for the contract
+    erc20.approve(actions_system.contract_address, 10000);
+    let allowance = erc20.allowance(RECIPIENT(), actions_system.contract_address);
+    assert(allowance >= land.sell_price.into(), 'Approval failed');
+
+    //creation of the land
+    land.pool_key = LIQUIDITY_POOL();
+    land.owner = FIRST_OWNER();
+    land.sell_price = 123;
+    land.token_used = erc20.contract_address;
+    
+    world.write_model_test(@land);
+
+    actions_system.buy(NEW_LIQUIDITY_POOL(), erc20.contract_address, 10, 11000, 12);
 }
 
