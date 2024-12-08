@@ -1,6 +1,7 @@
 <script lang="ts">
     import Tile from './tile.svelte';
     import { mockLandData } from '$lib/api/land';
+    import { mousePosCoords } from '$lib/stores';
 
     const MAP_SIZE = 64;
     const TILE_SIZE = 32;
@@ -21,6 +22,8 @@
             return {
                 type: landData.owner ? 'house' : 'grass',
                 owner: landData.owner,
+                sellPrice: landData.sell_price,
+                tokenUsed: landData.token_used
             };
         })
     );
@@ -51,6 +54,24 @@
             
             // Update offsets within constraints
             updateOffsets(newOffsetX, newOffsetY);
+        }
+
+        // Calculate tile coordinates
+        if (mapWrapper) {
+            const rect = mapWrapper.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left - offsetX;
+            const mouseY = event.clientY - rect.top - offsetY;
+            
+            // Convert to tile coordinates
+            const tileX = Math.floor(mouseX / (TILE_SIZE * scale));
+            const tileY = Math.floor(mouseY / (TILE_SIZE * scale));
+            
+            // Update store if coordinates are within bounds
+            if (tileX >= 0 && tileX < MAP_SIZE && tileY >= 0 && tileY < MAP_SIZE) {
+                $mousePosCoords = { x: tileX + 1, y: tileY + 1 };
+            } else {
+                $mousePosCoords = null;
+            }
         }
     }
 
@@ -117,7 +138,7 @@
             {#each tiles as row, y}
                 <div class="row">
                     {#each row as tile, x}
-                        <Tile type={tile.type} location={x + y * MAP_SIZE} owner={tile.owner} />
+                        <Tile type={tile.type} location={x + y * MAP_SIZE} owner={tile.owner} sellPrice={tile.sellPrice} tokenUsed={tile.tokenUsed} />
                     {/each}
                 </div>
             {/each}
