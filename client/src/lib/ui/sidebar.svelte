@@ -5,7 +5,7 @@
 </script>
 
 {#if open}
-    <div class="fixed top-0 left-0 h-screen w-64 bg-white shadow-lg z-50">
+    <div class="fixed top-0 left-8 h-screen w-64 bg-white shadow-lg z-50">
         <div class="flex justify-between items-center px-2 border-b">
             <h1>Sidebar</h1>
             <button class="p-2" aria-label="Close sidebar" onclick={() => (open = false)}>
