@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { playerLands } from '$lib/api/land';
     let open = $state(false);
 </script>
 
@@ -9,6 +10,23 @@
             <button class="p-2" aria-label="Close sidebar" onclick={() => (open = false)}>
                 ×
             </button>
+        </div>
+        
+        <div class="p-4 overflow-y-auto max-h-[calc(100vh-48px)]">
+            <h2 class="text-lg font-bold mb-4">Your Lands</h2>
+            {#each $playerLands as land}
+                <div class="mb-4 p-3 border rounded shadow-sm">
+                    <p class="font-medium">Location: {land.location}</p>
+                    <p>Block date bought: {land.block_date_bought}</p>
+                    <p>Sell Price: {land.sell_price}</p>
+                    {#if land.token_used}
+                        <p>Token: {land.token_used}</p>
+                    {/if}
+                    {#if land.pool_key}
+                        <p>Pool: {land.pool_key}</p>
+                    {/if}
+                </div>
+            {/each}
         </div>
     </div>
 {:else}

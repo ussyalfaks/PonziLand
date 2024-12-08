@@ -1,5 +1,6 @@
 // This represents the Cairo smart contract model for Land NFTs in the Realms game
 // The data structure below mirrors the one in Cairo, which we'll use to fetch and display land data
+import { derived, writable } from 'svelte/store';
 
 // Cairo struct reference:
 // pub struct land {
@@ -12,7 +13,9 @@
 //     pub pool_key: ContractAddress, // The Liquidity Pool Key (pool_lords, pool_eth, etc.)
 // }
 
-// Mock data for testing/development
+export const mockPlayerAddress = '0x1234567890abcdef';
+
+// Then use it in mockLandData
 export const mockLandData = Array.from({ length: 64 * 64 }, (_, index) => {
     // 30% chance of land being occupied
     const isOccupied = Math.random() < 0.3;
@@ -28,8 +31,8 @@ export const mockLandData = Array.from({ length: 64 * 64 }, (_, index) => {
         };
     }
     
-    // 15% chance for occupied land to be owned by mock player (should result in ~10 lands on average)
-    const isMockPlayerOwner = Math.random() < 0.15;
+    // 1% chance for occupied land to be owned by mock player (should result in ~10 lands on average)
+    const isMockPlayerOwner = Math.random() < 0.01;
     
     return {
         location: index,
@@ -41,4 +44,8 @@ export const mockLandData = Array.from({ length: 64 * 64 }, (_, index) => {
     };
 });
 
-export const mockPlayerAddress = '0x1234567890abcdef';
+export const landStore = writable(mockLandData);
+
+export const playerLands = derived(landStore, $landStore => 
+    $landStore.filter(land => land.owner === mockPlayerAddress)
+);
