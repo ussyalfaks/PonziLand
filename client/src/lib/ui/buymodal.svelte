@@ -23,14 +23,14 @@
 
     function addManualToken() {
         if (manualTokenAddress && manualLPAddress) {
-            selectedTokens = [
-                ...selectedTokens,
-                {
-                    name: 'Custom Token',
-                    address: manualTokenAddress,
-                    lpAddress: manualLPAddress
-                }
-            ];
+            const selectElement = document.getElementById('token-select') as HTMLSelectElement;
+            if (selectElement) selectElement.selectedIndex = 0;
+
+            selectedTokens = [{
+                name: 'Custom Token',
+                address: manualTokenAddress,
+                lpAddress: manualLPAddress
+            }];
             manualTokenAddress = '';
             manualLPAddress = '';
             showManualInput = false;
