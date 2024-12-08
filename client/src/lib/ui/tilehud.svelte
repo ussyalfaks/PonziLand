@@ -1,6 +1,10 @@
 <script lang="ts">
-    import { tileHUD } from '$lib/stores';
-    import { mousePosCoords } from '$lib/stores';
+    import { tileHUD } from '$lib/stores/stores';
+    import { mousePosCoords } from '$lib/stores/stores';
+    
+
+    // Receive the onBuyTile callback prop from the parent
+    let { onBuyTile } = $props();
 </script>
 
 <!-- Permanent mouse coordinates display -->
@@ -13,7 +17,7 @@
     <div class="fixed bottom-0 right-0 bg-white p-4 rounded shadow-lg z-50">
         <button 
             class="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            on:click={() => $tileHUD = null}
+            onclick={() => $tileHUD = null}
         >
             ✕
         </button>
@@ -22,7 +26,15 @@
             <p>Location: ({Math.floor($tileHUD.location % 64) + 1}, {Math.floor($tileHUD.location / 64) + 1})</p>
             <p>Owner: {$tileHUD.owner ?? 'Unclaimed'}</p>
         </div>
-        <button class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+        <button 
+            class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+            onclick={() => onBuyTile({
+                location: $tileHUD!.location,
+                sellPrice: $tileHUD!.sellPrice,
+                tokenUsed: $tileHUD!.tokenUsed,
+                owner: $tileHUD!.owner
+            })}
+        >
             Buy for {$tileHUD.sellPrice} {$tileHUD.tokenUsed}
         </button>
     </div>

@@ -1,6 +1,6 @@
 <script lang="ts">    
 
-    import { tileHUD } from '$lib/stores';
+    import { tileHUD } from '$lib/stores/stores';
 
     let { type, location, owner, sellPrice, tokenUsed } = $props<{
         type: string;

@@ -1,13 +1,11 @@
 <script lang="ts">
     import Tile from './tile.svelte';
     import { mockLandData } from '$lib/api/land';
-    import { mousePosCoords } from '$lib/stores';
+    import { mousePosCoords } from '$lib/stores/stores';
+    import { cameraPosition } from '$lib/stores/camera';
 
     const MAP_SIZE = 64;
     const TILE_SIZE = 32;
-    let scale = 1;
-    let offsetX = 0;
-    let offsetY = 0;
     let isDragging = false;
     let startX = 0;
     let startY = 0;
@@ -31,42 +29,38 @@
     function handleWheel(event: WheelEvent) {
         event.preventDefault();
         const delta = event.deltaY > 0 ? 0.9 : 1.1;
-        // Changed max scale from 3 to 5 to allow more zoom
-        const newScale = Math.max(0.5, Math.min(5, scale * delta));
+        const newScale = Math.max(0.5, Math.min(5, $cameraPosition.scale * delta));
         
-        if (newScale !== scale) {
-            scale = newScale;
-            // Adjust position after scale change to stay within bounds
+        if (newScale !== $cameraPosition.scale) {
+            $cameraPosition = {
+                ...$cameraPosition,
+                scale: newScale
+            };
             constrainOffset();
         }
     }
 
     function handleMouseDown(event: MouseEvent) {
         isDragging = true;
-        startX = event.clientX - offsetX;
-        startY = event.clientY - offsetY;
+        startX = event.clientX - $cameraPosition.offsetX;
+        startY = event.clientY - $cameraPosition.offsetY;
     }
 
     function handleMouseMove(event: MouseEvent) {
         if (isDragging) {
             const newOffsetX = event.clientX - startX;
             const newOffsetY = event.clientY - startY;
-            
-            // Update offsets within constraints
             updateOffsets(newOffsetX, newOffsetY);
         }
 
-        // Calculate tile coordinates
         if (mapWrapper) {
             const rect = mapWrapper.getBoundingClientRect();
-            const mouseX = event.clientX - rect.left - offsetX;
-            const mouseY = event.clientY - rect.top - offsetY;
+            const mouseX = event.clientX - rect.left - $cameraPosition.offsetX;
+            const mouseY = event.clientY - rect.top - $cameraPosition.offsetY;
             
-            // Convert to tile coordinates
-            const tileX = Math.floor(mouseX / (TILE_SIZE * scale));
-            const tileY = Math.floor(mouseY / (TILE_SIZE * scale));
+            const tileX = Math.floor(mouseX / (TILE_SIZE * $cameraPosition.scale));
+            const tileY = Math.floor(mouseY / (TILE_SIZE * $cameraPosition.scale));
             
-            // Update store if coordinates are within bounds
             if (tileX >= 0 && tileX < MAP_SIZE && tileY >= 0 && tileY < MAP_SIZE) {
                 $mousePosCoords = { x: tileX + 1, y: tileY + 1 };
             } else {
@@ -78,22 +72,23 @@
     function updateOffsets(newX: number, newY: number) {
         if (!mapWrapper) return;
 
-        const mapWidth = MAP_SIZE * TILE_SIZE * scale;
-        const mapHeight = MAP_SIZE * TILE_SIZE * scale;
+        const mapWidth = MAP_SIZE * TILE_SIZE * $cameraPosition.scale;
+        const mapHeight = MAP_SIZE * TILE_SIZE * $cameraPosition.scale;
         const containerWidth = mapWrapper.clientWidth;
         const containerHeight = mapWrapper.clientHeight;
 
-        // Calculate bounds
         const minX = Math.min(0, containerWidth - mapWidth);
         const minY = Math.min(0, containerHeight - mapHeight);
 
-        // Constrain the offsets
-        offsetX = Math.max(minX, Math.min(0, newX));
-        offsetY = Math.max(minY, Math.min(0, newY));
+        $cameraPosition = {
+            ...$cameraPosition,
+            offsetX: Math.max(minX, Math.min(0, newX)),
+            offsetY: Math.max(minY, Math.min(0, newY))
+        };
     }
 
     function constrainOffset() {
-        updateOffsets(offsetX, offsetY);
+        updateOffsets($cameraPosition.offsetX, $cameraPosition.offsetY);
     }
 
     function handleMouseUp() {
@@ -104,9 +99,9 @@
 <div class="map-wrapper" bind:this={mapWrapper}>
     
     <!-- Column numbers -->
-    <div class="column-numbers" style="left: {offsetX}px">
+    <div class="column-numbers" style="left: {$cameraPosition.offsetX}px">
         {#each Array(MAP_SIZE) as _, i}
-            <div class="coordinate" style="width: {TILE_SIZE * scale}px">
+            <div class="coordinate" style="width: {TILE_SIZE * $cameraPosition.scale}px">
                 {i + 1}
             </div>
         {/each}
@@ -114,9 +109,9 @@
 
     <div class="map-with-rows">
         <!-- Row numbers -->
-        <div class="row-numbers" style="top: {offsetY}px">
+        <div class="row-numbers" style="top: {$cameraPosition.offsetY}px">
             {#each Array(MAP_SIZE) as _, i}
-                <div class="coordinate" style="height: {TILE_SIZE * scale}px">
+                <div class="coordinate" style="height: {TILE_SIZE * $cameraPosition.scale}px">
                     {i + 1}
                 </div>
             {/each}
@@ -133,7 +128,7 @@
             on:mousemove={handleMouseMove}
             on:mouseup={handleMouseUp}
             on:mouseleave={handleMouseUp}
-            style="transform: translate({offsetX}px, {offsetY}px) scale({scale})"
+            style="transform: translate({$cameraPosition.offsetX}px, {$cameraPosition.offsetY}px) scale({$cameraPosition.scale})"
         >
             {#each tiles as row, y}
                 <div class="row">
