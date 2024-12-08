@@ -10,12 +10,23 @@ mod helpers {
     mod coord;
 }
 
-mod tests{
+mod components {
+    mod payable;
 }
 
 mod consts;
 
-mod tokens{
+mod tokens {
     mod erc20;
     mod main_currency;
+}
+
+mod mocks {
+    mod erc20;
+}
+
+#[cfg(test)]
+mod tests {
+    mod setup;
+    mod actions;
 }
