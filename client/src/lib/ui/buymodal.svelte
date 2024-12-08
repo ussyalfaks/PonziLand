@@ -60,25 +60,40 @@
             <label for="token-select" class="block text-sm font-medium mb-1">Select Tokens</label>
             <select 
                 id="token-select"
-                multiple 
-                class="w-full border rounded-md p-2 h-32"
+                class="w-full border rounded-md p-2"
                 onchange={handleTokenSelect}
             >
+                <option value="">Select a token</option>
                 {#each availableTokens as token, i}
                     <option value={i}>{token.name}</option>
                 {/each}
             </select>
+
+            {#if selectedTokens.length > 0}
+                <div class="mt-2 space-y-2">
+                    {#each selectedTokens as token}
+                        <div class="p-3 border rounded-md bg-gray-50">
+                            <div class="font-medium">{token.name}</div>
+                            <div class="text-sm text-gray-600">
+                                <div>Token Address: {token.address}</div>
+                                <div>LP Address: {token.lpAddress}</div>
+                            </div>
+                        </div>
+                    {/each}
+                </div>
+            {/if}
         </div>
         
         <button 
-            class="mb-4 text-blue-600 hover:text-blue-800"
+            class="mb-4 text-blue-600 hover:text-blue-800 flex items-center"
             onclick={() => showManualInput = !showManualInput}
         >
-            + Add Token Manually
+            <span class="mr-1">{showManualInput ? '−' : '+'}</span>
+            Add Token Manually
         </button>
         
         {#if showManualInput}
-            <div class="mb-4 space-y-2">
+            <div class="mb-4 space-y-2 border rounded-md p-3 bg-gray-50 transition-all">
                 <input
                     type="text"
                     bind:value={manualTokenAddress}
