@@ -1,16 +1,5 @@
 <script lang="ts">
-    interface Token {
-        name: string;
-        address: string;
-        lpAddress: string;
-    }
-
-    interface ModalData {
-        location: number;
-        sellPrice: number;
-        tokenUsed: string;
-        owner?: string;
-    }
+    import type { Token, BuyData } from '$lib/interfaces';
 
     let { onCancel, onBuy, data } = $props();
 
@@ -68,11 +57,12 @@
         <h2 class="text-2xl font-bold mb-4">Buy Land</h2>
         
         <div class="mb-4">
-            <label class="block text-sm font-medium mb-1">Select Tokens</label>
+            <label for="token-select" class="block text-sm font-medium mb-1">Select Tokens</label>
             <select 
+                id="token-select"
                 multiple 
                 class="w-full border rounded-md p-2 h-32"
-                on:change={handleTokenSelect}
+                onchange={handleTokenSelect}
             >
                 {#each availableTokens as token, i}
                     <option value={i}>{token.name}</option>
@@ -82,7 +72,7 @@
         
         <button 
             class="mb-4 text-blue-600 hover:text-blue-800"
-            on:click={() => showManualInput = !showManualInput}
+            onclick={() => showManualInput = !showManualInput}
         >
             + Add Token Manually
         </button>
@@ -103,7 +93,7 @@
                 />
                 <button 
                     class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-                    on:click={addManualToken}
+                    onclick={addManualToken}
                 >
                     Add Token
                 </button>
@@ -111,8 +101,9 @@
         {/if}
         
         <div class="mb-4">
-            <label class="block text-sm font-medium mb-1">Stake Amount</label>
+            <label for="stake-amount" class="block text-sm font-medium mb-1">Stake Amount</label>
             <input
+                id="stake-amount"
                 type="number"
                 bind:value={stakeAmount}
                 placeholder="Enter stake amount"
@@ -121,8 +112,9 @@
         </div>
         
         <div class="mb-6">
-            <label class="block text-sm font-medium mb-1">Sell Price</label>
+            <label for="sell-price" class="block text-sm font-medium mb-1">Sell Price</label>
             <input
+                id="sell-price"
                 type="number"
                 bind:value={sellPrice}
                 placeholder="Enter sell price"
@@ -133,13 +125,13 @@
         <div class="flex justify-end space-x-4">
             <button 
                 class="px-4 py-2 border rounded-md hover:bg-gray-100"
-                on:click={handleCancelClick}
+                onclick={handleCancelClick}
             >
                 Cancel
             </button>
             <button 
                 class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                on:click={handleBuyClick}
+                onclick={handleBuyClick}
             >
                 Buy
             </button>

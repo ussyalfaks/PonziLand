@@ -1,24 +1,24 @@
-interface Token {
+export interface Token {
     name: string;
     address: string;
     lpAddress: string;
 }
 
-interface ModalData {
+export interface ModalData {
     location: number;
     sellPrice: number;
     tokenUsed: string;
     owner?: string;
 }
 
-interface TileInfo {
+export interface TileInfo {
     location: number;
     sellPrice: number;
     tokenUsed: string;
     owner?: string;
 }
 
-interface BuyData {
+export interface BuyData {
     tokens: Array<{
         name: string;
         address: string;

@@ -2,23 +2,7 @@
     import Sidebar from './sidebar.svelte';
     import TileHUD from './tilehud.svelte';
     import Modal from './buymodal.svelte';
-
-    interface TileInfo {
-        location: number;
-        sellPrice: number;
-        tokenUsed: string;
-        owner?: string;
-    }
-
-    interface BuyData {
-        tokens: Array<{
-            name: string;
-            address: string;
-            lpAddress: string;
-        }>;
-        stakeAmount: string;
-        sellPrice: string;
-    }
+    import type { TileInfo, BuyData } from '$lib/interfaces';
 
     let showModal = $state<boolean>(false);
     let modalData = $state<TileInfo | null>(null);
@@ -34,6 +18,7 @@
 
     function handleBuy(data: BuyData): void {
         console.log("Buying land with data:", data);
+        // TODO: call buyTile function + front end sugar
         showModal = false;
     }
 </script>
