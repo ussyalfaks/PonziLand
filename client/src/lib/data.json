@@ -1,0 +1,51 @@
+{
+  "availableTokens": [
+    {
+      "name": "ETH",
+      "address": "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+      "lpAddress": "0x04d0390b777b424e43839cd1e744799f3de6c176c7e32c1812a41dbd9c19db6a",
+      "images": {
+        "icon": "/images/tokens/eth/icon.svg",
+        "castle": {
+          "basic": "/images/tokens/eth/castles/basic.png",
+          "advanced": "/images/tokens/eth/castles/advanced.png",
+          "premium": "/images/tokens/eth/castles/premium.png"
+        }
+      }
+    },
+    {
+      "name": "USDC",
+      "address": "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8",
+      "lpAddress": "0x04d0390b777b424e43839cd1e744799f3de6c176c7e32c1812a41dbd9c19db6a",
+      "images": {
+        "icon": "/images/tokens/usdc/icon.svg",
+        "castle": {
+          "basic": "/images/tokens/usdc/castles/basic.png",
+          "advanced": "/images/tokens/usdc/castles/advanced.png",
+          "premium": "/images/tokens/usdc/castles/premium.png"
+        }
+      }
+    },
+    {
+      "name": "USDT",
+      "address": "0x068f5c6a61780768455de69077e07e89787839bf8166decfbf92b645209c0fb8",
+      "lpAddress": "0x04d0390b777b424e43839cd1e744799f3de6c176c7e32c1812a41dbd9c19db6a",
+      "images": {
+        "icon": "/images/tokens/usdt/icon.svg",
+        "castle": {
+          "basic": "/images/tokens/usdt/castles/basic.png",
+          "advanced": "/images/tokens/usdt/castles/advanced.png",
+          "premium": "/images/tokens/usdt/castles/premium.png"
+        }
+      }
+    }
+  ],
+  "commonImages": {
+    "logo": "/images/logo.png",
+    "background": "/images/background.jpg",
+    "icons": {
+      "wallet": "/images/icons/wallet.svg",
+      "settings": "/images/icons/settings.svg"
+    }
+  }
+}

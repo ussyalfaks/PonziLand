@@ -1,7 +1,8 @@
 <script lang="ts">
     import type { Token, BuyData } from '$lib/interfaces';
+    import data from '$lib/data.json';
 
-    let { onCancel, onBuy, data } = $props();
+    let { onCancel, onBuy, data: propData } = $props();
 
     let selectedTokens = $state<Token[]>([]);
     let manualTokenAddress = $state('');
@@ -10,11 +11,14 @@
     let sellPrice = $state('');
     let showManualInput = $state(false);
     
-    let availableTokens = $state<Token[]>([
-        { name: 'ETH', address: '0x...', lpAddress: '0x...' },
-        { name: 'USDC', address: '0x...', lpAddress: '0x...' },
-        { name: 'USDT', address: '0x...', lpAddress: '0x...' }
-    ]);
+    let availableTokens = $state<Token[]>(
+        data.availableTokens.map(({ name, address, lpAddress, images }) => ({
+            name,
+            address,
+            lpAddress,
+            images
+        }))
+    );
 
     function handleTokenSelect(event: Event) {
         const selectElement = event.target as HTMLSelectElement;
@@ -29,7 +33,15 @@
             selectedTokens = [{
                 name: 'Custom Token',
                 address: manualTokenAddress,
-                lpAddress: manualLPAddress
+                lpAddress: manualLPAddress,
+                images: {
+                    icon: '',
+                    castle: {
+                        basic: '',
+                        advanced: '',
+                        premium: ''
+                    }
+                }
             }];
             manualTokenAddress = '';
             manualLPAddress = '';

@@ -2,6 +2,14 @@ export interface Token {
     name: string;
     address: string;
     lpAddress: string;
+    images: {
+        icon: string;
+        castle: {
+            basic: string;
+            advanced: string;
+            premium: string;
+        }
+    }
 }
 
 export interface ModalData {
