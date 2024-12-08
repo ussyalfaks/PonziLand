@@ -75,8 +75,8 @@
                         <div class="p-3 border rounded-md bg-gray-50">
                             <div class="font-medium">{token.name}</div>
                             <div class="text-sm text-gray-600">
-                                <div>Token Address: {token.address}</div>
-                                <div>LP Address: {token.lpAddress}</div>
+                                <div>Token Address: <a href="https://voyager.online/contract/{token.address}" class="text-blue-600 hover:underline">{token.address}</a></div>
+                                <div>LP Address: <a href="https://voyager.online/contract/{token.lpAddress}" class="text-blue-600 hover:underline">{token.lpAddress}</a></div>
                             </div>
                         </div>
                     {/each}
