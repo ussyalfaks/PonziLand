@@ -14,3 +14,4 @@ export const mousePosCoords = writable<{
 } | null>(null);
 
 export const accountAddress = writable<string | null>('0x1234567890abcdef');
+

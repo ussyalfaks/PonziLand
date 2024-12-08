@@ -1,6 +1,7 @@
 <script lang="ts">
-    import { tileHUD } from '$lib/stores';
-    import { mousePosCoords } from '$lib/stores';
+    import { tileHUD } from '$lib/stores/stores';
+    import { mousePosCoords } from '$lib/stores/stores';
+    
 
     // Receive the onBuyTile callback prop from the parent
     let { onBuyTile } = $props();
