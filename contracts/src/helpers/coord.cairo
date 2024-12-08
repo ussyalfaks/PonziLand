@@ -67,10 +67,14 @@ fn down(index: u64) -> u64 {
     return position_to_index(row + 1, col);
 }
 
+fn is_valid_position(index: u64) -> bool {
+   index < GRID_WIDTH * GRID_WIDTH
+}
+
 #[cfg(test)]
 mod coord_test {
     use ponzi_land::consts::GRID_WIDTH;
-    use ponzi_land::helpers::coord::{position_to_index, index_to_position, left, right, up, down};
+    use ponzi_land::helpers::coord::{position_to_index, index_to_position, left, right, up, down,is_valid_position};
 
     #[test]
     fn test_position_to_index() {
@@ -113,5 +117,13 @@ mod coord_test {
         assert_eq!(down(1), GRID_WIDTH + 1); // Down of (0, 1)
         assert_eq!(down(GRID_WIDTH), 2 * GRID_WIDTH); // Down of (1, 0)
         assert_eq!(down(GRID_WIDTH + 1), 2 * GRID_WIDTH + 1); // Down of (1, 1)
+    }
+
+    #[test]
+    fn test_is_valid_position(){
+        assert(is_valid_position(10),'has to be true');
+        assert(is_valid_position(4095), 'has to be true');
+        assert(!is_valid_position(4096),'has to be false');
+        assert(!is_valid_position(100000),'has to be false');
     }
 }
