@@ -5,7 +5,8 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	resolve: {
 		alias: {
-			'@dojoengine/sdk-svelte': '../dist/index.js' 
+			'@dojoengine/sdk-svelte': '../dist/index.js',
+			'$lib': '/src/lib'
 		}
 	}
 });
