@@ -180,10 +180,6 @@
                             <span>{propData.location}</span>
                         </div>
                         <div class="mb-2">
-                            <span class="font-medium">Current Price:</span> 
-                            <span>{propData.sellPrice} {propData.tokenUsed}</span>
-                        </div>
-                        <div class="mb-2">
                             <span class="font-medium">Token Info:</span> 
                             <a 
                                 href="https://voyager.online/contract/{propData.tokenAddress}" 
@@ -207,6 +203,10 @@
                                 </a>
                             </div>
                         {/if}
+                        <div class="mt-4 pt-4 border-t bg-green-100 flex items-center justify-center text-center py-4">
+                            <span class="font-medium text-lg mr-2">Current Price:</span> 
+                            <span class="text-xl font-bold px-2 py-1 rounded">{propData.sellPrice} {propData.tokenUsed}</span>
+                        </div>
                     </div>
                 </div>
             </div>
