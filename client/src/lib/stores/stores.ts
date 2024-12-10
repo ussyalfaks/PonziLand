@@ -5,6 +5,7 @@ export const tileHUD = writable<{
     owner: string | null;   
     sellPrice: number;
     tokenUsed: number;
+    tokenAddress: string | null;
 } | null>(null);
 
 

@@ -2,12 +2,13 @@
 
     import { tileHUD } from '$lib/stores/stores';
 
-    let { type, location, owner, sellPrice, tokenUsed } = $props<{
+    let { type, location, owner, sellPrice, tokenUsed, tokenAddress } = $props<{
         type: string;
         location: number;
         owner: string | null;
         sellPrice: number;
         tokenUsed: string | null;
+        tokenAddress: string | null;
     }>()
 
     function handleClick() {
@@ -16,7 +17,8 @@
             location: location,
             owner: owner,
             sellPrice: sellPrice,
-            tokenUsed: tokenUsed
+            tokenUsed: tokenUsed,
+            tokenAddress: tokenAddress
         };
     }
 </script>
