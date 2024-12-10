@@ -32,7 +32,8 @@
                 location: $tileHUD!.location,
                 sellPrice: $tileHUD!.sellPrice,
                 tokenUsed: $tileHUD!.tokenUsed,
-                owner: $tileHUD!.owner
+                tokenAddress: $tileHUD!.tokenAddress,
+                owner: $tileHUD!.owner,
             })}
         >
             Buy for {$tileHUD.sellPrice} {$tileHUD.tokenUsed}

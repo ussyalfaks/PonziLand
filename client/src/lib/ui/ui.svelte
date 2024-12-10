@@ -2,6 +2,7 @@
     import Sidebar from './sidebar.svelte';
     import TileHUD from './tilehud.svelte';
     import Modal from './buymodal.svelte';
+    import AuctionModal from './auctionmodal.svelte';
     import type { TileInfo, BuyData } from '$lib/interfaces';
 
     let showModal = $state<boolean>(false);
@@ -26,11 +27,18 @@
 <div class="z-50 absolute top-0 left-0">
     <Sidebar />
     <TileHUD onBuyTile={handleTileBuy} />
-    {#if showModal && modalData}
+    {#if showModal}
+        {#if modalData?.owner}
         <Modal
             onCancel={handleCancel}
             onBuy={handleBuy}
             data={modalData}
-        />
+            />
+        {:else}
+            <AuctionModal
+                onCancel={handleCancel}
+                onBuy={handleBuy}
+            />
+        {/if}
     {/if}
 </div>

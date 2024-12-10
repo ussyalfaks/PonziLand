@@ -24,6 +24,7 @@ export interface TileInfo {
     sellPrice: number;
     tokenUsed: string;
     owner?: string;
+    tokenAddress: string;
 }
 
 export interface BuyData {
