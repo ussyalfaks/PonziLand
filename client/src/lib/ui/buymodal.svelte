@@ -92,10 +92,20 @@
                                 </div>
                             {/if}
                             <div class="text-sm text-gray-600">
-                                <div>Token Address: <a href="https://voyager.online/contract/{token.address}" class="text-blue-600 hover:underline" title={token.address}>
+                                <div>Token Address: <a href="https://voyager.online/contract/{token.address}" 
+                                    class="text-blue-600 hover:underline" 
+                                    title={token.address}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
                                     {token.address.slice(0, 6)}...{token.address.slice(-4)}
                                 </a></div>
-                                <div>LP Address: <a href="https://voyager.online/contract/{token.lpAddress}" class="text-blue-600 hover:underline" title={token.lpAddress}>
+                                <div>LP Address: <a href="https://voyager.online/contract/{token.lpAddress}" 
+                                    class="text-blue-600 hover:underline" 
+                                    title={token.lpAddress}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
                                     {token.lpAddress.slice(0, 6)}...{token.lpAddress.slice(-4)}
                                 </a></div>
                             </div>
