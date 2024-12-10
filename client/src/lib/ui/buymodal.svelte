@@ -86,6 +86,11 @@
                     {#each selectedTokens as token}
                         <div class="p-3 border rounded-md bg-gray-50">
                             <div class="font-medium">{token.name}</div>
+                            {#if token.name === 'Custom Token'}
+                                <div class="text-red-500 text-xs font-medium mb-2">
+                                    ⚠️ Custom token - verify addresses carefully
+                                </div>
+                            {/if}
                             <div class="text-sm text-gray-600">
                                 <div>Token Address: <a href="https://voyager.online/contract/{token.address}" class="text-blue-600 hover:underline" title={token.address}>
                                     {token.address.slice(0, 6)}...{token.address.slice(-4)}
