@@ -1,5 +1,6 @@
-import type { Schema } from "$lib/bindings";
-import { createDojoStore } from "@dojoengine/svelte-sdk";
+// TODO: Add bindings 
+// import type { Schema } from "$lib/bindings";
+import { createDojoStore } from "@dojoengine/sdk-svelte";
 import { getContext, setContext } from "svelte";
 
 const storeKey = Symbol("dojo_store");
@@ -7,7 +8,7 @@ const storeKey = Symbol("dojo_store");
 export type Store = ReturnType<typeof setupStore>;
 
 export function setupStore() {
-    const value = createDojoStore<Schema>();
+    const value = createDojoStore();
     setContext(storeKey, value);
 
     return value;
