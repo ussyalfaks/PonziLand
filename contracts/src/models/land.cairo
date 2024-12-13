@@ -10,6 +10,8 @@ pub struct Land {
     pub sell_price: u64,
     pub token_used: ContractAddress,
     pub pool_key: ContractAddress, // The Liquidity Pool Key
+    //we will use this for taxes
+    pub last_pay_time: Option<u64>,
 }
 
 #[derive(Copy, Drop, Serde, Debug)]
