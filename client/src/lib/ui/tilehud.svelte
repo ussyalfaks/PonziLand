@@ -1,10 +1,22 @@
 <script lang="ts">
     import { tileHUD } from '$lib/stores/stores';
     import { mousePosCoords } from '$lib/stores/stores';
-    
+    import { getAuctionData } from '$lib/api/land';
+    import type { AuctionData } from '$lib/interfaces';
 
+    let auctionInfo = $state<AuctionData | null>(null);
+
+    $effect(() => {
+        if (!$tileHUD?.owner) {
+            const auctionData = getAuctionData($tileHUD!.location);
+            if (auctionData) {
+                auctionInfo = auctionData;
+            }
+        }
+    });
+    
     // Receive the onBuyTile callback prop from the parent
-    let { onBuyTile } = $props();
+    let { onBuyTile, onBidTile } = $props();
 </script>
 
 <!-- Permanent mouse coordinates display -->
@@ -26,17 +38,26 @@
             <p>Location: ({Math.floor($tileHUD.location % 64) + 1}, {Math.floor($tileHUD.location / 64) + 1})</p>
             <p>Owner: {$tileHUD.owner ?? 'Unclaimed'}</p>
         </div>
-        <button 
-            class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
-            onclick={() => onBuyTile({
-                location: $tileHUD!.location,
-                sellPrice: $tileHUD!.sellPrice,
-                tokenUsed: $tileHUD!.tokenUsed,
-                tokenAddress: $tileHUD!.tokenAddress,
-                owner: $tileHUD!.owner,
-            })}
-        >
-            Buy for {$tileHUD.sellPrice} {$tileHUD.tokenUsed}
-        </button>
+        {#if $tileHUD.owner}
+            <button 
+                class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+                onclick={() => onBuyTile({
+                    location: $tileHUD!.location,
+                    sellPrice: $tileHUD!.sellPrice,
+                    tokenUsed: $tileHUD!.tokenUsed,
+                    tokenAddress: $tileHUD!.tokenAddress,
+                    owner: $tileHUD!.owner,
+                })}
+            >
+                Buy for {$tileHUD.sellPrice} {$tileHUD.tokenUsed}
+            </button>
+        {:else} 
+            <button 
+                class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+                onclick={() => onBidTile(auctionInfo)}
+            >
+                Bid
+            </button>
+        {/if}
     </div>
 {/if}
