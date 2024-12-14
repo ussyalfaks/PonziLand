@@ -22,9 +22,53 @@ const TOKEN_ADDRESSES = {
     'STARK': '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d'
 };
 
-// Then use it in mockLandData
+// Add this interface for bid structure
+interface Bid {
+    price: number;
+    bidder: string;
+    timestamp: number;
+}
+
+interface AuctionData {
+    active: boolean;
+    bids: Bid[];
+}
+
+// Separate auction store
+export const mockAuctionData = new Map<number, AuctionData>();
+
+// Generate auction data separately
+Array.from({ length: 64 * 64 }).forEach((_, index) => {
+    // Only create auction data for unoccupied lands (70% chance as per original logic)
+    if (Math.random() >= 0.3) {
+        const numBids = Math.floor(Math.random() * 6);
+        const auctionBids: Bid[] = [];
+        
+        if (numBids > 0) {
+            let currentPrice = Math.floor(Math.random() * 50000) + 10000;
+            let currentTimestamp = Date.now() - (Math.random() * 3600000);
+            
+            for (let i = 0; i < numBids; i++) {
+                auctionBids.push({
+                    price: currentPrice,
+                    bidder: `0x${Math.random().toString(16).slice(2, 42)}`,
+                    timestamp: Math.floor(currentTimestamp)
+                });
+                currentPrice += currentPrice * (Math.random() * 0.2 + 0.1);
+                currentTimestamp -= Math.random() * 3540000 + 60000;
+            }
+            auctionBids.sort((a, b) => a.timestamp - b.timestamp);
+        }
+
+        mockAuctionData.set(index, {
+            active: numBids > 0,
+            bids: auctionBids
+        });
+    }
+});
+
+// Modify the mockLandData to not include auction data directly
 export const mockLandData = Array.from({ length: 64 * 64 }, (_, index) => {
-    // 30% chance of land being occupied
     const isOccupied = Math.random() < 0.3;
     
     if (!isOccupied) {
@@ -39,7 +83,6 @@ export const mockLandData = Array.from({ length: 64 * 64 }, (_, index) => {
         };
     }
     
-    // 1% chance for occupied land to be owned by mock player (should result in ~10 lands on average)
     const isMockPlayerOwner = Math.random() < 0.01;
     const tokenType = ['LORDS', 'ETH', 'STARK'][Math.floor(Math.random() * 3)] as keyof typeof TOKEN_ADDRESSES;
     
@@ -55,6 +98,12 @@ export const mockLandData = Array.from({ length: 64 * 64 }, (_, index) => {
 });
 
 export const landStore = writable(mockLandData);
+export const auctionStore = writable(mockAuctionData);
+
+// Helper function to get auction data for a specific land
+export function getAuctionData(landId: number): AuctionData | undefined {
+    return mockAuctionData.get(landId);
+}
 
 export const playerLands = derived(landStore, $landStore => 
     $landStore.filter(land => land.owner === mockPlayerAddress)

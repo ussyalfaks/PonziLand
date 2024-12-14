@@ -1,7 +1,9 @@
 <script lang="ts">
-    import { playerLands } from '$lib/api/land'; 
-    import { moveCameraTo } from '$lib/stores/camera';
+    import YourLands from './sidebar/yourlands.svelte';
+    import YourBids from './sidebar/yourbids.svelte';
+    
     let open = $state(false);
+    let activeTab = $state('lands'); // 'lands' or 'bids'
 </script>
 
 {#if open}
@@ -13,25 +15,29 @@
             </button>
         </div>
         
-        <div class="p-4 overflow-y-auto max-h-[calc(100vh-48px)]">
-            <h2 class="text-lg font-bold mb-4">Your Lands</h2>
-            {#each $playerLands as land}
-                <button class="mb-4 p-3 border rounded shadow-sm w-full text-left" 
-                    onclick={() => moveCameraTo(
-                        Math.floor(land.location % 64) + 1,
-                        Math.floor(land.location / 64) + 1
-                    )}>
-                    <p class="font-medium">Location: {land.location % 64 + 1}, {Math.floor(land.location / 64) + 1}</p>
-                    <p>Block date bought: {land.block_date_bought}</p>
-                    <p>Sell Price: {land.sell_price}</p>
-                    {#if land.token_used}
-                        <p>Token: {land.token_used}</p>
-                    {/if}
-                    {#if land.pool_key}
-                        <p>Pool: {land.pool_key}</p>
-                    {/if}
+        <div class="border-b">
+            <div class="flex">
+                <button 
+                    class="flex-1 p-2 {activeTab === 'lands' ? 'bg-gray-100 font-bold' : ''}"
+                    onclick={() => activeTab = 'lands'}
+                >
+                    Your Lands
                 </button>
-            {/each}
+                <button 
+                    class="flex-1 p-2 {activeTab === 'bids' ? 'bg-gray-100 font-bold' : ''}"
+                    onclick={() => activeTab = 'bids'}
+                >
+                    Your Bids
+                </button>
+            </div>
+        </div>
+
+        <div class="p-4 overflow-y-auto max-h-[calc(100vh-96px)]">
+            {#if activeTab === 'lands'}
+                <YourLands />
+            {:else}
+                <YourBids />
+            {/if}
         </div>
     </div>
 {:else}
