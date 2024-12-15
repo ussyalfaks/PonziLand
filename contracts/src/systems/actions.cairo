@@ -7,14 +7,22 @@ use ponzi_land::components::payable::PayableComponent::TokenInfo;
 // define the interface
 #[starknet::interface]
 trait IActions<T> {
-    fn bid(ref self: T);
-    fn buy(
+    fn bid(
         ref self: T,
-        liquidity_pool: ContractAddress,
+        land_location: u64,
         token_for_sale: ContractAddress,
         sell_price: u64,
+        amount_to_stake: u64,
+        liquidity_pool: ContractAddress,
+    );
+    fn buy(
+        ref self: T,
         land_location: u64,
-        amount_to_stake: u64
+        token_for_sale: ContractAddress,
+        sell_price: u64,
+        amount_to_stake: u64,
+        liquidity_pool: ContractAddress,
+        is_from_bid: bool
     );
 
     fn claim(ref self: T, land_location: u64);
@@ -48,6 +56,7 @@ pub mod actions {
     use ponzi_land::components::payable::{PayableComponent, PayableComponent::TokenInfo};
     use ponzi_land::helpers::coord::{is_valid_position, up, down, left, right};
     use ponzi_land::consts::{TAX_RATE};
+    use dojo::event::EventStorage;
 
     component!(path: PayableComponent, storage: payable, event: PayableEvent);
     impl PayableInternalImpl = PayableComponent::InternalImpl<ContractState>;
@@ -57,12 +66,16 @@ pub mod actions {
     enum Event {
         #[flat]
         PayableEvent: PayableComponent::Event,
-        LandEvent: LandCreated,
     }
 
-    #[derive(Drop, starknet::Event)]
-    struct LandCreated {
-        land: Land
+    //events
+
+    #[derive(Drop, Serde)]
+    #[dojo::event]
+    pub struct LandNukedEvent {
+        #[key]
+        owner_nuked: ContractAddress,
+        land_location: u64,
     }
 
     // Storage
@@ -76,17 +89,17 @@ pub mod actions {
     impl ActionsImpl of IActions<ContractState> {
         fn buy(
             ref self: ContractState,
-            liquidity_pool: ContractAddress,
+            land_location: u64,
             token_for_sale: ContractAddress,
             sell_price: u64,
-            land_location: u64,
             amount_to_stake: u64,
+            liquidity_pool: ContractAddress,
+            is_from_bid: bool
         ) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut land: Land = world.read_model(land_location);
 
-            //preguntar si es mejor ponerlo al principio de la funcion por temas de gas
             assert(is_valid_position(land_location), 'Land location not valid');
             assert(sell_price > 0, 'sell_price > 0');
 
@@ -95,12 +108,14 @@ pub mod actions {
             // //find the way to validate the liquidity pool for the new token_for_sale
             // //some assert();
 
-            self.payable._pay(caller, land.owner, land.sell_price.into());
-
-            //TODO:we have to see in what moment we do the stake for the first sell
-            // self.payable._refund_of_stake(land.owner);
-
-            self.payable._stake(caller, token_for_sale, amount_to_stake);
+            if is_from_bid {
+                //self.payable._pay_us();
+                self.payable._stake(caller, token_for_sale, amount_to_stake);
+            } else {
+                self.payable._pay(caller, land.owner, land.sell_price.into());
+                // self.payable._refund_of_stake(land.owner);
+                self.payable._stake(caller, token_for_sale, amount_to_stake);
+            }
 
             land.owner = caller;
             land.block_date_bought = get_block_timestamp();
@@ -136,19 +151,71 @@ pub mod actions {
             }
         }
 
-        fn nuke(
-            ref self: ContractState, land_location: u64,
-        ) { // nuke all land wherer the LP is smaller than the sell price
-        // println!("inside of function nukeee");
+        fn nuke(ref self: ContractState, land_location: u64,) {
+            let mut world = self.world_default();
+            let mut land: Land = world.read_model(land_location);
+            let owner_nuked = land.owner;
+
+            //delete land
+            world.erase_model(@land);
+
+            //emit event de nuke land
+            world.emit_event(@LandNukedEvent { owner_nuked, land_location });
         }
 
 
-        //inputs: LP, token to sell for, price, Bid offer(in a main currency(Lords?))
-        //In this function we want to use the auction logic and then reuse the buy function?
-        fn bid(ref self: ContractState) { // to buy fresh unowned land
-        // bid on a land
+        //Bid offer(in a main currency(Lords?))
+        // how we know who will be the owner of the land?
+        fn bid(
+            ref self: ContractState,
+            land_location: u64,
+            token_for_sale: ContractAddress,
+            sell_price: u64,
+            amount_to_stake: u64,
+            liquidity_pool: ContractAddress,
+        ) {
+            let mut world = self.world_default();
+            let land: Land = world.read_model(land_location);
+
+            //find the way to validate the liquidity pool for the new token_for_sale
+            //some assert();
+            assert(is_valid_position(land_location), 'Land location not valid');
+            assert(land.owner == ContractAddressZeroable::zero(), 'must be without owner');
+
+            //auction part
+
+            //when the auction part its finished
+
+            self
+                .buy(
+                    land_location, token_for_sale, sell_price, amount_to_stake, liquidity_pool, true
+                );
         }
 
+
+        //I will change this for bid function after, only for fast test
+        fn create_land(
+            ref self: ContractState,
+            location: u64,
+            sell_price: u64,
+            token_used: ContractAddress,
+            pool_key: ContractAddress,
+            stake_amount: u64
+        ) -> Land {
+            assert(is_valid_position(location), 'Land location not valid');
+            let mut world = self.world_default();
+            let mut land: Land = world.read_model(location);
+            let caller = get_caller_address();
+            land.owner = caller;
+            land.block_date_bought = get_block_timestamp();
+            land.sell_price = sell_price;
+            land.pool_key = pool_key;
+            land.token_used = token_used;
+            self.payable._stake(caller, token_used, stake_amount);
+
+            world.write_model(@land);
+            land
+        }
 
         //GETTERS FUNCTIONS
 
@@ -177,37 +244,11 @@ pub mod actions {
             let mut land: Land = world.read_model(land_location);
             land
         }
-
-        //I will change this for bid function after, only for fast test
-        fn create_land(
-            ref self: ContractState,
-            location: u64,
-            sell_price: u64,
-            token_used: ContractAddress,
-            pool_key: ContractAddress,
-            stake_amount: u64
-        ) -> Land {
-            assert(is_valid_position(location), 'Land location not valid');
-            let mut world = self.world_default();
-            let mut land: Land = world.read_model(location);
-            let caller = get_caller_address();
-            land.owner = caller;
-            land.block_date_bought = get_block_timestamp();
-            land.sell_price = sell_price;
-            land.pool_key = pool_key;
-            land.token_used = token_used;
-            self.payable._stake(caller, token_used, stake_amount);
-
-            world.write_model(@land);
-            self.emit(LandCreated { land });
-            land
-        }
     }
 
 
     #[generate_trait]
     impl InternalImpl of InternalTrait {
-        /// This function is handy since the ByteArray can't be const.
         fn world_default(self: @ContractState) -> WorldStorage {
             self.world(@"ponzi_land")
         }
