@@ -7,7 +7,7 @@
     let auctionInfo = $state<AuctionData | null>(null);
 
     $effect(() => {
-        if (!$tileHUD?.owner) {
+        if ($tileHUD && !$tileHUD?.owner) {
             const auctionData = getAuctionData($tileHUD!.location);
             if (auctionData) {
                 auctionInfo = auctionData;

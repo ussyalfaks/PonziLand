@@ -16,12 +16,13 @@
 
     function handleAuctionBuy(info: AuctionData) {
         auctionData = info;
-        console.log(auctionData)
         showModal = true;
     }
 
     function handleCancel(): void {
         showModal = false;
+        auctionData = null;
+        modalData = null;
     }
 
     function handleBuy(data: BuyData): void {
