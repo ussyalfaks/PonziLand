@@ -16,7 +16,6 @@
 
     function handleAuctionBuy(info: AuctionData) {
         auctionData = info;
-        console.log(auctionData)
         showModal = true;
     }
 
