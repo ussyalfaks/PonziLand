@@ -25,7 +25,7 @@ trait IActions<T> {
         is_from_bid: bool
     );
 
-    fn claim(ref self: T, land_location: u64);
+    fn claim(ref self: T, land_location: u64, is_from_sell: bool);
 
     fn nuke(ref self: T, land_location: u64);
 
@@ -102,18 +102,22 @@ pub mod actions {
 
             assert(is_valid_position(land_location), 'Land location not valid');
             assert(sell_price > 0, 'sell_price > 0');
-
-            self.payable._validate(caller, token_for_sale, land.sell_price);
-
-            // //find the way to validate the liquidity pool for the new token_for_sale
-            // //some assert();
+            assert(amount_to_stake > 0, 'amount_to_stake > 0');
 
             if is_from_bid {
+                //TODO: we have to create our contract to send the tokens for the first sell
                 //self.payable._pay_us();
+                //self.payable._validate(caller, token_for_sale, land.sell_price);
+
                 self.payable._stake(caller, token_for_sale, amount_to_stake);
             } else {
+                //we see if the buyer has the token and the amount for buy the land
+                assert(land.owner != ContractAddressZeroable::zero(), 'must have a owner');
+                self.claim(land_location, true);
+                self.payable._validate(caller, land.token_used, land.sell_price);
                 self.payable._pay(caller, land.owner, land.sell_price.into());
-                // self.payable._refund_of_stake(land.owner);
+
+                self.payable._refund_of_stake(land.owner);
                 self.payable._stake(caller, token_for_sale, amount_to_stake);
             }
 
@@ -122,25 +126,36 @@ pub mod actions {
             land.sell_price = sell_price;
             land.pool_key = liquidity_pool;
             land.token_used = token_for_sale;
+            land.last_pay_time = Option::None;
 
             world.write_model(@land);
         }
 
-        //see what we want return in this function
-        fn claim(ref self: ContractState, land_location: u64) {
-            //review valid_position function
+        //TODO:what happens if someone wants to call this from voyager?
+        fn claim(ref self: ContractState, land_location: u64, is_from_sell: bool) {
             is_valid_position(land_location);
+
             let mut world = self.world_default();
             let caller = get_caller_address();
             let land: Land = world.read_model(land_location);
 
-            assert(land.owner == caller, 'not the owner');
+            if !is_from_sell {
+                assert(land.owner == caller, 'not the owner')
+            };
+
             let neighbors = self.payable._add_neighbors(world, land_location);
             if neighbors.len() != 0 {
                 for location in neighbors {
                     match self.payable._generate_taxes(world, location) {
-                        Result::Ok(_) => {},
-                        Result::Err(_) => { self.nuke(location); }
+                        Result::Ok(x) => {
+                            if x == 'First taxes' {//do some event
+                            // println!("First taxes");
+                            }
+                        },
+                        Result::Err(_) => {
+                            // println!("nuke");
+                            self.nuke(location);
+                        }
                     };
                 };
             }

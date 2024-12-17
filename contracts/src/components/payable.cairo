@@ -22,7 +22,7 @@ mod PayableComponent {
     // Internal imports
     use ponzi_land::helpers::coord::{is_valid_position, up, down, left, right};
     use ponzi_land::models::land::Land;
-    use ponzi_land::consts::{TAX_RATE};
+    use ponzi_land::consts::{TAX_RATE, BASE_TIME};
     // Local imports
 
     use super::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
@@ -78,7 +78,6 @@ mod PayableComponent {
             amount: u256
         ) {
             let status = self.token_dispatcher.read().transferFrom(sender, recipient, amount);
-
             assert(status, errors::ERC20_PAY_FAILED);
         }
 
@@ -101,7 +100,7 @@ mod PayableComponent {
             amount: u64
         ) {
             let contract_address = get_contract_address();
-            self._initialize(token_address);
+            self._validate(staker, token_address, amount);
             let stake_info = TokenInfo { token_address, amount };
 
             let status = self
@@ -183,7 +182,6 @@ mod PayableComponent {
         ) {
             self._initialize(token_address);
             let buyer_balance = self.token_dispatcher.read().balanceOf(buyer);
-
             assert(buyer_balance >= amount.into(), errors::ERC20_NOT_SUFFICIENT_AMOUNT);
         }
 
@@ -227,12 +225,22 @@ mod PayableComponent {
 
             if neighbors.len() == 0 {
                 return Result::Ok('No neighbors');
+                //if for some nuke the land don't have neighbors we can put
+            //land.last_pay_time = Option::None;
             }
 
-            //TODO:here we have to calculate better, with a elapsed time from the last_pay_time to
-            //current_time
-            let total_taxes: u64 = land.sell_price * TAX_RATE / 100;
+            //TODO: We have to see how we want handle the case where is the first time for pay taxes
+            let current_time = get_block_timestamp();
+            let elapsed_time = match land.last_pay_time {
+                Option::Some(x) => current_time - x,
+                Option::None => {
+                    land.last_pay_time = Option::Some(current_time);
+                    world.write_model(@land);
+                    return Result::Ok('First taxes');
+                }
+            };
 
+            let total_taxes: u64 = (land.sell_price * TAX_RATE * elapsed_time) / (100 * BASE_TIME);
             let current_balance_stake = self.stake_balance.read(land.owner).amount;
 
             if current_balance_stake == 0 {
