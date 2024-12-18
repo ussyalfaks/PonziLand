@@ -219,7 +219,7 @@ mod PayableComponent {
 
         fn _generate_taxes(
             ref self: ComponentState<TContractState>, mut world: WorldStorage, land_location: u64
-        ) -> Result<felt252, felt252> {
+        ) -> Result<u64, felt252> {
             let mut land: Land = world.read_model(land_location);
             //generate taxes for each neighbor of neighbor
             let mut neighbors: Array<u64> = self._add_neighbors(world, land_location);
@@ -227,7 +227,7 @@ mod PayableComponent {
             if neighbors.len() == 0 {
                 land.last_pay_time = get_block_timestamp();
                 world.write_model(@land);
-                return Result::Ok('No neighbors');
+                return Result::Ok(0);
             }
 
             let current_balance_stake = self.stake_balance.read(land.owner).amount;
@@ -261,7 +261,7 @@ mod PayableComponent {
             if is_nuke {
                 Result::Err('Nuke')
             } else {
-                Result::Ok('Ok')
+                Result::Ok(self.stake_balance.read(land.owner).amount)
             }
         }
 

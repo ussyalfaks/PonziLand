@@ -29,16 +29,6 @@ trait IActions<T> {
 
     fn nuke(ref self: T, land_location: u64);
 
-    fn create_land(
-        ref self: T,
-        location: u64,
-        sell_price: u64,
-        token_used: ContractAddress,
-        pool_key: ContractAddress,
-        stake_amount: u64
-    ) -> Land;
-
-
     //getters
     fn get_stake_balance(self: @T, staker: ContractAddress) -> u64;
     fn get_land(self: @T, land_location: u64) -> Land;
@@ -77,6 +67,26 @@ pub mod actions {
         owner_nuked: ContractAddress,
         land_location: u64,
     }
+
+    #[derive(Drop,Serde)]
+    #[dojo::event]
+    pub struct NewLandEvent {
+        #[key]
+        owner_land:ContractAddress,
+        #[key]
+        land_location:u64,
+        token_for_sale:ContractAddress,
+        sell_price:u64
+    }
+
+    #[derive(Drop,Serde)]
+    #[dojo::event]
+    pub struct RemainingStakeEvent{
+        #[key]
+        land_location:u64,
+        remaining_stake:u64
+    }
+
 
     // Storage
     #[storage]
@@ -130,6 +140,12 @@ pub mod actions {
             land.last_pay_time = get_block_timestamp();
 
             world.write_model(@land);
+            world.emit_event(@NewLandEvent{
+                owner_land:land.owner,
+                land_location,
+                token_for_sale,
+                sell_price
+            })
         }
 
         //TODO:what happens if someone wants to call this from voyager?
@@ -148,7 +164,12 @@ pub mod actions {
             if neighbors.len() != 0 {
                 for location in neighbors {
                     match self.payable._generate_taxes(world, location) {
-                        Result::Ok(_) => {},
+                        Result::Ok(remaining_stake) => {if remaining_stake != 0 {
+                            world.emit_event(@RemainingStakeEvent{
+                                land_location:location,
+                                remaining_stake
+                            })
+                        }},
                         Result::Err(_) => {
                             // println!("nuke");
                             self.nuke(location);
@@ -204,30 +225,6 @@ pub mod actions {
                 );
         }
 
-
-        //I will change this for bid function after, only for fast test
-        fn create_land(
-            ref self: ContractState,
-            location: u64,
-            sell_price: u64,
-            token_used: ContractAddress,
-            pool_key: ContractAddress,
-            stake_amount: u64
-        ) -> Land {
-            assert(is_valid_position(location), 'Land location not valid');
-            let mut world = self.world_default();
-            let mut land: Land = world.read_model(location);
-            let caller = get_caller_address();
-            land.owner = caller;
-            land.block_date_bought = get_block_timestamp();
-            land.sell_price = sell_price;
-            land.pool_key = pool_key;
-            land.token_used = token_used;
-            self.payable._stake(caller, token_used, stake_amount);
-
-            world.write_model(@land);
-            land
-        }
 
         //GETTERS FUNCTIONS
 
