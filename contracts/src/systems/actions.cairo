@@ -106,9 +106,10 @@ pub mod actions {
 
             if is_from_bid {
                 //TODO: we have to create our contract to send the tokens for the first sell
-                //self.payable._pay_us();
                 //self.payable._validate(caller, token_for_sale, land.sell_price);
+                //self.payable._pay_us();
 
+                self.claim(land_location, true);
                 self.payable._stake(caller, token_for_sale, amount_to_stake);
             } else {
                 //we see if the buyer has the token and the amount for buy the land
@@ -126,32 +127,28 @@ pub mod actions {
             land.sell_price = sell_price;
             land.pool_key = liquidity_pool;
             land.token_used = token_for_sale;
-            land.last_pay_time = Option::None;
+            land.last_pay_time = get_block_timestamp();
 
             world.write_model(@land);
         }
 
         //TODO:what happens if someone wants to call this from voyager?
         fn claim(ref self: ContractState, land_location: u64, is_from_sell: bool) {
-            is_valid_position(land_location);
+            assert(is_valid_position(land_location), 'Land location not valid');
 
             let mut world = self.world_default();
             let caller = get_caller_address();
-            let land: Land = world.read_model(land_location);
+            let mut land: Land = world.read_model(land_location);
 
             if !is_from_sell {
                 assert(land.owner == caller, 'not the owner')
             };
-
+            //generate taxes for each neighbor of claimer
             let neighbors = self.payable._add_neighbors(world, land_location);
             if neighbors.len() != 0 {
                 for location in neighbors {
                     match self.payable._generate_taxes(world, location) {
-                        Result::Ok(x) => {
-                            if x == 'First taxes' {//do some event
-                            // println!("First taxes");
-                            }
-                        },
+                        Result::Ok(_) => {},
                         Result::Err(_) => {
                             // println!("nuke");
                             self.nuke(location);

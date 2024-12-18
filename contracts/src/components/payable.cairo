@@ -221,31 +221,25 @@ mod PayableComponent {
             ref self: ComponentState<TContractState>, mut world: WorldStorage, land_location: u64
         ) -> Result<felt252, felt252> {
             let mut land: Land = world.read_model(land_location);
+            //generate taxes for each neighbor of neighbor
             let mut neighbors: Array<u64> = self._add_neighbors(world, land_location);
 
             if neighbors.len() == 0 {
+                land.last_pay_time = get_block_timestamp();
+                world.write_model(@land);
                 return Result::Ok('No neighbors');
-                //if for some nuke the land don't have neighbors we can put
-            //land.last_pay_time = Option::None;
             }
 
-            //TODO: We have to see how we want handle the case where is the first time for pay taxes
-            let current_time = get_block_timestamp();
-            let elapsed_time = match land.last_pay_time {
-                Option::Some(x) => current_time - x,
-                Option::None => {
-                    land.last_pay_time = Option::Some(current_time);
-                    world.write_model(@land);
-                    return Result::Ok('First taxes');
-                }
-            };
-
-            let total_taxes: u64 = (land.sell_price * TAX_RATE * elapsed_time) / (100 * BASE_TIME);
             let current_balance_stake = self.stake_balance.read(land.owner).amount;
 
             if current_balance_stake == 0 {
                 return Result::Err('Nuke');
             }
+
+            let current_time = get_block_timestamp();
+            let elapsed_time = current_time - land.last_pay_time;
+
+            let total_taxes: u64 = (land.sell_price * TAX_RATE * elapsed_time) / (100 * BASE_TIME);
 
             let (tax_to_distribute, is_nuke) = if current_balance_stake <= total_taxes {
                 (current_balance_stake, true)
@@ -254,7 +248,6 @@ mod PayableComponent {
             };
 
             let tax_per_neighbor = tax_to_distribute / neighbors.len().into();
-
             for location in neighbors
                 .span() {
                     let neighbor: Land = world.read_model(*location);
@@ -263,6 +256,8 @@ mod PayableComponent {
 
             self._discount_stake_for_taxes(land.owner, tax_to_distribute);
 
+            land.last_pay_time = get_block_timestamp();
+            world.write_model(@land);
             if is_nuke {
                 Result::Err('Nuke')
             } else {

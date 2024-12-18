@@ -41,7 +41,7 @@ fn NEIGHBOR_3() -> ContractAddress {
 }
 
 fn NEW_BUYER() -> ContractAddress {
-    contract_address_const::<'NEIGHBOR_1'>()
+    contract_address_const::<'NEW_BUYER'>()
 }
 
 #[test]
@@ -159,20 +159,29 @@ fn test_claim_and_add_taxes() {
     assert(allowance >= 10000, 'Approval failed');
 
     //create lands
+    set_block_timestamp(100);
+
+    //generate taxes for land 1 to neighboors
 
     // Bid on land for claimer
     actions_system.bid(1280, erc20.contract_address, 500, 1000, LIQUIDITY_POOL());
     let claimer_land: Land = world.read_model(1280);
     assert(claimer_land.owner == RECIPIENT(), 'error with the land owner');
 
+    set_block_timestamp(300);
+
     //Bid for neighbors
     set_contract_address(NEIGHBOR_1());
     erc20_neighbor_1.approve(actions_system.contract_address, 100);
     actions_system.bid(1281, erc20_neighbor_1.contract_address, 500, 100, LIQUIDITY_POOL());
 
+    set_block_timestamp(500);
+
     set_contract_address(NEIGHBOR_2());
     erc20_neighbor_2.approve(actions_system.contract_address, 100000);
     actions_system.bid(1216, erc20_neighbor_2.contract_address, 500, 1000, LIQUIDITY_POOL());
+
+    set_block_timestamp(600);
 
     set_contract_address(NEIGHBOR_3());
     erc20_neighbor_3.approve(actions_system.contract_address, 10000);
@@ -183,12 +192,6 @@ fn test_claim_and_add_taxes() {
     erc20_neighbor_1.approve(RECIPIENT(), 100);
     erc20_neighbor_2.approve(RECIPIENT(), 100);
     erc20_neighbor_3.approve(RECIPIENT(), 100);
-
-    //generate taxes for land 1 to neighboors
-    set_block_timestamp(100);
-
-    //first time for put time data into land.last_pay_time
-    actions_system.claim(1280, false);
 
     //simulate some time difference to generate taxes
     set_block_timestamp(5000);
@@ -245,14 +248,23 @@ fn test_claim_and_buy_actions() {
     assert(erc20.balanceOf(RECIPIENT()) == 998500, 'error in stake erc20');
     assert(erc20_neighbor_1.balanceOf(RECIPIENT()) == 0, 'no taxes yet');
 
+    let land_1280: Land = world.read_model(1280);
+    assert(land_1280.last_pay_time == 100, 'err in set last_pay_time');
+
     // Neighbor bids on adjacent land (1281)
+    set_block_timestamp(600);
+
     set_contract_address(NEIGHBOR_1());
     erc20_neighbor_1.approve(actions_system.contract_address, 100);
-    erc20_neighbor_1.transfer(NEW_BUYER(), 1000);
+    erc20_neighbor_1.transfer(NEW_BUYER(), 100);
+
     actions_system.bid(1281, erc20_neighbor_1.contract_address, 1000, 100, LIQUIDITY_POOL());
 
-    set_contract_address(RECIPIENT());
-    actions_system.claim(1280, false);
+    let land_1280: Land = world.read_model(1280);
+    assert(land_1280.last_pay_time == 600, 'err in change last_pay_time');
+
+    let land_1281: Land = world.read_model(1281);
+    assert(land_1281.last_pay_time == 600, 'err in set last_pay_time');
 
     // Set a new block timestamp to simulate time passing (tax generation)
     set_block_timestamp(3000);
@@ -265,11 +277,23 @@ fn test_claim_and_buy_actions() {
     actions_system
         .buy(1280, erc20_neighbor_1.contract_address, 100, 100, NEW_LIQUIDITY_POOL(), false);
 
+    let land_1280: Land = world.read_model(1280);
+    assert(land_1280.last_pay_time == 3000, 'err in change last_pay_time');
+
+    let land_1281: Land = world.read_model(1281);
+    assert(land_1281.last_pay_time == 3000, 'err in change last_pay_time');
+
     // Verify that the seller received tokens from the sale and also refunded amount from stake
     assert(erc20.balanceOf(RECIPIENT()) == 1000000, 'error in sell land');
 
     // Verify taxes were successfully claimed
     assert(erc20_neighbor_1.balanceOf(RECIPIENT()) > 0, 'error in claim taxes');
+
+    set_block_timestamp(5000);
+
+    //Verify claim for the NEW_BUYER
+    actions_system.claim(1280, false);
+    assert(erc20_neighbor_1.balanceOf(NEW_BUYER()) > 0, 'error in claim normal taxes');
 }
 
 #[test]
@@ -308,13 +332,9 @@ fn test_nuke_action() {
     assert(nuked_land.sell_price != 0, 'sell_price must exist');
     assert(nuked_land.pool_key != ContractAddressZeroable::zero(), 'pool_key must exist');
 
-    // First claim to calculate taxes
-    actions_system.claim(claimer_land.location, false);
-
     // Simulate time progression
     set_block_timestamp(5110);
 
-    // Second claim: taxes accumulate over time
     actions_system.claim(claimer_land.location, false);
 
     // Verify that the land has been nuked
