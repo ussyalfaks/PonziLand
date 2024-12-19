@@ -116,8 +116,7 @@ pub mod actions {
 
             if is_from_bid {
                 //TODO: we have to create our contract to send the tokens for the first sell
-                //self.payable._validate(caller, token_for_sale, land.sell_price);
-                //self.payable._pay_us();
+                //self.payable._pay_to_us();
 
                 self.claim(land_location, true);
                 self.payable._stake(caller, token_for_sale, amount_to_stake);
@@ -125,8 +124,7 @@ pub mod actions {
                 //we see if the buyer has the token and the amount for buy the land
                 assert(land.owner != ContractAddressZeroable::zero(), 'must have a owner');
                 self.claim(land_location, true);
-                self.payable._validate(caller, land.token_used, land.sell_price);
-                self.payable._pay(caller, land.owner, land.sell_price.into());
+                self.payable._pay(caller, land.owner,land.token_used, land.sell_price);
 
                 self.payable._refund_of_stake(land.owner);
                 self.payable._stake(caller, token_for_sale, amount_to_stake);

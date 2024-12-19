@@ -66,20 +66,54 @@ mod PayableComponent {
     impl InternalImpl<
         TContractState, +HasComponent<TContractState>
     > of InternalTrait<TContractState> {
+
         fn _initialize(ref self: ComponentState<TContractState>, token_address: ContractAddress) {
             // Set token_dispatcher
             self.token_dispatcher.write(IERC20CamelDispatcher { contract_address: token_address });
         }
 
+        fn _validate(
+            ref self: ComponentState<TContractState>,
+            buyer: ContractAddress,
+            token_address: ContractAddress,
+            amount: u64
+        ) {
+            self._initialize(token_address);
+            let buyer_balance = self.token_dispatcher.read().balanceOf(buyer);
+            assert(buyer_balance >= amount.into(), errors::ERC20_NOT_SUFFICIENT_AMOUNT);
+        }
+
+
         fn _pay(
-            self: @ComponentState<TContractState>,
+           ref self: ComponentState<TContractState>,
             sender: ContractAddress,
             recipient: ContractAddress,
-            amount: u256
+            token_address:ContractAddress,
+            amount: u64,
         ) {
-            let status = self.token_dispatcher.read().transferFrom(sender, recipient, amount);
+            self._validate(sender,token_address,amount);
+            let status = self.token_dispatcher.read().transferFrom(sender, recipient, amount.into());
             assert(status, errors::ERC20_PAY_FAILED);
         }
+
+
+        fn _pay_to_us(ref self:ComponentState<TContractState>,sender:ContractAddress,token_address:ContractAddress,amount:u64){
+            self._validate(sender,token_address,amount);
+            //CONST OUR_CONTRACT = OXOXOXOX;
+            // let status = self.token_dispatcher.read().transferFrom(sender,OUR_CONTRACT,amount);
+            // assert(status, errors::ERC20_PAY_FAILED);
+        }
+
+
+        fn _pay_from_contract(
+            ref self: ComponentState<TContractState>, recipient: ContractAddress, amount: u64
+        ) -> bool {
+            //   some validation
+            // assert(get_contract_address)
+            let status = self.token_dispatcher.read().transfer(recipient, amount.into());
+            status
+        }
+
 
         fn _refund_of_stake(ref self: ComponentState<TContractState>, recipient: ContractAddress) {
             let info_of_stake = self.stake_balance.read(recipient);
@@ -92,6 +126,7 @@ mod PayableComponent {
 
             assert(status, errors::ERC20_REFUND_FAILED);
         }
+
 
         fn _stake(
             ref self: ComponentState<TContractState>,
@@ -111,6 +146,7 @@ mod PayableComponent {
 
             self.stake_balance.write(staker, stake_info);
         }
+
 
         fn _add_taxes(
             ref self: ComponentState<TContractState>,
@@ -142,6 +178,7 @@ mod PayableComponent {
             };
         }
 
+
         fn _discount_stake_for_taxes(
             ref self: ComponentState<TContractState>, owner_land: ContractAddress, tax_amount: u64
         ) {
@@ -163,26 +200,6 @@ mod PayableComponent {
                         TokenInfo { token_address: stake_balance.token_address, amount: new_amount }
                     );
             }
-        }
-
-        fn _pay_from_contract(
-            ref self: ComponentState<TContractState>, recipient: ContractAddress, amount: u64
-        ) -> bool {
-            //   some validation
-            // assert(get_contract_address)
-            let status = self.token_dispatcher.read().transfer(recipient, amount.into());
-            status
-        }
-
-        fn _validate(
-            ref self: ComponentState<TContractState>,
-            buyer: ContractAddress,
-            token_address: ContractAddress,
-            amount: u64
-        ) {
-            self._initialize(token_address);
-            let buyer_balance = self.token_dispatcher.read().balanceOf(buyer);
-            assert(buyer_balance >= amount.into(), errors::ERC20_NOT_SUFFICIENT_AMOUNT);
         }
 
 
@@ -265,6 +282,7 @@ mod PayableComponent {
             }
         }
 
+
         fn _claim_taxes(
             ref self: ComponentState<TContractState>,
             taxes: Array<TokenInfo>,
@@ -280,6 +298,7 @@ mod PayableComponent {
                 }
             }
         }
+
 
         fn add_if_neighbor_exists(
             self: @ComponentState<TContractState>,
@@ -297,6 +316,7 @@ mod PayableComponent {
                 Option::None => {}
             }
         }
+
 
         fn _discount_pending_taxes(
             ref self: ComponentState<TContractState>, owner_land: ContractAddress
