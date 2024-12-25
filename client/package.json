@@ -28,5 +28,9 @@
 		"@dojoengine/torii-client": "^1.0.0-alpha.30",
 		"@dojoengine/torii-wasm": "^1.0.0-alpha.30",
 		"@dojoengine/utils": "^1.0.0-alpha.30"
-		}
+	},
+	"dependencies": {
+		"@dojoengine/sdk": "^1.0.4-alpha.3.1.2",
+		"vite-plugin-wasm": "^3.3.0"
+	}
 }

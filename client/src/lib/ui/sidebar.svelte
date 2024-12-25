@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { playerLands } from '$lib/api/land'; 
+    import { playerLands } from '$lib/api/mock-land'; 
     import { moveCameraTo } from '$lib/stores/camera';
     let open = $state(false);
 </script>

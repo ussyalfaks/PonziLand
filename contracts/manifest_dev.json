@@ -1,9 +1,9 @@
 {
   "world": {
     "class_hash": "0x79d9ce84b97bcc2a631996c3100d57966fc2f5b061fb1ec4dfd0040976bcac6",
-    "address": "0xe2ea9b5dd9804d13903edf712998943b7d5d606c139dd0f13eeb8f5b84da8d",
-    "seed": "dojo_starter",
-    "name": "Dojo starter",
+    "address": "0x23317fcb2a395dfaed56e3df8269845387546de806e8d481728d8ff4c9b4da8",
+    "seed": "ponzi_land",
+    "name": "Ponzi Land",
     "entrypoints": [
       "uuid",
       "set_metadata",
@@ -1243,8 +1243,8 @@
   },
   "contracts": [
     {
-      "address": "0x58b83bea84766c5725c12e239c1ec9e1fde679ddf709b772fe7a8fdfd3cda27",
-      "class_hash": "0x3f87eccb39c9dc7bb70d372350f4360ae1ff9da43bd72c89a96e336402a569b",
+      "address": "0x37c343348a71c5847306518684814a10913261ea588e6fba51ba537fd200da8",
+      "class_hash": "0x20192a4cf85344f7075a21e10393e6f8d58adddba884848095465a587b4ca28",
       "abi": [
         {
           "type": "impl",
@@ -1299,56 +1299,251 @@
         {
           "type": "impl",
           "name": "ActionsImpl",
-          "interface_name": "dojo_starter::systems::actions::IActions"
+          "interface_name": "ponzi_land::systems::actions::IActions"
         },
         {
           "type": "enum",
-          "name": "dojo_starter::models::Direction",
+          "name": "core::bool",
           "variants": [
             {
-              "name": "None",
+              "name": "False",
               "type": "()"
             },
             {
-              "name": "Left",
-              "type": "()"
-            },
-            {
-              "name": "Right",
-              "type": "()"
-            },
-            {
-              "name": "Up",
-              "type": "()"
-            },
-            {
-              "name": "Down",
+              "name": "True",
               "type": "()"
             }
           ]
         },
         {
+          "type": "enum",
+          "name": "core::option::Option::<core::integer::u64>",
+          "variants": [
+            {
+              "name": "Some",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "None",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "ponzi_land::models::land::Land",
+          "members": [
+            {
+              "name": "location",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "block_date_bought",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "owner",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "sell_price",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "token_used",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "pool_key",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "last_pay_time",
+              "type": "core::option::Option::<core::integer::u64>"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "ponzi_land::components::payable::PayableComponent::TokenInfo",
+          "members": [
+            {
+              "name": "token_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "amount",
+              "type": "core::integer::u64"
+            }
+          ]
+        },
+        {
           "type": "interface",
-          "name": "dojo_starter::systems::actions::IActions",
+          "name": "ponzi_land::systems::actions::IActions",
           "items": [
             {
               "type": "function",
-              "name": "spawn",
-              "inputs": [],
+              "name": "bid",
+              "inputs": [
+                {
+                  "name": "land_location",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "token_for_sale",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "sell_price",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "amount_to_stake",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "liquidity_pool",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
               "outputs": [],
               "state_mutability": "external"
             },
             {
               "type": "function",
-              "name": "move",
+              "name": "buy",
               "inputs": [
                 {
-                  "name": "direction",
-                  "type": "dojo_starter::models::Direction"
+                  "name": "land_location",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "token_for_sale",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "sell_price",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "amount_to_stake",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "liquidity_pool",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "is_from_bid",
+                  "type": "core::bool"
                 }
               ],
               "outputs": [],
               "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "claim",
+              "inputs": [
+                {
+                  "name": "land_location",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "nuke",
+              "inputs": [
+                {
+                  "name": "land_location",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "create_land",
+              "inputs": [
+                {
+                  "name": "location",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "sell_price",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "token_used",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "pool_key",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                },
+                {
+                  "name": "stake_amount",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "ponzi_land::models::land::Land"
+                }
+              ],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "get_stake_balance",
+              "inputs": [
+                {
+                  "name": "staker",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::integer::u64"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_land",
+              "inputs": [
+                {
+                  "name": "land_location",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "ponzi_land::models::land::Land"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_pending_taxes",
+              "inputs": [
+                {
+                  "name": "owner_land",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::array::Array::<ponzi_land::components::payable::PayableComponent::TokenInfo>"
+                }
+              ],
+              "state_mutability": "view"
             }
           ]
         },
@@ -1451,7 +1646,13 @@
         },
         {
           "type": "event",
-          "name": "dojo_starter::systems::actions::actions::Event",
+          "name": "ponzi_land::components::payable::PayableComponent::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "ponzi_land::systems::actions::actions::Event",
           "kind": "enum",
           "variants": [
             {
@@ -1463,16 +1664,24 @@
               "name": "WorldProviderEvent",
               "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
               "kind": "nested"
+            },
+            {
+              "name": "PayableEvent",
+              "type": "ponzi_land::components::payable::PayableComponent::Event",
+              "kind": "flat"
             }
           ]
         }
       ],
       "init_calldata": [],
-      "tag": "dojo_starter-actions",
-      "selector": "0x7a1c71029f2d0b38e3ac89b09931d08b6e48417e079c289ff19a8698d0cba33",
+      "tag": "ponzi_land-actions",
+      "selector": "0x4c6e07326dfd951e1c971bbcec9fc9a3c00c744add51a51c4c3301e7857d1d8",
       "systems": [
-        "spawn",
-        "move",
+        "bid",
+        "buy",
+        "claim",
+        "nuke",
+        "create_land",
         "upgrade"
       ]
     }
@@ -1480,29 +1689,23 @@
   "models": [
     {
       "members": [],
-      "class_hash": "0x7deb48ccf95cc441a0489cfefdae54aeb6f8ec462ba13ff25e23f080e66cc2f",
-      "tag": "dojo_starter-DirectionsAvailable",
-      "selector": "0x77844f1facb51e60e546a9832d56c6bd04fa23be4fd5b57290caae5e9a3c1e4"
+      "class_hash": "0x68a87a1a63f2bbf720fc8cecd041699af0d4aeadb9b60ab2d6f64e2a9a19a54",
+      "tag": "ponzi_land-Land",
+      "selector": "0x6c48c5be88ed61b34bacc5b84e2a1530e3b691a1c89404c7ee5d2f49e1414cc"
     },
     {
       "members": [],
-      "class_hash": "0x70edf8f3be0b118e78f856f3ea9ebb652cba3684abaf7f299bfa6f93bf907c9",
-      "tag": "dojo_starter-Moves",
-      "selector": "0x2a29373f1af8348bd366a990eb3a342ef2cbe5e85160539eaca3441a673f468"
-    },
-    {
-      "members": [],
-      "class_hash": "0x2283c68ecba5c60bbbbd3b00659808a02244468e41a1d2cdba1312d65b83594",
-      "tag": "dojo_starter-Position",
-      "selector": "0x2ac8b4c190f7031b9fc44312e6b047a1dce0b3f2957c33a935ca7846a46dd5b"
+      "class_hash": "0x1b979554455e2bec6c00b229e6efc4ce1133dd9cc96fef0d002451096334509",
+      "tag": "ponzi_land-auction_info",
+      "selector": "0x5b31a1623abaaf8ad8be01a06a59cb746b3ba1114ab05ae443d65d06d8a61ff"
     }
   ],
   "events": [
     {
       "members": [],
-      "class_hash": "0x5be0a05a5df3bd3b4fc17f8b1feb395cb463ced20ea41d4fbb9b86a4d7efc66",
-      "tag": "dojo_starter-Moved",
-      "selector": "0x504403e5c02b6442527721fc464d9ea5fc8f1ee600ab5ccd5c0845d36fd45f1"
+      "class_hash": "0x92682836dedea3233ea898fa0a7f0a64fc025f74453dd4d0b0b6442552ec59",
+      "tag": "ponzi_land-LandNukedEvent",
+      "selector": "0x5ab63e32ba617fc00cdaf4469b0dfffd18eacb82fa7b5036437ca7f4ce3964b"
     }
   ]
 }

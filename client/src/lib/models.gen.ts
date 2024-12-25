@@ -1,5 +1,15 @@
 import type { SchemaType } from "@dojoengine/sdk";
 
+// Type definition for `ponzi_land::models::land::LandValue` struct
+export interface LandValue {
+	fieldOrder: string[];
+	block_date_bought: number;
+	owner: string;
+	sell_price: number;
+	token_used: string;
+	pool_key: string;
+}
+
 // Type definition for `ponzi_land::models::land::Land` struct
 export interface Land {
 	fieldOrder: string[];
@@ -11,20 +21,10 @@ export interface Land {
 	pool_key: string;
 }
 
-// Type definition for `ponzi_land::models::land::LandValue` struct
-export interface LandValue {
-	fieldOrder: string[];
-	block_date_bought: number;
-	owner: string;
-	sell_price: number;
-	token_used: string;
-	pool_key: string;
-}
-
 export interface PonziLandSchemaType extends SchemaType {
 	ponzi_land: {
-		Land: Land,
 		LandValue: LandValue,
+		Land: Land,
 		ERC__Balance: ERC__Balance,
 		ERC__Token: ERC__Token,
 		ERC__Transfer: ERC__Transfer,
@@ -32,17 +32,17 @@ export interface PonziLandSchemaType extends SchemaType {
 }
 export const schema: PonziLandSchemaType = {
 	ponzi_land: {
-		Land: {
-			fieldOrder: ['location', 'block_date_bought', 'owner', 'sell_price', 'token_used', 'pool_key'],
-			location: 0,
+		LandValue: {
+			fieldOrder: ['block_date_bought', 'owner', 'sell_price', 'token_used', 'pool_key'],
 			block_date_bought: 0,
 			owner: "",
 			sell_price: 0,
 			token_used: "",
 			pool_key: "",
 		},
-		LandValue: {
-			fieldOrder: ['block_date_bought', 'owner', 'sell_price', 'token_used', 'pool_key'],
+		Land: {
+			fieldOrder: ['location', 'block_date_bought', 'owner', 'sell_price', 'token_used', 'pool_key'],
+			location: 0,
 			block_date_bought: 0,
 			owner: "",
 			sell_price: 0,
