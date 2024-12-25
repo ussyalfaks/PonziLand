@@ -2,28 +2,27 @@
 
 use starknet::ContractAddress;
 use openzeppelin_token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-// Interfaces
-
-// #[starknet::interface]
-// trait IERC20<TContractState> {
-//     fn transfer(ref self: TContractState, recipient: ContractAddress, amount: u256) -> bool;
-//     fn transferFrom(
-//         ref self: TContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256
-//     ) -> bool;
-// }
 
 // Component
 
 #[starknet::component]
 mod PayableComponent {
+    //use dojo imports
+    use dojo::world::WorldStorage;
+    use dojo::model::{ModelStorage, ModelValueStorage};
+
     // Starknet imports
-
     use starknet::{ContractAddress};
-    use starknet::info::get_contract_address;
-    use starknet::storage::Map;
+    use starknet::info::{get_contract_address, get_block_timestamp};
 
+    use starknet::storage::{
+        Map, StoragePointerReadAccess, StoragePointerWriteAccess, Vec, VecTrait, MutableVecTrait
+    };
+    use starknet::contract_address::ContractAddressZeroable;
     // Internal imports
-
+    use ponzi_land::helpers::coord::{is_valid_position, up, down, left, right};
+    use ponzi_land::models::land::Land;
+    use ponzi_land::consts::{TAX_RATE};
     // Local imports
 
     use super::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
@@ -38,8 +37,8 @@ mod PayableComponent {
         const ERC20_NOT_SUFFICIENT_AMOUNT: felt252 = 'ERC20: not sufficient amount';
     }
 
-    #[derive(Drop, Serde, starknet::Store)]
-    struct StakeInfo {
+    #[derive(Drop, Serde, starknet::Store, Debug)]
+    pub struct TokenInfo {
         token_address: ContractAddress,
         amount: u64,
     }
@@ -48,10 +47,13 @@ mod PayableComponent {
 
     #[storage]
     struct Storage {
-        // token_address: ContractAddress,
         token_dispatcher: IERC20CamelDispatcher,
-        //this stake_balance can be in another component
-        stake_balance: Map<ContractAddress, StakeInfo>
+        stake_balance: Map<ContractAddress, TokenInfo>,
+        pending_taxes: Map<(ContractAddress, u64), TokenInfo>,
+        pending_taxes_length: Map<ContractAddress, u64>,
+        //this for the current version of cairo don't work
+    // pending_taxes:Map<ContractAddress,Vec<TokenInfo>>
+
     }
 
     // Events
@@ -71,11 +73,11 @@ mod PayableComponent {
 
         fn _pay(
             self: @ComponentState<TContractState>,
-            buyer: ContractAddress,
-            seller: ContractAddress,
+            sender: ContractAddress,
+            recipient: ContractAddress,
             amount: u256
         ) {
-            let status = self.token_dispatcher.read().transferFrom(buyer, seller, amount);
+            let status = self.token_dispatcher.read().transferFrom(sender, recipient, amount);
 
             assert(status, errors::ERC20_PAY_FAILED);
         }
@@ -98,13 +100,79 @@ mod PayableComponent {
             token_address: ContractAddress,
             amount: u64
         ) {
-            let contract = get_contract_address();
+            let contract_address = get_contract_address();
             self._initialize(token_address);
-            let stake_info = StakeInfo { token_address, amount };
-            let status = self.token_dispatcher.read().transferFrom(staker, contract, amount.into());
+            let stake_info = TokenInfo { token_address, amount };
+
+            let status = self
+                .token_dispatcher
+                .read()
+                .transferFrom(staker, contract_address, amount.into());
             assert(status, errors::ERC20_STAKE_FAILED);
 
             self.stake_balance.write(staker, stake_info);
+        }
+
+        fn _add_taxes(
+            ref self: ComponentState<TContractState>,
+            owner_land: ContractAddress,
+            token_address: ContractAddress,
+            amount: u64
+        ) {
+            // to see how many of diferents tokens the person can have
+            let taxes_length = self.pending_taxes_length.read(owner_land);
+            //to see if the token of new taxes already exists
+            let mut found = false;
+            //find existing token and sum the amount
+            for mut i in 0
+                ..taxes_length {
+                    let mut token_info = self.pending_taxes.read((owner_land, i));
+                    if token_info.token_address == token_address {
+                        token_info.amount += amount;
+                        self.pending_taxes.write((owner_land, i), token_info);
+                        found = true;
+                        break;
+                    }
+                };
+
+            if !found {
+                self
+                    .pending_taxes
+                    .write((owner_land, taxes_length), TokenInfo { token_address, amount });
+                self.pending_taxes_length.write(owner_land, taxes_length + 1);
+            };
+        }
+
+        fn _discount_stake_for_taxes(
+            ref self: ComponentState<TContractState>, owner_land: ContractAddress, tax_amount: u64
+        ) {
+            let stake_balance = self.stake_balance.read(owner_land);
+            if stake_balance.amount <= tax_amount {
+                let new_amount = 0;
+                self
+                    .stake_balance
+                    .write(
+                        owner_land,
+                        TokenInfo { token_address: stake_balance.token_address, amount: new_amount }
+                    );
+            } else {
+                let new_amount = stake_balance.amount - tax_amount;
+                self
+                    .stake_balance
+                    .write(
+                        owner_land,
+                        TokenInfo { token_address: stake_balance.token_address, amount: new_amount }
+                    );
+            }
+        }
+
+        fn _pay_from_contract(
+            ref self: ComponentState<TContractState>, recipient: ContractAddress, amount: u64
+        ) -> bool {
+            //   some validation
+            // assert(get_contract_address)
+            let status = self.token_dispatcher.read().transfer(recipient, amount.into());
+            status
         }
 
         fn _validate(
@@ -117,6 +185,132 @@ mod PayableComponent {
             let buyer_balance = self.token_dispatcher.read().balanceOf(buyer);
 
             assert(buyer_balance >= amount.into(), errors::ERC20_NOT_SUFFICIENT_AMOUNT);
+        }
+
+
+        fn _add_neighbors(
+            self: @ComponentState<TContractState>, mut world: WorldStorage, land_location: u64
+        ) -> Array<u64> {
+            let mut neighbors: Array<u64> = ArrayTrait::new();
+
+            self.add_if_neighbor_exists(world, ref neighbors, left(land_location));
+            self.add_if_neighbor_exists(world, ref neighbors, right(land_location));
+            self.add_if_neighbor_exists(world, ref neighbors, up(land_location));
+            self.add_if_neighbor_exists(world, ref neighbors, down(land_location));
+
+            // For diagonal neighbors, we need to handle nested Options
+            match up(land_location) {
+                Option::Some(up_location) => {
+                    self.add_if_neighbor_exists(world, ref neighbors, left(up_location));
+                    self.add_if_neighbor_exists(world, ref neighbors, right(up_location));
+                },
+                Option::None => {}
+            }
+
+            match down(land_location) {
+                Option::Some(down_location) => {
+                    self.add_if_neighbor_exists(world, ref neighbors, left(down_location));
+                    self.add_if_neighbor_exists(world, ref neighbors, right(down_location));
+                },
+                Option::None => {}
+            }
+
+            neighbors
+        }
+
+
+        fn _generate_taxes(
+            ref self: ComponentState<TContractState>, mut world: WorldStorage, land_location: u64
+        ) -> Result<felt252, felt252> {
+            let mut land: Land = world.read_model(land_location);
+            let mut neighbors: Array<u64> = self._add_neighbors(world, land_location);
+
+            if neighbors.len() == 0 {
+                return Result::Ok('No neighbors');
+            }
+
+            //TODO:here we have to calculate better, with a elapsed time from the last_pay_time to
+            //current_time
+            let total_taxes: u64 = land.sell_price * TAX_RATE / 100;
+
+            let current_balance_stake = self.stake_balance.read(land.owner).amount;
+
+            if current_balance_stake == 0 {
+                return Result::Err('Nuke');
+            }
+
+            let (tax_to_distribute, is_nuke) = if current_balance_stake <= total_taxes {
+                (current_balance_stake, true)
+            } else {
+                (total_taxes, false)
+            };
+
+            let tax_per_neighbor = tax_to_distribute / neighbors.len().into();
+
+            for location in neighbors
+                .span() {
+                    let neighbor: Land = world.read_model(*location);
+                    self._add_taxes(neighbor.owner, land.token_used, tax_per_neighbor);
+                };
+
+            self._discount_stake_for_taxes(land.owner, tax_to_distribute);
+
+            if is_nuke {
+                Result::Err('Nuke')
+            } else {
+                Result::Ok('Ok')
+            }
+        }
+
+        fn _claim_taxes(
+            ref self: ComponentState<TContractState>,
+            taxes: Array<TokenInfo>,
+            owner_land: ContractAddress
+        ) {
+            for i in taxes {
+                if i.amount > 0 {
+                    self._initialize(i.token_address);
+                    let status = self._pay_from_contract(owner_land, i.amount);
+                    if status {
+                        self._discount_pending_taxes(owner_land);
+                    }
+                }
+            }
+        }
+
+        fn add_if_neighbor_exists(
+            self: @ComponentState<TContractState>,
+            mut world: WorldStorage,
+            ref neighbors: Array<u64>,
+            land_location: Option<u64>,
+        ) {
+            match land_location {
+                Option::Some(x) => {
+                    let land: Land = world.read_model(x);
+                    if land.owner != ContractAddressZeroable::zero() {
+                        neighbors.append(x)
+                    }
+                },
+                Option::None => {}
+            }
+        }
+
+        fn _discount_pending_taxes(
+            ref self: ComponentState<TContractState>, owner_land: ContractAddress
+        ) {
+            let taxes_length = self.pending_taxes_length.read(owner_land);
+            for mut i in 0
+                ..taxes_length {
+                    let mut pending_tax = self.pending_taxes.read((owner_land, i));
+                    if pending_tax.amount > 0 {
+                        self
+                            .pending_taxes
+                            .write(
+                                (owner_land, i),
+                                TokenInfo { token_address: pending_tax.token_address, amount: 0 }
+                            );
+                    };
+                };
         }
     }
 }

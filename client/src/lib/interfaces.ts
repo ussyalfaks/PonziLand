@@ -24,6 +24,7 @@ export interface TileInfo {
     sellPrice: number;
     tokenUsed: string;
     owner?: string;
+    tokenAddress: string;
 }
 
 export interface BuyData {
@@ -34,4 +35,15 @@ export interface BuyData {
     }>;
     stakeAmount: string;
     sellPrice: string;
+}
+
+export interface Bid {
+    price: number;
+    bidder: string;
+    timestamp: number;
+}
+
+export interface AuctionData {
+    active: boolean;
+    bids: Bid[];
 }

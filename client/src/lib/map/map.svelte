@@ -24,7 +24,8 @@
                 type: landData.owner ? 'house' : 'grass',
                 owner: landData.owner,
                 sellPrice: landData.sell_price,
-                tokenUsed: landData.token_used
+                tokenUsed: landData.token_used,
+                tokenAddress: landData.token_address
             };
         })
     );
@@ -136,7 +137,7 @@
             {#each tiles as row, y}
                 <div class="row">
                     {#each row as tile, x}
-                        <Tile type={tile.type} location={x + y * MAP_SIZE} owner={tile.owner} sellPrice={tile.sellPrice} tokenUsed={tile.tokenUsed} />
+                        <Tile type={tile.type} location={x + y * MAP_SIZE} owner={tile.owner} sellPrice={tile.sellPrice} tokenUsed={tile.tokenUsed} tokenAddress={tile.tokenAddress} />
                     {/each}
                 </div>
             {/each}

@@ -21,6 +21,7 @@ mod setup {
     use ponzi_land::models::land::{Land, m_Land};
     use ponzi_land::systems::actions::{actions, IActionsDispatcher, IActionsDispatcherTrait};
 
+
     fn RECIPIENT() -> ContractAddress {
         contract_address_const::<'RECIPIENT'>()
     }
@@ -30,7 +31,7 @@ mod setup {
         let ndef = NamespaceDef {
             namespace: "ponzi_land", resources: [
                 TestResource::Model(m_Land::TEST_CLASS_HASH),
-                // TestResource::Event(actions::e_Winner::TEST_CLASS_HASH.try_into().unwrap()),
+                TestResource::Event(actions::e_LandNukedEvent::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Contract(actions::TEST_CLASS_HASH)
             ].span()
         };
@@ -45,9 +46,7 @@ mod setup {
         ].span()
     }
 
-    fn deploy_erc20() -> IERC20CamelDispatcher {
-        // println!("{:?}",MyToken::TEST_CLASS_HASH);
-        let recipient = RECIPIENT();
+    fn deploy_erc20(recipient: ContractAddress) -> IERC20CamelDispatcher {
         let mut calldata = array![];
         Serde::serialize(@recipient, ref calldata);
         let (address, _) = starknet::deploy_syscall(
@@ -58,31 +57,30 @@ mod setup {
         )
             .expect('ERC20 deploy failed');
 
-        // println!("{:?}",address);
         IERC20CamelDispatcher { contract_address: address }
     }
 
     fn create_setup() -> (WorldStorage, IActionsDispatcher, IERC20CamelDispatcher) {
         let ndef = namespace_def();
         let cdf = contract_defs();
-        let erc20 = deploy_erc20();
+        let erc20 = deploy_erc20(RECIPIENT());
         let mut world = spawn_test_world([ndef].span());
         world.sync_perms_and_inits(cdf);
         let (contract_address, _) = world.dns(@"actions").unwrap();
         let actions_system = IActionsDispatcher { contract_address };
         (world, actions_system, erc20)
     }
-// #[test]
+    // #[test]
 // fn test_deploy_erc20() {
 //     let erc20 = deploy_erc20();
 //     // assert(erc20.contract_address, '');
 //     println!("erc20 {:?}", erc20.contract_address);
 // }
 
-// #[test]
+    // #[test]
 // fn test_create_setup(){
 //     let (world,actions_system)= create_setup();
 
-// }
+    // }
 
 }
