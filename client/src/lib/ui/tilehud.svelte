@@ -1,7 +1,7 @@
 <script lang="ts">
     import { tileHUD } from '$lib/stores/stores';
     import { mousePosCoords } from '$lib/stores/stores';
-    import { getAuctionData } from '$lib/api/land';
+    import { getAuctionData } from '$lib/api/mock-land';
     import type { AuctionData } from '$lib/interfaces';
 
     let auctionInfo = $state<AuctionData | null>(null);
