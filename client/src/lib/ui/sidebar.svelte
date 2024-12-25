@@ -1,7 +1,6 @@
 <script lang="ts">
     import YourLands from './sidebar/yourlands.svelte';
     import YourBids from './sidebar/yourbids.svelte';
-    
     let open = $state(false);
     let activeTab = $state('lands'); // 'lands' or 'bids'
 </script>

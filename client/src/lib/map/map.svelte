@@ -1,8 +1,9 @@
 <script lang="ts">
     import Tile from './tile.svelte';
-    import { mockLandData } from '$lib/api/land';
+    import { mockLandData } from '$lib/api/mock-land';
     import { mousePosCoords } from '$lib/stores/stores';
     import { cameraPosition } from '$lib/stores/camera';
+    import {useLands} from '$lib/api/land.svelte';
 
     const MAP_SIZE = 64;
     const TILE_SIZE = 32;
@@ -12,6 +13,8 @@
     
     // Add container ref to get dimensions
     let mapWrapper: HTMLElement;
+    const landStore = useLands();
+    $inspect('aaaaaaa', $landStore);
 
     const tiles = Array(MAP_SIZE).fill(null).map((_, row) => 
         Array(MAP_SIZE).fill(null).map((_, col) => {
