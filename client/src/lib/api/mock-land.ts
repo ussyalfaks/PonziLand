@@ -17,9 +17,10 @@ export const mockPlayerAddress = '0x1234567890abcdef';
 
 // Add token address constants
 const TOKEN_ADDRESSES = {
-    'LORDS': '0x124afc6f5320456789fed23432d11f11acc11111',
+    'LORDS': '0x124afc6f5a0fc34cc1af16a1cdee98ffb20c31f11acc11111',
     'ETH': '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7',
-    'STARK': '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d'
+    'STARK': '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d',
+    'PAPER': '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
 };
 
 // Add this interface for bid structure
@@ -84,7 +85,7 @@ export const mockLandData = Array.from({ length: 64 * 64 }, (_, index) => {
     }
     
     const isMockPlayerOwner = Math.random() < 0.01;
-    const tokenType = ['LORDS', 'ETH', 'STARK'][Math.floor(Math.random() * 3)] as keyof typeof TOKEN_ADDRESSES;
+    const tokenType = ['LORDS', 'ETH', 'STARK', 'PAPER'][Math.floor(Math.random() * 4)] as keyof typeof TOKEN_ADDRESSES;
     
     return {
         location: index,
@@ -93,7 +94,7 @@ export const mockLandData = Array.from({ length: 64 * 64 }, (_, index) => {
         sell_price: Math.floor(Math.random() * 1000000),
         token_used: tokenType,
         token_address: TOKEN_ADDRESSES[tokenType],
-        pool_key: ['pool_lords', 'pool_eth', 'pool_stark'][Math.floor(Math.random() * 3)]
+        pool_key: ['pool_lords', 'pool_eth', 'pool_stark', 'pool_paper'][Math.floor(Math.random() * 4)]
     };
 });
 
