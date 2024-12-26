@@ -38,6 +38,32 @@
           "premium": "/images/tokens/usdt/castles/premium.png"
         }
       }
+    },
+    {
+      "name": "LORDS",
+      "address": "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8",
+      "lpAddress": "0x04d0390b777b424e43839cd1e744799f3de6c176c7e32c1812a41dbd9c19db6a",
+      "images": {
+        "icon": "/images/tokens/lords/icon.svg",
+        "castle": {
+          "basic": "/images/tokens/lords/castles/basic.png",
+          "advanced": "/images/tokens/lords/castles/advanced.png",
+          "premium": "/images/tokens/lords/castles/premium.png"
+        }
+      }
+    },
+    {
+      "name": "PAPER",
+      "address": "0x068f5c6a61780768455de69077e07e89787839bf8166decfbf92b645209c0fb8",
+      "lpAddress": "0x04d0390b777b424e43839cd1e744799f3de6c176c7e32c1812a41dbd9c19db6a",
+      "images": {
+        "icon": "/images/tokens/paper/icon.svg",
+        "castle": {
+          "basic": "/images/tokens/paper/castles/basic.png",
+          "advanced": "/images/tokens/paper/castles/advanced.png",
+          "premium": "/images/tokens/paper/castles/premium.png"
+        }
+      }
     }
   ],
   "commonImages": {
