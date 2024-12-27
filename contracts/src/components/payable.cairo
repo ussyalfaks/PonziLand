@@ -66,7 +66,6 @@ mod PayableComponent {
     impl InternalImpl<
         TContractState, +HasComponent<TContractState>
     > of InternalTrait<TContractState> {
-
         fn _initialize(ref self: ComponentState<TContractState>, token_address: ContractAddress) {
             // Set token_dispatcher
             self.token_dispatcher.write(IERC20CamelDispatcher { contract_address: token_address });
@@ -85,23 +84,31 @@ mod PayableComponent {
 
 
         fn _pay(
-           ref self: ComponentState<TContractState>,
+            ref self: ComponentState<TContractState>,
             sender: ContractAddress,
             recipient: ContractAddress,
-            token_address:ContractAddress,
+            token_address: ContractAddress,
             amount: u64,
         ) {
-            self._validate(sender,token_address,amount);
-            let status = self.token_dispatcher.read().transferFrom(sender, recipient, amount.into());
+            self._validate(sender, token_address, amount);
+            let status = self
+                .token_dispatcher
+                .read()
+                .transferFrom(sender, recipient, amount.into());
             assert(status, errors::ERC20_PAY_FAILED);
         }
 
 
-        fn _pay_to_us(ref self:ComponentState<TContractState>,sender:ContractAddress,token_address:ContractAddress,amount:u64){
-            self._validate(sender,token_address,amount);
+        fn _pay_to_us(
+            ref self: ComponentState<TContractState>,
+            sender: ContractAddress,
+            token_address: ContractAddress,
+            amount: u64
+        ) {
+            self._validate(sender, token_address, amount);
             //CONST OUR_CONTRACT = OXOXOXOX;
-            // let status = self.token_dispatcher.read().transferFrom(sender,OUR_CONTRACT,amount);
-            // assert(status, errors::ERC20_PAY_FAILED);
+        // let status = self.token_dispatcher.read().transferFrom(sender,OUR_CONTRACT,amount);
+        // assert(status, errors::ERC20_PAY_FAILED);
         }
 
 
@@ -183,23 +190,18 @@ mod PayableComponent {
             ref self: ComponentState<TContractState>, owner_land: ContractAddress, tax_amount: u64
         ) {
             let stake_balance = self.stake_balance.read(owner_land);
-            if stake_balance.amount <= tax_amount {
-                let new_amount = 0;
-                self
-                    .stake_balance
-                    .write(
-                        owner_land,
-                        TokenInfo { token_address: stake_balance.token_address, amount: new_amount }
-                    );
+            let new_amount = if stake_balance.amount <= tax_amount {
+                0
             } else {
-                let new_amount = stake_balance.amount - tax_amount;
-                self
-                    .stake_balance
-                    .write(
-                        owner_land,
-                        TokenInfo { token_address: stake_balance.token_address, amount: new_amount }
-                    );
-            }
+                stake_balance.amount - tax_amount
+            };
+
+            self
+                .stake_balance
+                .write(
+                    owner_land,
+                    TokenInfo { token_address: stake_balance.token_address, amount: new_amount }
+                );
         }
 
 
@@ -239,8 +241,8 @@ mod PayableComponent {
         ) -> Result<u64, felt252> {
             let mut land: Land = world.read_model(land_location);
             //generate taxes for each neighbor of neighbor
-            let mut neighbors: Array<u64> = self._add_neighbors(world, land_location);
 
+            let mut neighbors: Array<u64> = self._add_neighbors(world, land_location);
             if neighbors.len() == 0 {
                 land.last_pay_time = get_block_timestamp();
                 world.write_model(@land);
@@ -258,6 +260,8 @@ mod PayableComponent {
 
             let total_taxes: u64 = (land.sell_price * TAX_RATE * elapsed_time) / (100 * BASE_TIME);
 
+            //if we dont have enough stake to pay the taxes,we distrubute the total amount of stake
+            //and after we nuke the land
             let (tax_to_distribute, is_nuke) = if current_balance_stake <= total_taxes {
                 (current_balance_stake, true)
             } else {
