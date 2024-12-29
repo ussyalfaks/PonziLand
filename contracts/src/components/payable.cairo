@@ -20,7 +20,7 @@ mod PayableComponent {
     };
     use starknet::contract_address::ContractAddressZeroable;
     // Internal imports
-    use ponzi_land::helpers::coord::{is_valid_position, up, down, left, right};
+    use ponzi_land::helpers::coord::{is_valid_position, up, down, left, right, max_neighbors};
     use ponzi_land::models::land::Land;
     use ponzi_land::consts::{TAX_RATE, BASE_TIME};
     // Local imports
@@ -268,7 +268,7 @@ mod PayableComponent {
                 (total_taxes, false)
             };
 
-            let tax_per_neighbor = tax_to_distribute / neighbors.len().into();
+            let tax_per_neighbor = tax_to_distribute / max_neighbors(land_location);
             for location in neighbors
                 .span() {
                     let neighbor: Land = world.read_model(*location);
