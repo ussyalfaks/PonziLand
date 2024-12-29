@@ -23,3 +23,21 @@ pub struct auction_info {
     pub last_bid_time: u64,
     pub auction_price: u64,
 }
+
+#[generate_trait]
+impl LandImpl of LandTrait {
+    #[inline(always)]
+    fn new(
+        location: u64,
+        owner: ContractAddress,
+        token_used: ContractAddress,
+        sell_price: u64,
+        pool_key: ContractAddress,
+        last_pay_time: u64,
+        block_date_bought: u64,
+    ) -> Land {
+        Land {
+            location, owner, token_used, sell_price, pool_key, last_pay_time, block_date_bought,
+        }
+    }
+}

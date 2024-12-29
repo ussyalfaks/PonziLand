@@ -15,6 +15,7 @@ mod components {
 }
 
 mod consts;
+mod store;
 
 mod tokens {
     mod erc20;

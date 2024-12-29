@@ -8,7 +8,6 @@ use openzeppelin_token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDis
 #[starknet::component]
 mod PayableComponent {
     //use dojo imports
-    use dojo::world::WorldStorage;
     use dojo::model::{ModelStorage, ModelValueStorage};
 
     // Starknet imports
@@ -23,6 +22,7 @@ mod PayableComponent {
     use ponzi_land::helpers::coord::{is_valid_position, up, down, left, right, max_neighbors};
     use ponzi_land::models::land::Land;
     use ponzi_land::consts::{TAX_RATE, BASE_TIME};
+     use ponzi_land::store::{Store,StoreTrait};
     // Local imports
 
     use super::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
@@ -206,28 +206,28 @@ mod PayableComponent {
 
 
         fn _add_neighbors(
-            self: @ComponentState<TContractState>, mut world: WorldStorage, land_location: u64
+            self: @ComponentState<TContractState>, mut store: Store, land_location: u64
         ) -> Array<u64> {
             let mut neighbors: Array<u64> = ArrayTrait::new();
 
-            self.add_if_neighbor_exists(world, ref neighbors, left(land_location));
-            self.add_if_neighbor_exists(world, ref neighbors, right(land_location));
-            self.add_if_neighbor_exists(world, ref neighbors, up(land_location));
-            self.add_if_neighbor_exists(world, ref neighbors, down(land_location));
+            self.add_if_neighbor_exists(store, ref neighbors, left(land_location));
+            self.add_if_neighbor_exists(store, ref neighbors, right(land_location));
+            self.add_if_neighbor_exists(store, ref neighbors, up(land_location));
+            self.add_if_neighbor_exists(store, ref neighbors, down(land_location));
 
             // For diagonal neighbors, we need to handle nested Options
             match up(land_location) {
                 Option::Some(up_location) => {
-                    self.add_if_neighbor_exists(world, ref neighbors, left(up_location));
-                    self.add_if_neighbor_exists(world, ref neighbors, right(up_location));
+                    self.add_if_neighbor_exists(store, ref neighbors, left(up_location));
+                    self.add_if_neighbor_exists(store, ref neighbors, right(up_location));
                 },
                 Option::None => {}
             }
 
             match down(land_location) {
                 Option::Some(down_location) => {
-                    self.add_if_neighbor_exists(world, ref neighbors, left(down_location));
-                    self.add_if_neighbor_exists(world, ref neighbors, right(down_location));
+                    self.add_if_neighbor_exists(store, ref neighbors, left(down_location));
+                    self.add_if_neighbor_exists(store, ref neighbors, right(down_location));
                 },
                 Option::None => {}
             }
@@ -237,15 +237,15 @@ mod PayableComponent {
 
 
         fn _generate_taxes(
-            ref self: ComponentState<TContractState>, mut world: WorldStorage, land_location: u64
+            ref self: ComponentState<TContractState>, mut store: Store, land_location: u64
         ) -> Result<u64, felt252> {
-            let mut land: Land = world.read_model(land_location);
+            let mut land = store.land(land_location);
             //generate taxes for each neighbor of neighbor
 
-            let mut neighbors: Array<u64> = self._add_neighbors(world, land_location);
+            let mut neighbors: Array<u64> = self._add_neighbors(store, land_location);
             if neighbors.len() == 0 {
                 land.last_pay_time = get_block_timestamp();
-                world.write_model(@land);
+                store.set_land(land);
                 return Result::Ok(0);
             }
 
@@ -271,14 +271,14 @@ mod PayableComponent {
             let tax_per_neighbor = tax_to_distribute / max_neighbors(land_location);
             for location in neighbors
                 .span() {
-                    let neighbor: Land = world.read_model(*location);
+                    let neighbor: Land = store.land(*location);
                     self._add_taxes(neighbor.owner, land.token_used, tax_per_neighbor);
                 };
 
             self._discount_stake_for_taxes(land.owner, tax_to_distribute);
 
             land.last_pay_time = get_block_timestamp();
-            world.write_model(@land);
+            store.set_land(land);
             if is_nuke {
                 Result::Err('Nuke')
             } else {
@@ -306,15 +306,15 @@ mod PayableComponent {
 
         fn add_if_neighbor_exists(
             self: @ComponentState<TContractState>,
-            mut world: WorldStorage,
+            mut store: Store,
             ref neighbors: Array<u64>,
             land_location: Option<u64>,
         ) {
             match land_location {
-                Option::Some(x) => {
-                    let land: Land = world.read_model(x);
+                Option::Some(location) => {
+                    let land = store.land(location);
                     if land.owner != ContractAddressZeroable::zero() {
-                        neighbors.append(x)
+                        neighbors.append(location)
                     }
                 },
                 Option::None => {}
