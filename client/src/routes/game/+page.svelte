@@ -19,5 +19,8 @@
   {:then _}
     <Map />
     <Ui />
+  {:catch _}
+    <Map />
+    <Ui />
   {/await}
 </div>

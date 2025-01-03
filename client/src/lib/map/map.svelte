@@ -13,7 +13,12 @@
     
     // Add container ref to get dimensions
     let mapWrapper: HTMLElement;
-    const landStore = useLands();
+    let landStore;
+    try {
+        landStore = useLands();
+    } catch (e) {
+        console.log('Error in map.svelte', e);
+    }
     $inspect('aaaaaaa', $landStore);
 
     const tiles = Array(MAP_SIZE).fill(null).map((_, row) => 
