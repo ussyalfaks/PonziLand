@@ -22,10 +22,9 @@ trait IActions<T> {
         sell_price: u64,
         amount_to_stake: u64,
         liquidity_pool: ContractAddress,
-        is_from_bid: bool
     );
 
-    fn claim(ref self: T, land_location: u64, is_from_sell: bool);
+    fn claim(ref self: T, land_location: u64);
 
     fn nuke(ref self: T, land_location: u64);
 
@@ -42,10 +41,11 @@ pub mod actions {
     use starknet::{ContractAddress, get_caller_address, get_block_timestamp, get_contract_address};
     use starknet::contract_address::ContractAddressZeroable;
     use dojo::model::{ModelStorage, ModelValueStorage};
-    use ponzi_land::models::land::Land;
+    use ponzi_land::models::land::{Land, LandTrait};
     use ponzi_land::components::payable::{PayableComponent, PayableComponent::TokenInfo};
     use ponzi_land::helpers::coord::{is_valid_position, up, down, left, right};
     use ponzi_land::consts::{TAX_RATE};
+    use ponzi_land::store::{Store,StoreTrait};
     use dojo::event::EventStorage;
 
     component!(path: PayableComponent, storage: payable, event: PayableEvent);
@@ -68,23 +68,23 @@ pub mod actions {
         land_location: u64,
     }
 
-    #[derive(Drop,Serde)]
+    #[derive(Drop, Serde)]
     #[dojo::event]
     pub struct NewLandEvent {
         #[key]
-        owner_land:ContractAddress,
+        owner_land: ContractAddress,
         #[key]
-        land_location:u64,
-        token_for_sale:ContractAddress,
-        sell_price:u64
+        land_location: u64,
+        token_for_sale: ContractAddress,
+        sell_price: u64
     }
 
-    #[derive(Drop,Serde)]
+    #[derive(Drop, Serde)]
     #[dojo::event]
-    pub struct RemainingStakeEvent{
+    pub struct RemainingStakeEvent {
         #[key]
-        land_location:u64,
-        remaining_stake:u64
+        land_location: u64,
+        remaining_stake: u64
     }
 
 
@@ -104,96 +104,70 @@ pub mod actions {
             sell_price: u64,
             amount_to_stake: u64,
             liquidity_pool: ContractAddress,
-            is_from_bid: bool
         ) {
-            let mut world = self.world_default();
-            let caller = get_caller_address();
-            let mut land: Land = world.read_model(land_location);
-
             assert(is_valid_position(land_location), 'Land location not valid');
             assert(sell_price > 0, 'sell_price > 0');
             assert(amount_to_stake > 0, 'amount_to_stake > 0');
 
-            if is_from_bid {
-                //TODO: we have to create our contract to send the tokens for the first sell
-                //self.payable._pay_to_us();
+            let mut world = self.world_default();
+            let caller = get_caller_address();
 
-                self.claim(land_location, true);
-                self.payable._stake(caller, token_for_sale, amount_to_stake);
-            } else {
-                //we see if the buyer has the token and the amount for buy the land
-                assert(land.owner != ContractAddressZeroable::zero(), 'must have a owner');
-                self.claim(land_location, true);
-                self.payable._pay(caller, land.owner,land.token_used, land.sell_price);
+            let mut store = StoreTrait::new(world);
+            let land = store.land(land_location);
 
-                self.payable._refund_of_stake(land.owner);
-                self.payable._stake(caller, token_for_sale, amount_to_stake);
-            }
+            assert(land.owner != ContractAddressZeroable::zero(), 'must have a owner');
+            self.internal_claim(store, land);
 
-            land.owner = caller;
-            land.block_date_bought = get_block_timestamp();
-            land.sell_price = sell_price;
-            land.pool_key = liquidity_pool;
-            land.token_used = token_for_sale;
-            land.last_pay_time = get_block_timestamp();
+            self.payable._pay(caller, land.owner, land.token_used, land.sell_price);
+            self.payable._refund_of_stake(land.owner);
+            self.payable._stake(caller, token_for_sale, amount_to_stake);
+            
 
-            world.write_model(@land);
-            world.emit_event(@NewLandEvent{
-                owner_land:land.owner,
-                land_location,
-                token_for_sale,
-                sell_price
-            })
+
+            self
+                .finalize_land_purchase(
+                    store,
+                    land_location,
+                    token_for_sale,
+                    sell_price,
+                    amount_to_stake,
+                    liquidity_pool,
+                    caller
+                );
         }
 
-        //TODO:what happens if someone wants to call this from voyager?
-        fn claim(ref self: ContractState, land_location: u64, is_from_sell: bool) {
+
+        fn claim(ref self: ContractState, land_location: u64) {
             assert(is_valid_position(land_location), 'Land location not valid');
 
             let mut world = self.world_default();
+            let mut store = StoreTrait::new(world);
+
+            let land = store.land(land_location);
             let caller = get_caller_address();
-            let mut land: Land = world.read_model(land_location);
 
-            if !is_from_sell {
-                assert(land.owner == caller, 'not the owner')
-            };
-            //generate taxes for each neighbor of claimer
-            let neighbors = self.payable._add_neighbors(world, land_location);
-            if neighbors.len() != 0 {
-                for location in neighbors {
-                    match self.payable._generate_taxes(world, location) {
-                        Result::Ok(remaining_stake) => {if remaining_stake != 0 {
-                            world.emit_event(@RemainingStakeEvent{
-                                land_location:location,
-                                remaining_stake
-                            })
-                        }},
-                        Result::Err(_) => {
-                            // println!("nuke");
-                            self.nuke(location);
-                        }
-                    };
-                };
-            }
-
-            let taxes = self.get_pending_taxes(land.owner);
-            if taxes.len() != 0 {
-                self.payable._claim_taxes(taxes, land.owner)
-            }
+            assert(land.owner == caller, 'not the owner');
+            self.internal_claim(store, land);
         }
 
+
+        // TODO:see if we want pass this function into internalTrait
         fn nuke(ref self: ContractState, land_location: u64,) {
             let mut world = self.world_default();
-            let mut land: Land = world.read_model(land_location);
+            let store = StoreTrait::new(world);
+
+            let land = store.land(land_location);
+            //TODO:see how we validate the lp to nuke the land
+            assert(self.get_stake_balance(land.owner) == 0, 'land with stake');
+
             let owner_nuked = land.owner;
 
             //delete land
-            world.erase_model(@land);
+            store.delete_land(land);
 
             //emit event de nuke land
             world.emit_event(@LandNukedEvent { owner_nuked, land_location });
         }
-
 
         //Bid offer(in a main currency(Lords?))
         // how we know who will be the owner of the land?
@@ -206,26 +180,39 @@ pub mod actions {
             liquidity_pool: ContractAddress,
         ) {
             let mut world = self.world_default();
-            let land: Land = world.read_model(land_location);
+            let mut store = StoreTrait::new(world);
 
+            let land = store.land(land_location);
+            //whe have to see how manage the caller or the owner of the land with auction part
+            let caller = get_caller_address();
             //find the way to validate the liquidity pool for the new token_for_sale
             //some assert();
             assert(is_valid_position(land_location), 'Land location not valid');
             assert(land.owner == ContractAddressZeroable::zero(), 'must be without owner');
+            assert(sell_price > 0, 'sell_price > 0');
+            assert(amount_to_stake > 0, 'amount_to_stake > 0');
 
             //auction part
 
             //when the auction part its finished
 
+            self.internal_claim(store, land);
             self
-                .buy(
-                    land_location, token_for_sale, sell_price, amount_to_stake, liquidity_pool, true
+                .buy_from_bid(
+                    store,
+                    land_location,
+                    token_for_sale,
+                    sell_price,
+                    amount_to_stake,
+                    liquidity_pool,
+                    caller
                 );
         }
 
 
         //GETTERS FUNCTIONS
 
+        //TODO: here we have to change the return to struct of TokenInfo, no only amount
         fn get_stake_balance(self: @ContractState, staker: ContractAddress) -> u64 {
             self.payable.stake_balance.read(staker).amount
         }
@@ -248,7 +235,8 @@ pub mod actions {
         fn get_land(self: @ContractState, land_location: u64) -> Land {
             assert(is_valid_position(land_location), 'Land location not valid');
             let mut world = self.world_default();
-            let mut land: Land = world.read_model(land_location);
+            let store = StoreTrait::new(world);
+            let land = store.land(land_location);
             land
         }
     }
@@ -258,6 +246,94 @@ pub mod actions {
     impl InternalImpl of InternalTrait {
         fn world_default(self: @ContractState) -> WorldStorage {
             self.world(@"ponzi_land")
+        }
+
+        fn internal_claim(ref self: ContractState, mut store: Store, land: Land) {
+            //generate taxes for each neighbor of claimer
+            let neighbors = self.payable._add_neighbors(store, land.location);
+            if neighbors.len() != 0 {
+                for location in neighbors {
+                    match self.payable._generate_taxes(store, location) {
+                        Result::Ok(remaining_stake) => {
+                            if remaining_stake != 0 {
+                               store.world
+                                    .emit_event(
+                                        @RemainingStakeEvent {
+                                            land_location: location, remaining_stake
+                                        }
+                                    )
+                            }
+                        },
+                        Result::Err(_) => {
+                            // println!("nuke");
+                            self.nuke(location);
+                        }
+                    };
+                };
+            }
+            let taxes = self.get_pending_taxes(land.owner);
+            if taxes.len() != 0 {
+                self.payable._claim_taxes(taxes, land.owner)
+            }
+        }
+
+
+        fn buy_from_bid(
+            ref self: ContractState,
+            mut store:Store,
+            land_location: u64,
+            token_for_sale: ContractAddress,
+            sell_price: u64,
+            amount_to_stake: u64,
+            liquidity_pool: ContractAddress,
+            caller: ContractAddress,
+        ) {
+            //TODO: we have to create our contract to send the tokens for the first sell
+            //self.payable._pay_to_us();
+            self.payable._stake(caller, token_for_sale, amount_to_stake);
+
+            self
+                .finalize_land_purchase(
+                    store,
+                    land_location,
+                    token_for_sale,
+                    sell_price,
+                    amount_to_stake,
+                    liquidity_pool,
+                    caller
+                );
+        }
+
+        fn finalize_land_purchase(
+            ref self: ContractState,
+            mut store: Store,
+            land_location: u64,
+            token_for_sale: ContractAddress,
+            sell_price: u64,
+            amount_to_stake: u64,
+            liquidity_pool: ContractAddress,
+            caller: ContractAddress,
+        ) {
+            
+            let land = LandTrait::new(
+                land_location,
+                caller,
+                token_for_sale,
+                sell_price,
+                liquidity_pool,
+                get_block_timestamp(),
+                get_block_timestamp(),
+            );
+
+            
+            store.set_land(land);
+            
+            store.world
+            .emit_event(
+                @NewLandEvent {
+                    owner_land: land.owner, land_location, token_for_sale, sell_price
+                }
+            );
         }
     }
 }

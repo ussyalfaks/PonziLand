@@ -65,11 +65,46 @@ fn is_valid_position(index: u64) -> bool {
     index < GRID_WIDTH * GRID_WIDTH
 }
 
+fn max_neighbors(index: u64) -> u64 {
+    let mut count = 0;
+
+    // Orthogonal neighbors
+    if left(index).is_some() {
+        count += 1;
+    }
+    if right(index).is_some() {
+        count += 1;
+    }
+    if up(index).is_some() {
+        count += 1;
+    }
+    if down(index).is_some() {
+        count += 1;
+    }
+
+    // Diagonal neighbors
+    if up(index).is_some() && right(index).is_some() {
+        count += 1;
+    }
+    if up(index).is_some() && left(index).is_some() {
+        count += 1;
+    }
+    if down(index).is_some() && right(index).is_some() {
+        count += 1;
+    }
+    if down(index).is_some() && left(index).is_some() {
+        count += 1;
+    }
+
+    return count;
+}
+
 #[cfg(test)]
 mod coord_test {
     use ponzi_land::consts::GRID_WIDTH;
     use ponzi_land::helpers::coord::{
-        position_to_index, index_to_position, left, right, up, down, is_valid_position
+        position_to_index, index_to_position, left, right, up, down, is_valid_position,
+        max_neighbors,
     };
 
     #[test]
@@ -123,4 +158,33 @@ mod coord_test {
         assert(!is_valid_position(4096), 'has to be false');
         assert(!is_valid_position(100000), 'has to be false');
     }
+
+    #[test]
+    fn test_max_neighbors() {
+        // Corner positions
+        assert_eq!(max_neighbors(position_to_index(0, 0)), 3); // Top-left: right, down, down-right
+        assert_eq!(
+            max_neighbors(position_to_index(0, GRID_WIDTH - 1)), 3
+        ); // Top-right: left, down, down-left
+        assert_eq!(
+            max_neighbors(position_to_index(GRID_WIDTH - 1, 0)), 3
+        ); // Bottom-left: up, right, up-right
+        assert_eq!(
+            max_neighbors(position_to_index(GRID_WIDTH - 1, GRID_WIDTH - 1)), 3
+        ); // Bottom-right: up, left, up-left
+
+        // Edge positions
+        assert_eq!(
+            max_neighbors(position_to_index(0, 1)), 5
+        ); // Top edge: left, right, down, down-left, down-right
+        assert_eq!(
+            max_neighbors(position_to_index(1, 0)), 5
+        ); // Left edge: up, down, right, up-right, down-right
+
+        // Interior position
+        assert_eq!(
+            max_neighbors(position_to_index(1, 1)), 8
+        ); // All directions: up, down, left, right, and all diagonals
+    }
 }
+

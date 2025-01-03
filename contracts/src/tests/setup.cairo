@@ -33,13 +33,16 @@ mod setup {
                 TestResource::Model(m_Land::TEST_CLASS_HASH),
                 TestResource::Event(actions::e_LandNukedEvent::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Event(actions::e_NewLandEvent::TEST_CLASS_HASH.try_into().unwrap()),
-                TestResource::Event(actions::e_RemainingStakeEvent::TEST_CLASS_HASH.try_into().unwrap()),
+                TestResource::Event(
+                    actions::e_RemainingStakeEvent::TEST_CLASS_HASH.try_into().unwrap()
+                ),
                 TestResource::Contract(actions::TEST_CLASS_HASH)
             ].span()
         };
 
         ndef
     }
+
     fn contract_defs() -> Span<ContractDef> {
         [
             ContractDefTrait::new(@"ponzi_land", @"actions")
