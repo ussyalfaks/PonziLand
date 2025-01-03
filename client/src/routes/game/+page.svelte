@@ -1,4 +1,5 @@
 <script>
+  import { dev } from "$app/environment";
   import { setupBurner } from "$lib/contexts/account";
   import { setupClient } from "$lib/contexts/client";
   import { setupStore } from "$lib/contexts/store";
@@ -19,5 +20,10 @@
   {:then _}
     <Map />
     <Ui />
+  {:catch _}
+    {#if dev}
+      <Map />
+      <Ui />
+    {/if}
   {/await}
 </div>
