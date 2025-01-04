@@ -342,3 +342,40 @@ fn test_nuke_action() {
     assert(nuked_land.pool_key == ContractAddressZeroable::zero(), 'pool_key must be 0');
 }
 
+#[test]
+fn test_increase_price_and_stake() {
+    //setup environment
+    let (mut world, actions_system, erc20) = create_setup();
+
+    //permisions for the contract
+    set_contract_address(RECIPIENT());
+    erc20.approve(actions_system.contract_address, 10000);
+
+    let allowance = erc20.allowance(RECIPIENT(), actions_system.contract_address);
+    assert(allowance >= 10000, 'Approval failed');
+
+    //create land
+    set_block_timestamp(100);
+
+    actions_system.bid(1280, erc20.contract_address, 500, 1000, LIQUIDITY_POOL());
+    let land: Land = world.read_model(1280);
+
+    //verify the land
+    assert(land.owner == RECIPIENT(), 'error with the land owner');
+    assert(land.sell_price == 500, 'land price has to be 500');
+    
+    //increase the price
+    actions_system.increase_price(1280, 2300);
+    let land: Land = world.read_model(1280);
+    assert(land.sell_price == 2300, 'has increase to 2300');
+    
+    //increase the stake
+    let stake_balance = actions_system.get_stake_balance(land.owner);
+    assert(stake_balance == 1000, 'stake has to be 1000');
+    
+    actions_system.increase_stake(1280, 2000);
+
+    let stake_balance = actions_system.get_stake_balance(land.owner);
+    assert(stake_balance == 3000, 'stake has to be 3000');
+}
+
