@@ -246,8 +246,8 @@ pub mod actions {
                 .world
                 .emit_event(
                     @RemainingStakeEvent {
-                        land_location: location,
-                        smount: self.payable.stake_balance.read(caller).amount
+                        land_location: land.location,
+                        remaining_stake: self.payable.stake_balance.read(caller).amount
                     }
                 );
         }
