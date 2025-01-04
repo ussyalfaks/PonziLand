@@ -22,7 +22,7 @@ mod PayableComponent {
     use ponzi_land::helpers::coord::{is_valid_position, up, down, left, right, max_neighbors};
     use ponzi_land::models::land::Land;
     use ponzi_land::consts::{TAX_RATE, BASE_TIME};
-     use ponzi_land::store::{Store,StoreTrait};
+    use ponzi_land::store::{Store, StoreTrait};
     // Local imports
 
     use super::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
@@ -143,7 +143,6 @@ mod PayableComponent {
         ) {
             let contract_address = get_contract_address();
             self._validate(staker, token_address, amount);
-            let stake_info = TokenInfo { token_address, amount };
 
             let status = self
                 .token_dispatcher
@@ -151,6 +150,8 @@ mod PayableComponent {
                 .transferFrom(staker, contract_address, amount.into());
             assert(status, errors::ERC20_STAKE_FAILED);
 
+            let current_stake = self.stake_balance.read(staker).amount;
+            let stake_info = TokenInfo { token_address, amount: current_stake + amount };
             self.stake_balance.write(staker, stake_info);
         }
 
