@@ -4,6 +4,7 @@ mod systems {
 
 mod models {
     mod land;
+    mod auction;
 }
 
 mod helpers {

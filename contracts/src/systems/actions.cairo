@@ -7,6 +7,9 @@ use ponzi_land::components::payable::PayableComponent::TokenInfo;
 // define the interface
 #[starknet::interface]
 trait IActions<T> {
+
+    fn auction(ref self :T, land_location: u64, start_price: u64, floor_price: u64, token_for_sale:ContractAddress);
+
     fn bid(
         ref self: T,
         land_location: u64,
@@ -36,6 +39,7 @@ trait IActions<T> {
     fn get_stake_balance(self: @T, staker: ContractAddress) -> u64;
     fn get_land(self: @T, land_location: u64) -> Land;
     fn get_pending_taxes(self: @T, owner_land: ContractAddress) -> Array<TokenInfo>;
+    fn get_current_auction_price(self: @T, land_location: u64) -> u64;
 }
 
 // dojo decorator
@@ -46,11 +50,14 @@ pub mod actions {
     use starknet::contract_address::ContractAddressZeroable;
     use dojo::model::{ModelStorage, ModelValueStorage};
     use ponzi_land::models::land::{Land, LandTrait};
+    use ponzi_land::models::auction::{Auction, AuctionTrait};
     use ponzi_land::components::payable::{PayableComponent, PayableComponent::TokenInfo};
     use ponzi_land::helpers::coord::{is_valid_position, up, down, left, right};
     use ponzi_land::consts::{TAX_RATE};
     use ponzi_land::store::{Store, StoreTrait};
     use dojo::event::EventStorage;
+    
+    // use ponzi_land::tokens::main_currency::LORDS_CURRENCY;
 
     component!(path: PayableComponent, storage: payable, event: PayableEvent);
     impl PayableInternalImpl = PayableComponent::InternalImpl<ContractState>;
@@ -89,6 +96,26 @@ pub mod actions {
         #[key]
         land_location: u64,
         remaining_stake: u64
+    }
+
+    #[derive(Drop, Serde)]
+    #[dojo::event]
+    pub struct NewAuctionEvent {
+        #[key]
+        land_location: u64,
+        start_time: u64,
+        start_price: u64,
+        floor_price: u64,
+    }
+
+    #[derive(Drop, Serde)]
+    #[dojo::event]
+    pub struct AuctionFinishedEvent {
+        #[key]
+        land_location: u64,
+        start_time: u64,
+        final_time: u64,
+        final_price: u64,
     }
 
 
@@ -184,8 +211,7 @@ pub mod actions {
             let mut world = self.world_default();
             let mut store = StoreTrait::new(world);
 
-            let land = store.land(land_location);
-            //whe have to see how manage the caller or the owner of the land with auction part
+            let mut land = store.land(land_location);
             let caller = get_caller_address();
             //find the way to validate the liquidity pool for the new token_for_sale
             //some assert();
@@ -196,9 +222,20 @@ pub mod actions {
 
             //auction part
 
-            //when the auction part its finished
+            //Validate if the land can be buyed because is an auction happening for that land
+            let mut auction = store.auction(land_location);
+            assert(!auction.is_finished, 'auction is finished');
+            assert(auction.start_price > 0 , 'auction not started');
+
+
+            let current_price = auction.get_current_price();
+            land.sell_price = current_price;
+            store.set_land(land);
+
+            
 
             self.internal_claim(store, land);
+
             self
                 .buy_from_bid(
                     store,
@@ -207,7 +244,40 @@ pub mod actions {
                     sell_price,
                     amount_to_stake,
                     liquidity_pool,
-                    caller
+                    caller,
+                    auction
+                );
+        }
+
+        fn auction(ref self :ContractState, land_location: u64, start_price: u64, floor_price: u64, token_for_sale:ContractAddress) {
+            assert(is_valid_position(land_location), 'Land location not valid');
+            assert(start_price > 0, 'start_price > 0');
+            assert(floor_price > 0, 'floor_price > 0');
+
+            let mut world = self.world_default();
+            let mut store = StoreTrait::new(world);
+
+            let mut land = store.land(land_location);
+
+            assert(land.owner == ContractAddressZeroable::zero(), 'must be without owner');
+
+            let auction = AuctionTrait::new(land_location, start_price, floor_price, false);
+            store.set_auction(auction);
+
+            land.sell_price = start_price;
+
+            // land.token_used = LORDS_CURRENCY;
+
+            land.token_used = token_for_sale;
+
+            store.set_land(land);
+
+            store
+                .world
+                .emit_event(
+                    @NewAuctionEvent {
+                         land_location, start_time: auction.start_time, start_price, floor_price
+                    }
                 );
         }
 
@@ -282,6 +352,21 @@ pub mod actions {
             let land = store.land(land_location);
             land
         }
+
+
+        //TODO: see how validate if the auction is active or not
+        fn get_current_auction_price(self: @ContractState, land_location: u64) -> u64 {
+            assert(is_valid_position(land_location), 'Land location not valid');
+            let mut world = self.world_default();
+            let store = StoreTrait::new(world);
+            let auction = store.auction(land_location);
+
+            if auction.is_finished {
+                return 0;
+            }
+
+            auction.get_current_price()
+        }
     }
 
 
@@ -331,21 +416,36 @@ pub mod actions {
             amount_to_stake: u64,
             liquidity_pool: ContractAddress,
             caller: ContractAddress,
+            mut auction: Auction,
         ) {
             //TODO: we have to create our contract to send the tokens for the first sell
             //self.payable._pay_to_us();
+            self.payable._pay(caller, get_contract_address(), store.land(land_location).token_used, sell_price);
             self.payable._stake(caller, token_for_sale, amount_to_stake);
 
             self
-                .finalize_land_purchase(
-                    store,
-                    land_location,
-                    token_for_sale,
-                    sell_price,
-                    amount_to_stake,
-                    liquidity_pool,
-                    caller
-                );
+            .finalize_land_purchase(
+                store,
+                land_location,
+                token_for_sale,
+                sell_price,
+                amount_to_stake,
+                liquidity_pool,
+                caller
+            );
+
+            auction.is_finished = true;
+            store.set_auction(auction);
+
+            store.world
+        .emit_event(
+            @AuctionFinishedEvent {
+                land_location,
+                start_time: auction.start_time,
+                final_time: get_block_timestamp(),
+                final_price: auction.get_current_price(),
+            }
+        );
         }
 
         fn finalize_land_purchase(

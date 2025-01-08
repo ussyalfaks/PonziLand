@@ -14,15 +14,8 @@ pub struct Land {
     pub last_pay_time: u64,
 }
 
-#[derive(Copy, Drop, Serde, Debug)]
-#[dojo::model]
-pub struct auction_info {
-    #[key]
-    pub location: u64,
-    pub auction_start_time: u64,
-    pub last_bid_time: u64,
-    pub auction_price: u64,
-}
+
+
 
 #[generate_trait]
 impl LandImpl of LandTrait {
