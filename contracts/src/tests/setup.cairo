@@ -19,6 +19,7 @@ mod setup {
     // Internal imports
     use ponzi_land::mocks::erc20::MyToken;
     use ponzi_land::models::land::{Land, m_Land};
+    use ponzi_land::models::auction::{Auction, m_Auction};
     use ponzi_land::systems::actions::{actions, IActionsDispatcher, IActionsDispatcherTrait};
 
 
@@ -31,10 +32,17 @@ mod setup {
         let ndef = NamespaceDef {
             namespace: "ponzi_land", resources: [
                 TestResource::Model(m_Land::TEST_CLASS_HASH),
+                TestResource::Model(m_Auction::TEST_CLASS_HASH),
                 TestResource::Event(actions::e_LandNukedEvent::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Event(actions::e_NewLandEvent::TEST_CLASS_HASH.try_into().unwrap()),
                 TestResource::Event(
                     actions::e_RemainingStakeEvent::TEST_CLASS_HASH.try_into().unwrap()
+                ),
+                 TestResource::Event(
+                    actions::e_NewAuctionEvent::TEST_CLASS_HASH.try_into().unwrap()
+                ),
+                 TestResource::Event(
+                    actions::e_AuctionFinishedEvent::TEST_CLASS_HASH.try_into().unwrap()
                 ),
                 TestResource::Contract(actions::TEST_CLASS_HASH)
             ].span()
