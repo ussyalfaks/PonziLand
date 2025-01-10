@@ -13,30 +13,40 @@ import {
   type Call,
 } from 'starknet';
 
+import { Web3 } from 'web3';
+const web3 = new Web3();
+
 export type ApprovalData = {
   tokenAddress: string;
   amount: BigNumberish;
 };
 
-function getApprove(
+async function getApprove(
   provider: DojoProvider,
   data: ApprovalData,
   spendingCall: DojoCall | Call,
-  namespace: string = 'ponzi_land',
-): [Call, DojoCall | Call] {
+  namespace: string = 'ponzi_land'
+): Promise<[Call, DojoCall | Call]> {
   let spendingContract;
 
   if ('contractName' in spendingCall) {
     spendingContract = getContractByName(
       provider.manifest,
       namespace,
-      spendingCall.contractName,
+      spendingCall.contractName
     )!.address as string;
   } else {
     spendingContract = spendingCall.contractAddress;
   }
 
   console.log(spendingContract);
+  console.dir(data);
+
+  const decimals = (await provider.call('ponzi_land', {
+    contractAddress: data.tokenAddress,
+    entrypoint: 'decimals',
+    calldata: CallData.compile({}),
+  })) as unknown as number;
 
   return [
     {
@@ -44,7 +54,7 @@ function getApprove(
       entrypoint: 'approve',
       calldata: CallData.compile({
         spender: spendingContract,
-        amount: cairo.uint256(data.amount),
+        amount: cairo.uint256(BigInt(data.amount) * BigInt(10 ** decimals)),
       }),
     },
     spendingCall,
@@ -58,11 +68,11 @@ export async function wrappedActions(provider: DojoProvider) {
     tokenForSale: string,
     sellPrice: BigNumberish,
     amountToStake: BigNumberish,
-    liquidityPool: string,
+    liquidityPool: string
   ) => {
     return await provider.execute(
       snAccount,
-      getApprove(
+      await getApprove(
         provider,
         {
           tokenAddress: tokenForSale,
@@ -78,9 +88,9 @@ export async function wrappedActions(provider: DojoProvider) {
             amountToStake,
             liquidityPool,
           ],
-        },
+        }
       ),
-      'ponzi_land',
+      'ponzi_land'
     );
   };
 
@@ -90,12 +100,12 @@ export async function wrappedActions(provider: DojoProvider) {
     tokenForSale: string,
     sellPrice: BigNumberish,
     amountToStake: BigNumberish,
-    liquidityPool: string,
+    liquidityPool: string
   ) => {
     try {
       return await provider.execute(
         snAccount,
-        getApprove(
+        await getApprove(
           provider,
           {
             tokenAddress: tokenForSale,
@@ -111,9 +121,9 @@ export async function wrappedActions(provider: DojoProvider) {
               amountToStake,
               liquidityPool,
             ],
-          },
+          }
         ),
-        'ponzi_land',
+        'ponzi_land'
       );
     } catch (error) {
       console.error(error);
@@ -124,12 +134,12 @@ export async function wrappedActions(provider: DojoProvider) {
     snAccount: Account | AccountInterface,
     landLocation: BigNumberish,
     stakingToken: string,
-    amountToStake: BigNumberish,
+    amountToStake: BigNumberish
   ) => {
     try {
       return await provider.execute(
         snAccount,
-        getApprove(
+        await getApprove(
           provider,
           {
             tokenAddress: stakingToken,
@@ -139,9 +149,9 @@ export async function wrappedActions(provider: DojoProvider) {
             contractName: 'actions',
             entrypoint: 'increase_stake',
             calldata: [landLocation, amountToStake],
-          },
+          }
         ),
-        'ponzi_land',
+        'ponzi_land'
       );
     } catch (error) {
       console.error(error);

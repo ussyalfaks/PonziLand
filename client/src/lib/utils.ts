@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { cubicOut } from 'svelte/easing';
 import type { TransitionConfig } from 'svelte/transition';
+import data from '$lib/data.json';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -16,7 +17,7 @@ type FlyAndScaleParams = {
 
 export const flyAndScale = (
   node: Element,
-  params: FlyAndScaleParams = { y: -8, x: 0, start: 0.95, duration: 150 },
+  params: FlyAndScaleParams = { y: -8, x: 0, start: 0.95, duration: 150 }
 ): TransitionConfig => {
   const style = getComputedStyle(node);
   const transform = style.transform === 'none' ? '' : style.transform;
@@ -24,7 +25,7 @@ export const flyAndScale = (
   const scaleConversion = (
     valueA: number,
     scaleA: [number, number],
-    scaleB: [number, number],
+    scaleB: [number, number]
   ) => {
     const [minA, maxA] = scaleA;
     const [minB, maxB] = scaleB;
@@ -36,7 +37,7 @@ export const flyAndScale = (
   };
 
   const styleToString = (
-    style: Record<string, number | string | undefined>,
+    style: Record<string, number | string | undefined>
   ): string => {
     return Object.keys(style).reduce((str, key) => {
       if (style[key] === undefined) return str;
@@ -60,3 +61,38 @@ export const flyAndScale = (
     easing: cubicOut,
   };
 };
+
+export function toHexWithPadding(number: number, paddingLength = 64) {
+  // Convert the number to a hexadecimal string
+  let hex = number.toString(16);
+
+  // Ensure it's lowercase and pad it to the desired length
+  hex = hex.toLowerCase().padStart(paddingLength, '0');
+
+  // Add the 0x prefix
+  return '0x' + hex;
+}
+
+export function shortenHex(hex: string, length = 4) {
+  if (!hex.startsWith('0x')) {
+    return hex;
+  }
+
+  if (hex.length <= 2 + 2 * length) {
+    // No shortening needed
+    return hex;
+  }
+
+  const start = hex.slice(0, 2 + length);
+  const end = hex.slice(-length);
+  return `${start}...${end}`;
+}
+
+export function getTokenInfo(tokenAddress: string) {
+  // from data.available tokens
+  const token = data.availableTokens.find(
+    (token) => token.address === tokenAddress
+  );
+
+  return token;
+}

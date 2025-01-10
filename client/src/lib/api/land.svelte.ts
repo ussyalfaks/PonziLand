@@ -1,15 +1,8 @@
-import { useClient } from '$lib/contexts/client';
-import { onMount, unmount } from 'svelte';
-import type { BigNumberish } from 'starknet';
-import type { Land, SchemaType as PonziLandSchemaType } from '$lib/models.gen';
 import { useDojo } from '$lib/contexts/dojo';
-import {
-  createDojoStore,
-  QueryBuilder,
-  type SubscribeParams,
-} from '@dojoengine/sdk';
-import { derived, get, readable, writable, type Readable } from 'svelte/store';
-import { slide } from 'svelte/transition';
+import type { Land, SchemaType as PonziLandSchemaType } from '$lib/models.gen';
+import { QueryBuilder, type SubscribeParams } from '@dojoengine/sdk';
+import type { BigNumberish } from 'starknet';
+import { derived, get, type Readable } from 'svelte/store';
 
 type TransactionResult = Promise<
   | {
@@ -18,7 +11,7 @@ type TransactionResult = Promise<
   | undefined
 >;
 
-type LandSetup = {
+export type LandSetup = {
   tokenForSaleAddress: string;
   salePrice: BigNumberish;
   amountToStake: BigNumberish;
@@ -35,7 +28,7 @@ export type LandsStore = Readable<LandWithActions[]> & {
     location: BigNumberish,
     startPrice: BigNumberish,
     floorPrice: BigNumberish,
-    tokenForSale: string,
+    tokenForSale: string
   ): TransactionResult;
 };
 
@@ -102,14 +95,14 @@ export function useLands(): LandsStore | undefined {
             account.getAccount()!,
             land.location,
             land.token_used,
-            amount,
+            amount
           );
         },
         increasePrice(amount: BigNumberish) {
           return sdk.client.actions.increasePrice(
             account.getAccount()!,
             land.location,
-            amount,
+            amount
           );
         },
         claim() {
@@ -130,7 +123,7 @@ export function useLands(): LandsStore | undefined {
         setup.tokenForSaleAddress,
         setup.salePrice,
         setup.amountToStake,
-        setup.liquidityPoolAddress,
+        setup.liquidityPoolAddress
       );
     },
     bidLand(location, setup) {
@@ -140,7 +133,7 @@ export function useLands(): LandsStore | undefined {
         setup.tokenForSaleAddress,
         setup.salePrice,
         setup.amountToStake,
-        setup.liquidityPoolAddress,
+        setup.liquidityPoolAddress
       );
     },
     auctionLand(location, startPrice, floorPrice, tokenForSale) {
@@ -149,7 +142,7 @@ export function useLands(): LandsStore | undefined {
         location,
         startPrice,
         floorPrice,
-        tokenForSale,
+        tokenForSale
       );
     },
   };

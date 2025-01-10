@@ -1,11 +1,12 @@
 <script lang="ts">
-  import Tile from "./tile.svelte";
-  import { mockLandData } from "$lib/api/mock-land";
-  import { mousePosCoords } from "$lib/stores/stores";
-  import { cameraPosition } from "$lib/stores/camera";
-  import { useLands } from "$lib/api/land.svelte";
-  import type { LandsStore } from "$lib/api/land.svelte";
-  import type { BigNumberish } from "starknet";
+  import Tile from './tile.svelte';
+  import { mockLandData } from '$lib/api/mock-land';
+  import { mousePosCoords } from '$lib/stores/stores';
+  import { cameraPosition } from '$lib/stores/camera';
+  import { useLands } from '$lib/api/land.svelte';
+  import type { LandsStore } from '$lib/api/land.svelte';
+  import type { BigNumberish } from 'starknet';
+  import { getTokenInfo, toHexWithPadding } from '$lib/utils';
 
   const MAP_SIZE = 64;
   const TILE_SIZE = 32;
@@ -19,38 +20,67 @@
   try {
     landStore = useLands();
   } catch (e) {
-    console.log("Error in map.svelte", e);
+    console.log('Error in map.svelte', e);
   }
-  $inspect("landStore", $landStore);
+  $inspect('landStore', $landStore);
 
+  // Reactive state for the tiles
   let tiles = $state<
     {
       type: string;
-      owner: string;
-      sellPrice: number;
-      tokenUsed: string;
-      tokenAddress: string;
+      owner: string | null;
+      sellPrice: number | null;
+      tokenUsed: string | null;
+      tokenAddress: string | null;
     }[][]
   >([]);
 
   landStore?.subscribe((lands) => {
+    // initialize the map with empty tiles
     tiles = Array(MAP_SIZE)
       .fill(null)
-      .map((_, row) =>
+      .map(() =>
         Array(MAP_SIZE)
           .fill(null)
-          .map((_, col) => {
-            const index = row * MAP_SIZE + col;
-            const landData = lands[index];
-            return {
-              type: landData?.owner ? "house" : "grass",
-              owner: landData?.owner,
-              sellPrice: landData?.sell_price as number,
-              tokenUsed: landData?.token_used,
-              tokenAddress: landData?.token_used,
-            };
-          })
+          .map(() => ({
+            type: 'grass',
+            owner: null,
+            sellPrice: null,
+            tokenUsed: null,
+            tokenAddress: null,
+          })),
       );
+
+    // fill the map with the lands
+    lands.forEach((land) => {
+      let location;
+      if (typeof land.location === 'string') {
+        location = parseInt(land.location);
+      } else if (typeof land.location === 'bigint') {
+        location = Number(land.location);
+      } else {
+        location = land.location;
+      }
+
+      let sellPrice;
+      if (typeof land.sell_price === 'string') {
+        sellPrice = parseInt(land.sell_price);
+      } else if (typeof land.sell_price === 'bigint') {
+        sellPrice = Number(land.sell_price);
+      } else {
+        sellPrice = land.sell_price;
+      }
+
+      const x = location % MAP_SIZE;
+      const y = Math.floor(location / MAP_SIZE);
+      tiles[y][x] = {
+        type: land.owner == toHexWithPadding(0) ? 'auction' : 'house',
+        owner: land.owner,
+        sellPrice: sellPrice,
+        tokenUsed: getTokenInfo(land.token_used)?.name ?? 'Unknown Token',
+        tokenAddress: land.token_used,
+      };
+    });
   });
 
   function handleWheel(event: WheelEvent) {
@@ -169,7 +199,7 @@
               type={tile.type}
               location={x + y * MAP_SIZE}
               owner={tile.owner}
-              sellPrice={tile.sellPrice}
+              sellPrice={tile.sellPrice || 0}
               tokenUsed={tile.tokenUsed}
               tokenAddress={tile.tokenAddress}
             />
