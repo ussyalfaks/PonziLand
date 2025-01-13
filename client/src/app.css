@@ -62,7 +62,11 @@
 }
 
 .bg-ponzi {
-  background-image: url('images/ui/texture.png');
+  background-image: url('assets/ui/texture.png');
+}
+
+.shadow-ponzi {
+  box-shadow: inset 4px 4px 0 0 #0b0c13;
 }
 
 .text-ponzi {
