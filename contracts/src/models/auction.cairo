@@ -17,7 +17,9 @@ pub struct Auction {
 #[generate_trait]
 impl AuctionImpl of AuctionTrait {
     #[inline(always)]
-    fn new(land_location: u64, start_price: u256, floor_price: u256, is_finished: bool,) -> Auction {
+    fn new(
+        land_location: u64, start_price: u256, floor_price: u256, is_finished: bool,
+    ) -> Auction {
         Auction {
             land_location, start_time: get_block_timestamp(), start_price, floor_price, is_finished,
         }
@@ -34,7 +36,10 @@ impl AuctionImpl of AuctionTrait {
         };
 
         //the price will decrease 2% every 2 minutes (for tests)
-        let total_decrease = self.start_price * PRICE_DECREASE_RATE.into() * time_passed.into() / (100 * 120);
+        let total_decrease = self.start_price
+            * PRICE_DECREASE_RATE.into()
+            * time_passed.into()
+            / (100 * 120);
 
         let decremented_price = if self.start_price > total_decrease {
             self.start_price - total_decrease
