@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x45575a88cc5cef1e444c77ce60b7b4c9e73a01cbbe20926d5a4c72a94011410",
-    "address": "0xabd46df949c146031bcdbbc975b7ea9ab4abd0528339ebb2adf9b46956f6bb",
-    "seed": "ponzi_land_red",
+    "address": "0x17fa1c4e948450ed199bc025e1b8b3ba1abe7c71e5894b1d78b390e34c41a30",
+    "seed": "ponzi_land_sepolia",
     "name": "Ponzi Land",
     "entrypoints": [
       "uuid",
@@ -1252,8 +1252,8 @@
   },
   "contracts": [
     {
-      "address": "0x4da8873257357eb154d5bfd136d9c580970398a11af3b1bc610be18fab081eb",
-      "class_hash": "0x129c888764cc30df2dd6a3b656153649277988f55a992c3193dbac13c589515",
+      "address": "0x10187689620c7f5d02d2f3a657c51cc35e59b0fe7289ec023971e8946cf635a",
+      "class_hash": "0x1bee3a3707d99de3e0cfbafe38883a99fe506012231223c496cdb700613507a",
       "abi": [
         {
           "type": "impl",
@@ -1312,6 +1312,20 @@
         },
         {
           "type": "struct",
+          "name": "core::integer::u256",
+          "members": [
+            {
+              "name": "low",
+              "type": "core::integer::u128"
+            },
+            {
+              "name": "high",
+              "type": "core::integer::u128"
+            }
+          ]
+        },
+        {
+          "type": "struct",
           "name": "ponzi_land::models::land::Land",
           "members": [
             {
@@ -1328,7 +1342,7 @@
             },
             {
               "name": "sell_price",
-              "type": "core::integer::u64"
+              "type": "core::integer::u256"
             },
             {
               "name": "token_used",
@@ -1354,7 +1368,7 @@
             },
             {
               "name": "amount",
-              "type": "core::integer::u64"
+              "type": "core::integer::u256"
             }
           ]
         },
@@ -1372,11 +1386,11 @@
                 },
                 {
                   "name": "start_price",
-                  "type": "core::integer::u64"
+                  "type": "core::integer::u256"
                 },
                 {
                   "name": "floor_price",
-                  "type": "core::integer::u64"
+                  "type": "core::integer::u256"
                 },
                 {
                   "name": "token_for_sale",
@@ -1400,11 +1414,11 @@
                 },
                 {
                   "name": "sell_price",
-                  "type": "core::integer::u64"
+                  "type": "core::integer::u256"
                 },
                 {
                   "name": "amount_to_stake",
-                  "type": "core::integer::u64"
+                  "type": "core::integer::u256"
                 },
                 {
                   "name": "liquidity_pool",
@@ -1428,11 +1442,11 @@
                 },
                 {
                   "name": "sell_price",
-                  "type": "core::integer::u64"
+                  "type": "core::integer::u256"
                 },
                 {
                   "name": "amount_to_stake",
-                  "type": "core::integer::u64"
+                  "type": "core::integer::u256"
                 },
                 {
                   "name": "liquidity_pool",
@@ -1476,7 +1490,7 @@
                 },
                 {
                   "name": "new_price",
-                  "type": "core::integer::u64"
+                  "type": "core::integer::u256"
                 }
               ],
               "outputs": [],
@@ -1492,7 +1506,7 @@
                 },
                 {
                   "name": "amount_to_stake",
-                  "type": "core::integer::u64"
+                  "type": "core::integer::u256"
                 }
               ],
               "outputs": [],
@@ -1509,7 +1523,7 @@
               ],
               "outputs": [
                 {
-                  "type": "core::integer::u64"
+                  "type": "core::integer::u256"
                 }
               ],
               "state_mutability": "view"
@@ -1548,6 +1562,26 @@
             },
             {
               "type": "function",
+              "name": "get_pending_taxes_for_land",
+              "inputs": [
+                {
+                  "name": "land_location",
+                  "type": "core::integer::u64"
+                },
+                {
+                  "name": "owner_land",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::array::Array::<ponzi_land::components::payable::PayableComponent::TokenInfo>"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
               "name": "get_current_auction_price",
               "inputs": [
                 {
@@ -1557,7 +1591,7 @@
               ],
               "outputs": [
                 {
-                  "type": "core::integer::u64"
+                  "type": "core::integer::u256"
                 }
               ],
               "state_mutability": "view"
@@ -1708,13 +1742,13 @@
   "models": [
     {
       "members": [],
-      "class_hash": "0x70cbab39da2aaa049ced7c5eff87f180555b7c0b25a844e320d56dc877f65e",
+      "class_hash": "0x41d9951e766e59900271a4e3c80b48a8fb75150a4c994e8f2e3285fb691d51b",
       "tag": "ponzi_land-Auction",
       "selector": "0x7e0590370db3aa23e7aa340e9dfbdb6127f3fe6d5173b6051be0225a6acddec"
     },
     {
       "members": [],
-      "class_hash": "0x7056cc6dc11d1f4ae58f6017484b122878ea2f6634f924895fcdd80ecf3a3c1",
+      "class_hash": "0x4b7e4a90b2ea2e54c744078a5d89874aee9dbce182eaae826e9aafd79f98745",
       "tag": "ponzi_land-Land",
       "selector": "0x6c48c5be88ed61b34bacc5b84e2a1530e3b691a1c89404c7ee5d2f49e1414cc"
     }
@@ -1722,7 +1756,7 @@
   "events": [
     {
       "members": [],
-      "class_hash": "0x306fb3619cfe1cf9e08ff9fc50005f7b66040ac9a3e2243d4791637bb2d2101",
+      "class_hash": "0x7076d8fe5236a1bc1e53c8a7c98d25975a09f0fe8a4794bfbcd56778acec949",
       "tag": "ponzi_land-AuctionFinishedEvent",
       "selector": "0x4a851acb463e71e7b60828525b2af21e21fc500b159358a7b0f0036418d3d9a"
     },
@@ -1734,19 +1768,19 @@
     },
     {
       "members": [],
-      "class_hash": "0x7a01723d7f27950049e713b83ce9ea1a509331cf63f89756bb5700f2607614c",
+      "class_hash": "0x4f70e9c18ead46e7ffdbadb6e8d70f45cde132c6ad8faa05bdef63fb7210400",
       "tag": "ponzi_land-NewAuctionEvent",
       "selector": "0x617c6bf5e078af2c93083a50e445f36b55cad4a6bd07a21a5a42540cb0d8f9f"
     },
     {
       "members": [],
-      "class_hash": "0x6d9a3c3dcd0639ad43a2aab9ed207333da71d748f919a860422b88cb96c7b5d",
+      "class_hash": "0x66128195801869379aa2b09740592f8cb9ec43de620271870f1d7019db42122",
       "tag": "ponzi_land-NewLandEvent",
       "selector": "0x399e09d878d316ad3e7e3f11970368610167e6d7d30cc55d95635b86c5181bf"
     },
     {
       "members": [],
-      "class_hash": "0x6fc69d77f2ccdd7bd1f60faeeabffedc936c0b094024c786c335fcf341a85ce",
+      "class_hash": "0x5075b71332d4501663c2de3c3f7a71574440010eec31bde0a4dea37d88bcdd",
       "tag": "ponzi_land-RemainingStakeEvent",
       "selector": "0x7021aa577bc24a67ca28766ec1ad646945d1c9b43aca6af8d53aba43bb0f5ea"
     }
