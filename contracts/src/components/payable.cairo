@@ -37,7 +37,7 @@ mod PayableComponent {
         const ERC20_NOT_SUFFICIENT_AMOUNT: felt252 = 'ERC20: not sufficient amount';
     }
 
-    #[derive(Drop, Serde, starknet::Store, Debug)]
+    #[derive(Drop, Serde, starknet::Store, Debug, Copy)]
     pub struct TokenInfo {
         token_address: ContractAddress,
         amount: u64,
@@ -49,8 +49,11 @@ mod PayableComponent {
     struct Storage {
         token_dispatcher: IERC20CamelDispatcher,
         stake_balance: Map<ContractAddress, TokenInfo>,
-        pending_taxes: Map<(ContractAddress, u64), TokenInfo>,
         pending_taxes_length: Map<ContractAddress, u64>,
+        //                 (land_owner,token_index) -> token_info
+        pending_taxes: Map<(ContractAddress, u64), TokenInfo>,
+        //                         (land_owner,location,token_index) -> token_info
+        pending_taxes_for_land: Map<(ContractAddress, u64, u64), TokenInfo>
         //this for the current version of cairo don't work
     // pending_taxes:Map<ContractAddress,Vec<TokenInfo>>
 
@@ -160,7 +163,8 @@ mod PayableComponent {
             ref self: ComponentState<TContractState>,
             owner_land: ContractAddress,
             token_address: ContractAddress,
-            amount: u64
+            amount: u64,
+            land_location: u64
         ) {
             // to see how many of diferents tokens the person can have
             let taxes_length = self.pending_taxes_length.read(owner_land);
@@ -172,16 +176,26 @@ mod PayableComponent {
                     let mut token_info = self.pending_taxes.read((owner_land, i));
                     if token_info.token_address == token_address {
                         token_info.amount += amount;
+
                         self.pending_taxes.write((owner_land, i), token_info);
+                        self
+                            .pending_taxes_for_land
+                            .write((owner_land, land_location, i), token_info);
+
                         found = true;
                         break;
                     }
                 };
 
             if !found {
+                let token_info = TokenInfo { token_address, amount };
+
+                self.pending_taxes.write((owner_land, taxes_length), token_info);
+
                 self
-                    .pending_taxes
-                    .write((owner_land, taxes_length), TokenInfo { token_address, amount });
+                    .pending_taxes_for_land
+                    .write((owner_land, land_location, taxes_length), token_info);
+
                 self.pending_taxes_length.write(owner_land, taxes_length + 1);
             };
         }
@@ -270,10 +284,14 @@ mod PayableComponent {
             };
 
             let tax_per_neighbor = tax_to_distribute / max_neighbors(land_location);
+
             for location in neighbors
                 .span() {
                     let neighbor: Land = store.land(*location);
-                    self._add_taxes(neighbor.owner, land.token_used, tax_per_neighbor);
+                    self
+                        ._add_taxes(
+                            neighbor.owner, land.token_used, tax_per_neighbor, neighbor.location
+                        );
                 };
 
             self._discount_stake_for_taxes(land.owner, tax_to_distribute);
@@ -291,14 +309,15 @@ mod PayableComponent {
         fn _claim_taxes(
             ref self: ComponentState<TContractState>,
             taxes: Array<TokenInfo>,
-            owner_land: ContractAddress
+            owner_land: ContractAddress,
+            land_location: u64
         ) {
-            for i in taxes {
-                if i.amount > 0 {
-                    self._initialize(i.token_address);
-                    let status = self._pay_from_contract(owner_land, i.amount);
+            for token_info in taxes {
+                if token_info.amount > 0 {
+                    self._initialize(token_info.token_address);
+                    let status = self._pay_from_contract(owner_land, token_info.amount);
                     if status {
-                        self._discount_pending_taxes(owner_land);
+                        self._discount_pending_taxes(owner_land, land_location, token_info);
                     }
                 }
             }
@@ -324,21 +343,84 @@ mod PayableComponent {
 
 
         fn _discount_pending_taxes(
-            ref self: ComponentState<TContractState>, owner_land: ContractAddress
+            ref self: ComponentState<TContractState>,
+            owner_land: ContractAddress,
+            land_location: u64,
+            token_info: TokenInfo
         ) {
+            //to see the quantity of token in total
             let taxes_length = self.pending_taxes_length.read(owner_land);
+
             for mut i in 0
                 ..taxes_length {
-                    let mut pending_tax = self.pending_taxes.read((owner_land, i));
-                    if pending_tax.amount > 0 {
+                    //we search for tokens for each land
+                    let mut pending_tax = self
+                        .pending_taxes_for_land
+                        .read((owner_land, land_location, i));
+                    //when we find the token we discount the amount for the land
+                    if pending_tax.amount > 0
+                        && pending_tax.token_address == token_info.token_address {
                         self
-                            .pending_taxes
+                            .pending_taxes_for_land
                             .write(
-                                (owner_land, i),
+                                (owner_land, land_location, i),
                                 TokenInfo { token_address: pending_tax.token_address, amount: 0 }
                             );
-                    };
+                        
+                        //now we discount in the global of the owner balance
+                        let amount = self.pending_taxes.read((owner_land, i)).amount;
+                        if amount > token_info.amount {
+                            self
+                                .pending_taxes
+                                .write(
+                                    (owner_land, i),
+                                    TokenInfo {
+                                        token_address: pending_tax.token_address,
+                                        amount: amount - token_info.amount
+                                    }
+                                );
+                        } else {
+                            self
+                                .pending_taxes
+                                .write(
+                                    (owner_land, i),
+                                    TokenInfo {
+                                        token_address: pending_tax.token_address, amount: 0
+                                    }
+                                );
+                        };
+                    }
                 };
+        }
+
+        fn _get_pending_taxes(
+            self: @ComponentState<TContractState>,
+            owner_land: ContractAddress,
+            land_location: Option<u64>
+        ) -> Array<TokenInfo> {
+            let taxes_length = self.pending_taxes_length.read(owner_land);
+            let mut taxes: Array<TokenInfo> = ArrayTrait::new();
+
+            for mut i in 0
+                ..taxes_length {
+                    match land_location {
+                        Option::Some(land_location) => {
+                            let tax = self
+                                .pending_taxes_for_land
+                                .read((owner_land, land_location, i));
+                            if tax.amount > 0 {
+                                taxes.append(tax);
+                            }
+                        },
+                        Option::None => {
+                            let tax = self.pending_taxes.read((owner_land, i));
+                            if tax.amount > 0 {
+                                taxes.append(tax);
+                            }
+                        }
+                    }
+                };
+            taxes
         }
     }
 }
