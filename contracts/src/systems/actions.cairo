@@ -10,8 +10,8 @@ trait IActions<T> {
     fn auction(
         ref self: T,
         land_location: u64,
-        start_price: u64,
-        floor_price: u64,
+        start_price: u256,
+        floor_price: u256,
         token_for_sale: ContractAddress
     );
 
@@ -19,16 +19,16 @@ trait IActions<T> {
         ref self: T,
         land_location: u64,
         token_for_sale: ContractAddress,
-        sell_price: u64,
-        amount_to_stake: u64,
+        sell_price: u256,
+        amount_to_stake: u256,
         liquidity_pool: ContractAddress,
     );
     fn buy(
         ref self: T,
         land_location: u64,
         token_for_sale: ContractAddress,
-        sell_price: u64,
-        amount_to_stake: u64,
+        sell_price: u256,
+        amount_to_stake: u256,
         liquidity_pool: ContractAddress,
     );
 
@@ -36,18 +36,18 @@ trait IActions<T> {
 
     fn nuke(ref self: T, land_location: u64);
 
-    fn increase_price(ref self: T, land_location: u64, new_price: u64,);
+    fn increase_price(ref self: T, land_location: u64, new_price: u256,);
 
-    fn increase_stake(ref self: T, land_location: u64, amount_to_stake: u64,);
+    fn increase_stake(ref self: T, land_location: u64, amount_to_stake: u256,);
 
     //getters
-    fn get_stake_balance(self: @T, staker: ContractAddress) -> u64;
+    fn get_stake_balance(self: @T, staker: ContractAddress) -> u256;
     fn get_land(self: @T, land_location: u64) -> Land;
     fn get_pending_taxes(self: @T, owner_land: ContractAddress) -> Array<TokenInfo>;
     fn get_pending_taxes_for_land(
         self: @T, land_location: u64, owner_land: ContractAddress
     ) -> Array<TokenInfo>;
-    fn get_current_auction_price(self: @T, land_location: u64) -> u64;
+    fn get_current_auction_price(self: @T, land_location: u64) -> u256;
 }
 
 // dojo decorator
@@ -95,7 +95,7 @@ pub mod actions {
         #[key]
         land_location: u64,
         token_for_sale: ContractAddress,
-        sell_price: u64
+        sell_price: u256
     }
 
     #[derive(Drop, Serde)]
@@ -103,7 +103,7 @@ pub mod actions {
     pub struct RemainingStakeEvent {
         #[key]
         land_location: u64,
-        remaining_stake: u64
+        remaining_stake: u256
     }
 
     #[derive(Drop, Serde)]
@@ -112,8 +112,8 @@ pub mod actions {
         #[key]
         land_location: u64,
         start_time: u64,
-        start_price: u64,
-        floor_price: u64,
+        start_price: u256,
+        floor_price: u256,
     }
 
     #[derive(Drop, Serde)]
@@ -123,7 +123,7 @@ pub mod actions {
         land_location: u64,
         start_time: u64,
         final_time: u64,
-        final_price: u64,
+        final_price: u256,
     }
 
 
@@ -140,8 +140,8 @@ pub mod actions {
             ref self: ContractState,
             land_location: u64,
             token_for_sale: ContractAddress,
-            sell_price: u64,
-            amount_to_stake: u64,
+            sell_price: u256,
+            amount_to_stake: u256,
             liquidity_pool: ContractAddress,
         ) {
             assert(is_valid_position(land_location), 'Land location not valid');
@@ -212,8 +212,8 @@ pub mod actions {
             ref self: ContractState,
             land_location: u64,
             token_for_sale: ContractAddress,
-            sell_price: u64,
-            amount_to_stake: u64,
+            sell_price: u256,
+            amount_to_stake: u256,
             liquidity_pool: ContractAddress,
         ) {
             let mut world = self.world_default();
@@ -257,8 +257,8 @@ pub mod actions {
         fn auction(
             ref self: ContractState,
             land_location: u64,
-            start_price: u64,
-            floor_price: u64,
+            start_price: u256,
+            floor_price: u256,
             token_for_sale: ContractAddress
         ) {
             assert(is_valid_position(land_location), 'Land location not valid');
@@ -293,7 +293,7 @@ pub mod actions {
         }
 
 
-        fn increase_price(ref self: ContractState, land_location: u64, new_price: u64,) {
+        fn increase_price(ref self: ContractState, land_location: u64, new_price: u256,) {
             assert(is_valid_position(land_location), 'Land location not valid');
 
             let mut world = self.world_default();
@@ -309,7 +309,7 @@ pub mod actions {
             store.set_land(land);
         }
 
-        fn increase_stake(ref self: ContractState, land_location: u64, amount_to_stake: u64) {
+        fn increase_stake(ref self: ContractState, land_location: u64, amount_to_stake: u256) {
             assert(is_valid_position(land_location), 'Land location not valid');
 
             let mut world = self.world_default();
@@ -336,7 +336,7 @@ pub mod actions {
         //GETTERS FUNCTIONS
 
         //TODO: here we have to change the return to struct of TokenInfo, no only amount
-        fn get_stake_balance(self: @ContractState, staker: ContractAddress) -> u64 {
+        fn get_stake_balance(self: @ContractState, staker: ContractAddress) -> u256 {
             self.payable.stake_balance.read(staker).amount
         }
 
@@ -362,7 +362,7 @@ pub mod actions {
 
 
         //TODO: see how validate if the auction is active or not
-        fn get_current_auction_price(self: @ContractState, land_location: u64) -> u64 {
+        fn get_current_auction_price(self: @ContractState, land_location: u64) -> u256 {
             assert(is_valid_position(land_location), 'Land location not valid');
             let mut world = self.world_default();
             let store = StoreTrait::new(world);
@@ -421,8 +421,8 @@ pub mod actions {
             mut store: Store,
             land_location: u64,
             token_for_sale: ContractAddress,
-            sell_price: u64,
-            amount_to_stake: u64,
+            sell_price: u256,
+            amount_to_stake: u256,
             liquidity_pool: ContractAddress,
             caller: ContractAddress,
             mut auction: Auction,
@@ -467,8 +467,8 @@ pub mod actions {
             mut store: Store,
             land_location: u64,
             token_for_sale: ContractAddress,
-            sell_price: u64,
-            amount_to_stake: u64,
+            sell_price: u256,
+            amount_to_stake: u256,
             liquidity_pool: ContractAddress,
             caller: ContractAddress,
         ) {

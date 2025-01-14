@@ -40,7 +40,7 @@ mod PayableComponent {
     #[derive(Drop, Serde, starknet::Store, Debug, Copy)]
     pub struct TokenInfo {
         token_address: ContractAddress,
-        amount: u64,
+        amount: u256,
     }
 
     // Storage
@@ -78,7 +78,7 @@ mod PayableComponent {
             ref self: ComponentState<TContractState>,
             buyer: ContractAddress,
             token_address: ContractAddress,
-            amount: u64
+            amount: u256
         ) {
             self._initialize(token_address);
             let buyer_balance = self.token_dispatcher.read().balanceOf(buyer);
@@ -91,7 +91,7 @@ mod PayableComponent {
             sender: ContractAddress,
             recipient: ContractAddress,
             token_address: ContractAddress,
-            amount: u64,
+            amount: u256,
         ) {
             self._validate(sender, token_address, amount);
             let status = self
@@ -106,7 +106,7 @@ mod PayableComponent {
             ref self: ComponentState<TContractState>,
             sender: ContractAddress,
             token_address: ContractAddress,
-            amount: u64
+            amount: u256
         ) {
             self._validate(sender, token_address, amount);
             //CONST OUR_CONTRACT = OXOXOXOX;
@@ -116,7 +116,7 @@ mod PayableComponent {
 
 
         fn _pay_from_contract(
-            ref self: ComponentState<TContractState>, recipient: ContractAddress, amount: u64
+            ref self: ComponentState<TContractState>, recipient: ContractAddress, amount: u256
         ) -> bool {
             //   some validation
             // assert(get_contract_address)
@@ -142,7 +142,7 @@ mod PayableComponent {
             ref self: ComponentState<TContractState>,
             staker: ContractAddress,
             token_address: ContractAddress,
-            amount: u64
+            amount: u256
         ) {
             let contract_address = get_contract_address();
             self._validate(staker, token_address, amount);
@@ -163,7 +163,7 @@ mod PayableComponent {
             ref self: ComponentState<TContractState>,
             owner_land: ContractAddress,
             token_address: ContractAddress,
-            amount: u64,
+            amount: u256,
             land_location: u64
         ) {
             // to see how many of diferents tokens the person can have
@@ -202,7 +202,7 @@ mod PayableComponent {
 
 
         fn _discount_stake_for_taxes(
-            ref self: ComponentState<TContractState>, owner_land: ContractAddress, tax_amount: u64
+            ref self: ComponentState<TContractState>, owner_land: ContractAddress, tax_amount: u256
         ) {
             let stake_balance = self.stake_balance.read(owner_land);
             let new_amount = if stake_balance.amount <= tax_amount {
@@ -253,7 +253,7 @@ mod PayableComponent {
 
         fn _generate_taxes(
             ref self: ComponentState<TContractState>, mut store: Store, land_location: u64
-        ) -> Result<u64, felt252> {
+        ) -> Result<u256, felt252> {
             let mut land = store.land(land_location);
             //generate taxes for each neighbor of neighbor
 
@@ -273,7 +273,7 @@ mod PayableComponent {
             let current_time = get_block_timestamp();
             let elapsed_time = current_time - land.last_pay_time;
 
-            let total_taxes: u64 = (land.sell_price * TAX_RATE * elapsed_time) / (100 * BASE_TIME);
+            let total_taxes: u256 = (land.sell_price * TAX_RATE.into() * elapsed_time.into()) / (100 * BASE_TIME.into());
 
             //if we dont have enough stake to pay the taxes,we distrubute the total amount of stake
             //and after we nuke the land
@@ -283,7 +283,7 @@ mod PayableComponent {
                 (total_taxes, false)
             };
 
-            let tax_per_neighbor = tax_to_distribute / max_neighbors(land_location);
+            let tax_per_neighbor = tax_to_distribute / max_neighbors(land_location).into();
 
             for location in neighbors
                 .span() {
