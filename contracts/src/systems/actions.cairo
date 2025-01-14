@@ -44,6 +44,9 @@ trait IActions<T> {
     fn get_stake_balance(self: @T, staker: ContractAddress) -> u64;
     fn get_land(self: @T, land_location: u64) -> Land;
     fn get_pending_taxes(self: @T, owner_land: ContractAddress) -> Array<TokenInfo>;
+    fn get_pending_taxes_for_land(
+        self: @T, land_location: u64, owner_land: ContractAddress
+    ) -> Array<TokenInfo>;
     fn get_current_auction_price(self: @T, land_location: u64) -> u64;
 }
 
@@ -340,16 +343,13 @@ pub mod actions {
         fn get_pending_taxes(
             self: @ContractState, owner_land: ContractAddress
         ) -> Array<TokenInfo> {
-            let mut token_info: Array<TokenInfo> = ArrayTrait::new();
-            let taxes_length = self.payable.pending_taxes_length.read(owner_land);
-            for mut i in 0
-                ..taxes_length {
-                    let pending_tax = self.payable.pending_taxes.read((owner_land, i));
-                    if pending_tax.amount > 0 {
-                        token_info.append(pending_tax);
-                    };
-                };
-            token_info
+            self.payable._get_pending_taxes(owner_land, Option::None)
+        }
+
+        fn get_pending_taxes_for_land(
+            self: @ContractState, land_location: u64, owner_land: ContractAddress
+        ) -> Array<TokenInfo> {
+            self.payable._get_pending_taxes(owner_land, Option::Some(land_location))
         }
 
         fn get_land(self: @ContractState, land_location: u64) -> Land {
@@ -407,9 +407,11 @@ pub mod actions {
                     };
                 };
             }
-            let taxes = self.get_pending_taxes(land.owner);
+
+            //claim taxes for the land
+            let taxes = self.get_pending_taxes_for_land(land.location, land.owner);
             if taxes.len() != 0 {
-                self.payable._claim_taxes(taxes, land.owner)
+                self.payable._claim_taxes(taxes, land.owner, land.location);
             }
         }
 
