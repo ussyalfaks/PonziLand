@@ -273,7 +273,8 @@ mod PayableComponent {
             let current_time = get_block_timestamp();
             let elapsed_time = current_time - land.last_pay_time;
 
-            let total_taxes: u256 = (land.sell_price * TAX_RATE.into() * elapsed_time.into()) / (100 * BASE_TIME.into());
+            let total_taxes: u256 = (land.sell_price * TAX_RATE.into() * elapsed_time.into())
+                / (100 * BASE_TIME.into());
 
             //if we dont have enough stake to pay the taxes,we distrubute the total amount of stake
             //and after we nuke the land
@@ -366,7 +367,7 @@ mod PayableComponent {
                                 (owner_land, land_location, i),
                                 TokenInfo { token_address: pending_tax.token_address, amount: 0 }
                             );
-                        
+
                         //now we discount in the global of the owner balance
                         let amount = self.pending_taxes.read((owner_land, i)).amount;
                         if amount > token_info.amount {
