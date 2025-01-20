@@ -25,7 +25,7 @@ jobs:
       - id: setup-dojo
         uses: runelabsxyz/setup-dojo@main
         with:
-          version: "v1.0.0"
+          version: "v1.0.12"
 
       - uses: oven-sh/setup-bun@v2
         with:
