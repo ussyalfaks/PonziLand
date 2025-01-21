@@ -12,6 +12,7 @@
   import { hexStringToNumber, padAddress, toBigInt } from '$lib/utils';
   import LandTaxClaimer from '../land/land-tax-claimer.svelte';
   import Button from '../ui/button/button.svelte';
+  import RatesOverlay from './rates-overlay.svelte';
 
   let backgroundImage = $state('/tiles/grass.jpg');
 
@@ -60,6 +61,7 @@
       getNextClaim: land.getNextClaim,
       getCurrentAuctionPrice: land.getCurrentAuctionPrice,
       increaseStake: land.increaseStake,
+      getYieldInfo: land.getYieldInfo,
     };
   }
 
@@ -136,6 +138,9 @@
                background-size: cover;
                background-position: center;`}
 >
+  {#if selected}
+    <RatesOverlay />
+  {/if}
   {#if isOwner()}
     <div
       class="absolute z-10 top-1 left-1/2"

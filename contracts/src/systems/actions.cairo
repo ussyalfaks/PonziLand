@@ -2,7 +2,7 @@ use starknet::ContractAddress;
 
 use dojo::world::WorldStorage;
 use ponzi_land::models::land::Land;
-use ponzi_land::components::payable::PayableComponent::{TokenInfo, ClaimInfo};
+use ponzi_land::components::payable::PayableComponent::{TokenInfo, ClaimInfo, YieldInfo};
 
 // define the interface
 #[starknet::interface]
@@ -50,6 +50,7 @@ trait IActions<T> {
     ) -> Array<TokenInfo>;
     fn get_current_auction_price(self: @T, land_location: u64) -> u256;
     fn get_next_claim_info(self: @T, land_location: u64) -> Array<ClaimInfo>;
+    fn get_neighbors_yield(self: @T, land_location: u64) -> Array<YieldInfo>;
 }
 
 // dojo decorator
@@ -62,7 +63,7 @@ pub mod actions {
     use ponzi_land::models::land::{Land, LandTrait};
     use ponzi_land::models::auction::{Auction, AuctionTrait};
     use ponzi_land::components::payable::{
-        PayableComponent, PayableComponent::{TokenInfo, ClaimInfo}
+        PayableComponent, PayableComponent::{TokenInfo, ClaimInfo, YieldInfo}
     };
     use ponzi_land::helpers::coord::{is_valid_position, up, down, left, right, max_neighbors};
     use ponzi_land::consts::{TAX_RATE, BASE_TIME};
@@ -429,6 +430,32 @@ pub mod actions {
                 }
             }
             claim_info
+        }
+
+
+        fn get_neighbors_yield(self: @ContractState, land_location: u64) -> Array<YieldInfo> {
+            assert(is_valid_position(land_location), 'Land location not valid');
+            let mut world = self.world_default();
+            let store = StoreTrait::new(world);
+            let land = store.land(land_location);
+
+            let neighbors = self.payable._add_neighbors(store, land.location);
+
+            let mut yield_info: Array<YieldInfo> = ArrayTrait::new();
+            if neighbors.len() > 0 {
+                for neighbor in neighbors {
+                    yield_info
+                        .append(
+                            YieldInfo {
+                                token: neighbor.token_used,
+                                rate: neighbor.sell_price
+                                    * TAX_RATE.into()
+                                    / (100 * BASE_TIME.into())
+                            }
+                        );
+                }
+            }
+            yield_info
         }
     }
 
