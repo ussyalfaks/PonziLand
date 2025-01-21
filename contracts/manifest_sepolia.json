@@ -1253,7 +1253,7 @@
   "contracts": [
     {
       "address": "0x68afc45a6e6baff16a5089aa81676a2d4b654a7a3e78e83e57690a1b10b9dac",
-      "class_hash": "0x36bb41dbd9b89ac0d5b0a5ee541a2457b00e8df0507dbc64133b4cc25366778",
+      "class_hash": "0x1830c7b32237e4c4a27ab465ba44554644f97c3631b932bedae5a6b70b3c36f",
       "abi": [
         {
           "type": "impl",
@@ -1423,6 +1423,20 @@
             {
               "name": "rate",
               "type": "core::integer::u256"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "ponzi_land::components::payable::PayableComponent::LandYieldInfo",
+          "members": [
+            {
+              "name": "remaining_stake_time",
+              "type": "core::integer::u256"
+            },
+            {
+              "name": "yield_info",
+              "type": "core::array::Array::<ponzi_land::components::payable::PayableComponent::YieldInfo>"
             }
           ]
         },
@@ -1681,7 +1695,7 @@
               ],
               "outputs": [
                 {
-                  "type": "core::array::Array::<ponzi_land::components::payable::PayableComponent::YieldInfo>"
+                  "type": "ponzi_land::components::payable::PayableComponent::LandYieldInfo"
                 }
               ],
               "state_mutability": "view"
