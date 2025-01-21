@@ -139,7 +139,7 @@
                background-position: center;`}
 >
   {#if selected}
-    <RatesOverlay />
+    <RatesOverlay {land} />
   {/if}
   {#if isOwner()}
     <div
