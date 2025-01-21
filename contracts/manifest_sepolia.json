@@ -1253,7 +1253,7 @@
   "contracts": [
     {
       "address": "0x68afc45a6e6baff16a5089aa81676a2d4b654a7a3e78e83e57690a1b10b9dac",
-      "class_hash": "0x5ae9a7ed1bb47998daa157dd23d6d42381a44439a8bc348e6d9b4dc1b0bd967",
+      "class_hash": "0x36bb41dbd9b89ac0d5b0a5ee541a2457b00e8df0507dbc64133b4cc25366778",
       "abi": [
         {
           "type": "impl",
@@ -1409,6 +1409,20 @@
             {
               "name": "can_be_nuked",
               "type": "core::bool"
+            }
+          ]
+        },
+        {
+          "type": "struct",
+          "name": "ponzi_land::components::payable::PayableComponent::YieldInfo",
+          "members": [
+            {
+              "name": "token",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "rate",
+              "type": "core::integer::u256"
             }
           ]
         },
@@ -1652,6 +1666,22 @@
               "outputs": [
                 {
                   "type": "core::array::Array::<ponzi_land::components::payable::PayableComponent::ClaimInfo>"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_neighbors_yield",
+              "inputs": [
+                {
+                  "name": "land_location",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::array::Array::<ponzi_land::components::payable::PayableComponent::YieldInfo>"
                 }
               ],
               "state_mutability": "view"
