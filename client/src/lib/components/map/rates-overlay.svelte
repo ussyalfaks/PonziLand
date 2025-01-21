@@ -4,15 +4,21 @@
 
   let { land } = $props<{ land: SelectedLandType }>();
 
-  $inspect('land from rates-overlay', land);
-
   let yieldInfo: YieldInfo[] | undefined;
 
   $effect(() => {
-    land.getYieldInfo().then((res: YieldInfo[]) => {
-      yieldInfo = res;
-      $inspect('yeildInfo', yieldInfo);
-    });
+    console.log('land from rates', land);
+    if (land) {
+      land
+        .getYieldInfo()
+        .then((res: YieldInfo[] | undefined) => {
+          yieldInfo = res;
+          console.log('yield info response:', res);
+        })
+        .catch((error: any) => {
+          console.error('Error fetching yield info:', error);
+        });
+    }
   });
 </script>
 
