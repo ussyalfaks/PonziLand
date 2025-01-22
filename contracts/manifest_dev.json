@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x45575a88cc5cef1e444c77ce60b7b4c9e73a01cbbe20926d5a4c72a94011410",
-    "address": "0x74726ebce329b31da8fcad2c5bf5bd5da53b4bccbd5b6aaf5f08d7a54e7e954",
-    "seed": "ponzi_land_internal_2",
+    "address": "0x1e3f3b4a94efe916afd13af2eac5ddbfb184edda17e58834f5d88a0517ca520",
+    "seed": "ponzi_land",
     "name": "Ponzi Land",
     "entrypoints": [
       "uuid",
@@ -1252,8 +1252,8 @@
   },
   "contracts": [
     {
-      "address": "0x68afc45a6e6baff16a5089aa81676a2d4b654a7a3e78e83e57690a1b10b9dac",
-      "class_hash": "0x1830c7b32237e4c4a27ab465ba44554644f97c3631b932bedae5a6b70b3c36f",
+      "address": "0x4d81ae950723f367706d4062654b2d829b704b236fa341b4fedf2604dd73200",
+      "class_hash": "0xd676f03126cd97c6da5c37533fd028614f7c3c43c546421754c775a756afe9",
       "abi": [
         {
           "type": "impl",
@@ -1421,7 +1421,11 @@
               "type": "core::starknet::contract_address::ContractAddress"
             },
             {
-              "name": "rate",
+              "name": "sell_price",
+              "type": "core::integer::u256"
+            },
+            {
+              "name": "percent_rate",
               "type": "core::integer::u256"
             }
           ]
