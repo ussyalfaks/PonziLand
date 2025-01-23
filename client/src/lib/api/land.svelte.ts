@@ -12,6 +12,7 @@ import { QueryBuilder, type SubscribeParams } from '@dojoengine/sdk';
 import type { BigNumberish, Result } from 'starknet';
 import { derived, get, writable, type Readable } from 'svelte/store';
 import data from '$lib/data.json';
+import { type LandYieldInfo } from '$lib/interfaces';
 
 export type TransactionResult = Promise<
   | {
@@ -84,7 +85,7 @@ export type LandWithActions = LandWithMeta & {
   getPendingTaxes(): Promise<PendingTax[] | undefined>;
   getNextClaim(): Promise<NextClaimInformation[] | undefined>;
   getCurrentAuctionPrice(): Promise<CurrencyAmount | undefined>;
-  getYieldInfo(): Promise<YieldInfo[] | undefined>;
+  getYieldInfo(): Promise<LandYieldInfo | undefined>;
 };
 
 export function useLands(): LandsStore | undefined {
@@ -224,10 +225,11 @@ export function useLands(): LandsStore | undefined {
           );
         },
         async getYieldInfo() {
-          console.log('Location:', ensureNumber(land.location));
-          return (await sdk.client.actions.getNeighborsYield(
-            `0x${ensureNumber(land.location)}`,
-          )) as YieldInfo[] | undefined;
+          const result = (await sdk.client.actions.getNeighborsYield(
+            land.location,
+          )) as LandYieldInfo | undefined;
+
+          return result;
         },
       }));
 
