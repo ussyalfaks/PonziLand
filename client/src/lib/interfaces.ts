@@ -1,7 +1,10 @@
+import type { CurrencyAmount } from './utils/CurrencyAmount';
+
 export interface Token {
   name: string;
   address: string;
   lpAddress: string;
+  decimals: number;
   images: {
     icon: string;
     castle: {
@@ -14,7 +17,7 @@ export interface Token {
 
 export interface TileInfo {
   location: number;
-  sellPrice: number;
+  sellPrice: CurrencyAmount;
   tokenUsed: string;
   owner?: string;
   tokenAddress: string;
@@ -26,14 +29,14 @@ export interface BuyData {
     address: string;
     lpAddress: string;
   }>;
-  stakeAmount: string;
-  sellPrice: string;
+  stakeAmount: CurrencyAmount;
+  sellPrice: CurrencyAmount;
 }
 
 export interface Bid {
-  price: number;
+  price: CurrencyAmount;
   bidder: string;
-  timestamp: number;
+  timestamp: CurrencyAmount;
 }
 
 export interface YieldInfo {

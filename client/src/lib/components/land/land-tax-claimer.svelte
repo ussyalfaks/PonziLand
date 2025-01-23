@@ -1,76 +1,16 @@
 <script lang="ts">
-  import { nukableStore, useLands } from '$lib/api/land.svelte';
-  import {
-    selectedLandMeta,
-    type SelectedLandType,
-  } from '$lib/stores/stores.svelte';
-  import { hexStringToNumber, toHexWithPadding } from '$lib/utils';
+  import { nukableStore, type LandWithActions } from '$lib/api/land.svelte';
+  import { toBigInt, toHexWithPadding } from '$lib/utils';
   import data from '$lib/data.json';
+  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
+  import { Tag } from 'lucide-svelte';
+  import { type Token } from '$lib/interfaces';
+  import { getAggregatedTaxes, type TaxData } from '$lib/utils/taxes';
 
-  let { land } = $props<{ land: SelectedLandType }>();
+  let { land } = $props<{ land: LandWithActions }>();
 
   let waiting = $state(false);
   let nukableLands = $state<bigint[]>([]);
-
-  const getAggregatedTaxes = async (
-    land: SelectedLandType,
-  ): Promise<
-    { tokenAddress: string; tokenSymbol: string; totalTax: bigint }[]
-  > => {
-    if (!land || !land.getNextClaim || !land.getPendingTaxes) {
-      return [];
-    }
-
-    // get next claim
-    const nextClaimTaxes = await land.getNextClaim();
-    console.log('nextclaim taxes', nextClaimTaxes);
-
-    // get pending taxes
-    const pendingTaxes = await land.getPendingTaxes();
-
-    // aggregate the two arrays with total tax per token
-    const tokenTaxMap: Record<string, bigint> = {};
-
-    nextClaimTaxes?.forEach((tax) => {
-      if (tax.can_be_nuked) {
-        nukableLands = [...nukableLands, tax.land_location];
-      }
-      if (tax.amount == 0n) return;
-      const token = toHexWithPadding(tax.token_address);
-      tokenTaxMap[token] = (tokenTaxMap[token] || 0n) + tax.amount;
-    });
-
-    pendingTaxes?.forEach((tax) => {
-      if (tax.amount == 0n) return;
-      const token = toHexWithPadding(tax.token_address);
-      tokenTaxMap[token] = (tokenTaxMap[token] || 0n) + tax.amount;
-    });
-
-    // Convert the map to an array of objects
-    const result = Object.entries(tokenTaxMap).map(([token, totalTax]) => {
-      const tokenSymbol =
-        data.availableTokens.find((t) => t.address == token)?.name ?? 'Unknown';
-
-      return {
-        tokenAddress: token,
-        tokenSymbol,
-        totalTax,
-      };
-    });
-
-    nukableStore.update((nukableLandStore) => {
-      const result = [...nukableLandStore];
-      // for each nukable land, add the land to the store
-      nukableLands.forEach((land) => {
-        if (!result.includes(land)) result.push(land);
-        console.log('nukable land added to store', land);
-      });
-
-      return result;
-    });
-
-    return result;
-  };
 
   async function handleClaimFromCoin() {
     console.log('claiming from coin');
@@ -98,16 +38,30 @@
   }
 
   async function fetchTaxes() {
-    await getAggregatedTaxes(land).then((taxes) => {
-      aggregatedTaxes = taxes;
+    const result = await getAggregatedTaxes(land);
+
+    aggregatedTaxes = result.taxes;
+
+    const nukableLands = result.nukable;
+
+    nukableStore.update((nukableLandStore) => {
+      const newStoreValue = [...nukableLandStore];
+      // for each nukable land, add the land to the store
+      for (const land of nukableLands) {
+        const location = toBigInt(land)!;
+        if (newStoreValue.includes(location)) {
+          continue;
+        }
+
+        console.log('nukable land added to store', land);
+        newStoreValue.push(location);
+      }
+
+      return newStoreValue;
     });
   }
 
-  let aggregatedTaxes: {
-    tokenAddress: string;
-    tokenSymbol: string;
-    totalTax: bigint;
-  }[] = $state([]);
+  let aggregatedTaxes: TaxData[] = $state([]);
 
   $effect(() => {
     fetchTaxes();

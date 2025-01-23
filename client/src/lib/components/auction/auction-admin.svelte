@@ -1,7 +1,6 @@
 <script lang="ts">
   import { useLands } from '$lib/api/land.svelte';
   import type { Token } from '$lib/interfaces';
-  import BuySellForm from '../buy/buy-sell-form.svelte';
   import { Button } from '../ui/button';
   import { Input } from '../ui/input';
   import { Label } from '../ui/label';
@@ -14,13 +13,14 @@
   } from '../ui/select';
   import data from '$lib/data.json';
   import { goto } from '$app/navigation';
+  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
 
   let landStore = useLands();
 
   let location = $state<number>(0);
   let selectedToken = $state<Token | null>(null);
-  let stakeAmount = $state<number>(100);
-  let sellAmount = $state<number>(10);
+  let startPrice = $state<string>('100');
+  let stopPrice = $state<string>('10');
   let decayRate = $state<number>(2);
 
   const handleCreateAuction = () => {
@@ -29,8 +29,8 @@
     landStore
       ?.auctionLand(
         location,
-        stakeAmount,
-        sellAmount,
+        CurrencyAmount.fromScaled(startPrice, selectedToken ?? undefined),
+        CurrencyAmount.fromScaled(stopPrice, selectedToken ?? undefined),
         selectedToken?.address!,
         decayRate,
       )
@@ -56,9 +56,9 @@
     </SelectContent>
   </Select>
   <Label>Start Price</Label>
-  <Input type="number" bind:value={stakeAmount} />
+  <Input type="number" bind:value={startPrice} />
   <Label>Stop Price</Label>
-  <Input type="number" bind:value={sellAmount} />
+  <Input type="number" bind:value={stopPrice} />
   <Label>Decay Rate</Label>
   <Input type="number" bind:value={decayRate} />
   <Button on:click={handleCreateAuction}>Create Auction</Button>
