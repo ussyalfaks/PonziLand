@@ -4,7 +4,7 @@ description = "The official Dojo Starter guide, the quickest and most streamline
 cover_uri = "file://assets/cover.png"
 icon_uri = "file://assets/icon.png"
 website = "https://github.com/dojoengine/dojo-starter"
-seed = "ponzi_land_internal_5"
+seed = "ponzi_land_internal_6"
 
 [world.socials]
 x = "https://x.com/ohayo_dojo"
@@ -23,3 +23,8 @@ ipfs_config.password = "12290b883db9138a8ae3363b6739d220"
 
 [writers]
 "ponzi_land" = ["ponzi_land-actions"]
+
+[init_call_args]
+"ponzi_land-actions" = [
+    "0x071de745c1ae996cfd39fb292b4342b7c086622e3ecf3a5692bd623060ff3fa0",
+]

@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x45575a88cc5cef1e444c77ce60b7b4c9e73a01cbbe20926d5a4c72a94011410",
-    "address": "0x432a170b560678103c59236a7510e8be3b8bcd5263e712bd35a35c2ae808789",
-    "seed": "ponzi_land_internal_5",
+    "address": "0x2c1855609bfcdd2584bfd65afcc786108c34d7794e2df181a0d4518cd1a3dc0",
+    "seed": "ponzi_land_internal_6",
     "name": "Ponzi Land",
     "entrypoints": [
       "uuid",
@@ -1252,8 +1252,8 @@
   },
   "contracts": [
     {
-      "address": "0x6d486804be809c374c411f157a8fd023e74c8ab912207886721925597809507",
-      "class_hash": "0x6420fc06f101e46ff96d366d8096c8736c12b3d47dbb18a40cecd9849d48ab1",
+      "address": "0x69ceb08777f6339e8c7b28a846725759fd358c83c8a0cb29d221280fe7fef5",
+      "class_hash": "0x33cfcf8c94d404069db274d4953228c42100e40c34c2c8251ec37ea86cae61c",
       "abi": [
         {
           "type": "impl",
@@ -1304,6 +1304,18 @@
               "state_mutability": "view"
             }
           ]
+        },
+        {
+          "type": "function",
+          "name": "dojo_init",
+          "inputs": [
+            {
+              "name": "token_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
         },
         {
           "type": "impl",
@@ -1449,6 +1461,36 @@
           ]
         },
         {
+          "type": "struct",
+          "name": "ponzi_land::models::auction::Auction",
+          "members": [
+            {
+              "name": "land_location",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "start_time",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "start_price",
+              "type": "core::integer::u256"
+            },
+            {
+              "name": "floor_price",
+              "type": "core::integer::u256"
+            },
+            {
+              "name": "is_finished",
+              "type": "core::bool"
+            },
+            {
+              "name": "decay_rate",
+              "type": "core::integer::u8"
+            }
+          ]
+        },
+        {
           "type": "interface",
           "name": "ponzi_land::systems::actions::IActions",
           "items": [
@@ -1467,10 +1509,6 @@
                 {
                   "name": "floor_price",
                   "type": "core::integer::u256"
-                },
-                {
-                  "name": "token_for_sale",
-                  "type": "core::starknet::contract_address::ContractAddress"
                 },
                 {
                   "name": "decay_rate",
@@ -1707,15 +1745,35 @@
                 }
               ],
               "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_active_auctions",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::integer::u8"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_auction",
+              "inputs": [
+                {
+                  "name": "land_location",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "ponzi_land::models::auction::Auction"
+                }
+              ],
+              "state_mutability": "view"
             }
           ]
-        },
-        {
-          "type": "function",
-          "name": "dojo_init",
-          "inputs": [],
-          "outputs": [],
-          "state_mutability": "view"
         },
         {
           "type": "impl",
@@ -1836,10 +1894,13 @@
           ]
         }
       ],
-      "init_calldata": [],
+      "init_calldata": [
+        "0x071de745c1ae996cfd39fb292b4342b7c086622e3ecf3a5692bd623060ff3fa0"
+      ],
       "tag": "ponzi_land-actions",
       "selector": "0x4c6e07326dfd951e1c971bbcec9fc9a3c00c744add51a51c4c3301e7857d1d8",
       "systems": [
+        "dojo_init",
         "auction",
         "bid",
         "buy",
