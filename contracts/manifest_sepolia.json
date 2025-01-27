@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x45575a88cc5cef1e444c77ce60b7b4c9e73a01cbbe20926d5a4c72a94011410",
-    "address": "0x2c1855609bfcdd2584bfd65afcc786108c34d7794e2df181a0d4518cd1a3dc0",
-    "seed": "ponzi_land_internal_6",
+    "address": "0x7c446db0d65cc450e1609e2bc7ed4a2074a1a8ed819e2e0ad3e40c8e943b901",
+    "seed": "ponzi_land_internal_7",
     "name": "Ponzi Land",
     "entrypoints": [
       "uuid",
@@ -1252,8 +1252,8 @@
   },
   "contracts": [
     {
-      "address": "0x69ceb08777f6339e8c7b28a846725759fd358c83c8a0cb29d221280fe7fef5",
-      "class_hash": "0x1875e7bf102be6004eb85bf39ae4758746abccb9949c3fab1e0d392f102a685",
+      "address": "0x27da016d84a96f6ec783d2bdaebdfabe3db7257e9267a810d99571929eb6e7e",
+      "class_hash": "0x7cb924028051f1bca4466ede8c3895456c67e41776da41fc2658a9505e4a68b",
       "abi": [
         {
           "type": "impl",
@@ -1306,23 +1306,6 @@
           ]
         },
         {
-          "type": "function",
-          "name": "dojo_init",
-          "inputs": [
-            {
-              "name": "token_address",
-              "type": "core::starknet::contract_address::ContractAddress"
-            }
-          ],
-          "outputs": [],
-          "state_mutability": "external"
-        },
-        {
-          "type": "impl",
-          "name": "ActionsImpl",
-          "interface_name": "ponzi_land::systems::actions::IActions"
-        },
-        {
           "type": "struct",
           "name": "core::integer::u256",
           "members": [
@@ -1335,6 +1318,51 @@
               "type": "core::integer::u128"
             }
           ]
+        },
+        {
+          "type": "function",
+          "name": "dojo_init",
+          "inputs": [
+            {
+              "name": "token_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "land_1",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "land_2",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "land_3",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "land_4",
+              "type": "core::integer::u64"
+            },
+            {
+              "name": "start_price",
+              "type": "core::integer::u256"
+            },
+            {
+              "name": "floor_price",
+              "type": "core::integer::u256"
+            },
+            {
+              "name": "decay_rate",
+              "type": "core::integer::u64"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "impl",
+          "name": "ActionsImpl",
+          "interface_name": "ponzi_land::systems::actions::IActions"
         },
         {
           "type": "struct",
@@ -1486,7 +1514,7 @@
             },
             {
               "name": "decay_rate",
-              "type": "core::integer::u8"
+              "type": "core::integer::u64"
             }
           ]
         },
@@ -1512,7 +1540,7 @@
                 },
                 {
                   "name": "decay_rate",
-                  "type": "core::integer::u8"
+                  "type": "core::integer::u64"
                 }
               ],
               "outputs": [],
@@ -1895,7 +1923,16 @@
         }
       ],
       "init_calldata": [
-        "0x071de745c1ae996cfd39fb292b4342b7c086622e3ecf3a5692bd623060ff3fa0"
+        "0x071de745c1ae996cfd39fb292b4342b7c086622e3ecf3a5692bd623060ff3fa0",
+        "0x41",
+        "0x48",
+        "0x201",
+        "0x208",
+        "128000000000000000000",
+        "0",
+        "1000000000000000000",
+        "0",
+        "100"
       ],
       "tag": "ponzi_land-actions",
       "selector": "0x4c6e07326dfd951e1c971bbcec9fc9a3c00c744add51a51c4c3301e7857d1d8",
@@ -1915,7 +1952,7 @@
   "models": [
     {
       "members": [],
-      "class_hash": "0x1849db767ed466f911a5cb9c9442a0831b0ba02a6cb3fec79376165ea4c8fb",
+      "class_hash": "0x2d6a47decc7a74f87446e1496f5b5f8b97d606db403b421c1a1d3c732a6a102",
       "tag": "ponzi_land-Auction",
       "selector": "0x7e0590370db3aa23e7aa340e9dfbdb6127f3fe6d5173b6051be0225a6acddec"
     },
