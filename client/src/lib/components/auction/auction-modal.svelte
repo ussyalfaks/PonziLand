@@ -2,6 +2,7 @@
   import { getAuctionDataFromLocation } from '$lib/api/auction.svelte';
   import type { LandSetup } from '$lib/api/land.svelte';
   import { useLands } from '$lib/api/land.svelte';
+  import type { Token } from '$lib/interfaces';
   import type { Auction } from '$lib/models.gen';
   import {
     selectedLand,
@@ -9,15 +10,15 @@
     uiStore,
   } from '$lib/stores/stores.svelte';
   import { toHexWithPadding } from '$lib/utils';
-  import Button from '../ui/button/button.svelte';
+  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
+  import BigNumber from 'bignumber.js';
   import BuySellForm from '../buy/buy-sell-form.svelte';
-  import type { Token } from '$lib/interfaces';
+  import LandOverview from '../land/land-overview.svelte';
+  import Button from '../ui/button/button.svelte';
   import { Card } from '../ui/card';
   import CloseButton from '../ui/close-button.svelte';
-  import BigNumber from 'bignumber.js';
-  import { type BigNumberish } from 'starknet';
-  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
-  import { Currency } from 'lucide-svelte';
+
+  let extended = $state(false);
 
   let auctionInfo = $state<Auction>();
   let currentTime = $state(Date.now());
@@ -51,7 +52,12 @@
   let floorPrice = $derived(
     CurrencyAmount.fromUnscaled(auctionInfo?.floor_price ?? 0).toString(),
   );
-  let currentPriceDisplay = $derived(currentPriceDerived?.toString());
+  let currentPriceDisplay = $derived(
+    CurrencyAmount.fromUnscaled(
+      currentPriceDerived?.toNumber() ?? 0,
+      $selectedLandMeta?.token,
+    ),
+  );
 
   let landStore = useLands();
 
@@ -129,21 +135,72 @@
 <div
   class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
 >
-  <Card class="flex flex-col min-w-96 min-h-96">
+  <Card class="flex flex-col min-w-96 min-h-96 bg-ponzi">
     <CloseButton onclick={handleCancelClick} />
-    <p>
-      StartTime: {new Date(
-        parseInt(auctionInfo?.start_time as string, 16) * 1000,
-      ).toLocaleString()}
-    </p>
-    <p>StartPrice: {startPrice}</p>
-    <p>Current Price: {currentPriceDisplay}</p>
-    <p>FloorPrice: {floorPrice}</p>
 
-    <BuySellForm bind:selectedToken bind:stakeAmount bind:sellAmount />
-    <Button on:click={handleBiddingClick}>
-      Buy for {currentPriceDisplay}
-      XXX
-    </Button>
+    <h2 class="text-2xl">Buy Land</h2>
+    <div class="flex flex-col items-center">
+      <div class="flex gap-6">
+        <div class="flex flex-col items-center justify-center p-5 gap-3">
+          {#if $selectedLandMeta}
+            <LandOverview land={$selectedLandMeta} size="lg" />
+          {/if}
+          <div class="text-shadow-none">0 watching</div>
+          <div class="flex items-center gap-1">
+            {#each currentPriceDisplay.toString() as char}
+              {#if char === '.'}
+                <div class="text-ponzi-huge text-3xl">.</div>
+              {:else}
+                <div
+                  class="text-ponzi-huge text-3xl bg-[#2B2B3D] p-2 text-[#f2b545]"
+                >
+                  {char}
+                </div>
+              {/if}
+            {/each}
+          </div>
+          <div class="text-ponzi-huge text-3xl"></div>
+          <div class="flex items-center gap-2">
+            <div class="text-3xl text-ponzi-huge text-white">
+              {$selectedLandMeta?.token?.symbol}
+            </div>
+            <img
+              class="w-6 h-6"
+              src={$selectedLandMeta?.token?.images.icon}
+              alt="{$selectedLandMeta?.token?.symbol} icon"
+            />
+          </div>
+        </div>
+        {#if extended}
+          <div class="flex flex-col gap-4 w-96">
+            <BuySellForm bind:selectedToken bind:stakeAmount bind:sellAmount />
+          </div>
+        {/if}
+      </div>
+      <div class="flex items-center justify-center w-36 my-4">
+        {#if extended}
+          <button onclick={handleBiddingClick}>
+            <img
+              src="/assets/ui/button/buy/button-buy.png"
+              alt="buy-land"
+              class=" hover:cursor-pointer hover:opacity-90"
+            />
+          </button>
+        {:else}
+          <button
+            onclick={() => {
+              console.log('extended');
+              extended = true;
+            }}
+          >
+            <img
+              src="/assets/ui/button/buy/button-buy-glass.png"
+              alt="buy-land"
+              class=" hover:cursor-pointer hover:opacity-90"
+            />
+          </button>
+        {/if}
+      </div>
+    </div>
   </Card>
 </div>

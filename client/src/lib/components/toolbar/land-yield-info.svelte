@@ -5,27 +5,36 @@
   import { padAddress, toHexWithPadding } from '$lib/utils';
   import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
 
-  let { land, expanded }: { land: LandWithActions; expanded: boolean } =
-    $props();
+  let {
+    land,
+    expanded = false,
+  }: { land: LandWithActions; expanded?: boolean } = $props();
 
   const getAggregatedYield = (yieldInfos: YieldInfo[]) => {
+    console.log('yieldInfos', yieldInfos);
     const aggregatedYield = yieldInfos.reduce(
       (acc, curr) => {
+        if (curr.percent_rate <= 0n) {
+          return acc;
+        }
         const tokenAddress = toHexWithPadding(curr.token);
         acc[tokenAddress] = acc[tokenAddress] ?? 0n;
-        acc[tokenAddress] += curr.sell_price;
+        acc[tokenAddress] += curr.percent_rate;
         return acc;
       },
       {} as Record<string, bigint>,
     );
 
-    return Object.entries(aggregatedYield).map(([token, sell_price]) => {
+    return Object.entries(aggregatedYield).map(([token, totalPercentRate]) => {
       // get token
       const tokenData = data.availableTokens.find((t) => t.address == token);
 
       return {
         token: tokenData,
-        sell_price: CurrencyAmount.fromUnscaled(sell_price, tokenData),
+        totalPercentRate: CurrencyAmount.fromUnscaled(
+          totalPercentRate,
+          tokenData,
+        ),
       };
     });
   };
@@ -78,7 +87,7 @@
       <div class="flex flex-col">
         {#each getAggregatedYield(yieldInfo?.yield_info ?? []) as neighbourYield}
           <div class="flex justify-between gap-1 text-yellow-500">
-            <div>{neighbourYield.sell_price}</div>
+            <div>{neighbourYield.totalPercentRate}</div>
             <div>{neighbourYield.token?.symbol ?? 'unknown'}</div>
           </div>
         {/each}
