@@ -8,15 +8,34 @@ import {
   PUBLIC_DOJO_BURNER_PRIVATE,
   PUBLIC_DOJO_CHAIN_ID,
 } from '$env/static/public';
-import type { CallPolicy } from '@cartridge/controller';
+import type {
+  CallPolicy,
+  ContractPolicy,
+  SessionPolicies,
+} from '@cartridge/controller';
 import type { DojoConfig as DojoConfigInternal } from '@dojoengine/core';
 
-const policies: CallPolicy[] = manifest.contracts.flatMap((contract) => {
-  return contract.systems.map((system) => ({
-    target: contract.address,
-    method: system,
-  }));
-});
+const policies: SessionPolicies = (() => {
+  const contracts: Record<string, ContractPolicy> = Object.fromEntries(
+    manifest.contracts.map((e) => {
+      return [
+        e.address,
+        {
+          name: e.tag,
+          methods: e.systems.map((system) => {
+            return {
+              entrypoint: 'system',
+            };
+          }),
+        },
+      ];
+    }),
+  );
+
+  return {
+    contracts,
+  };
+})();
 
 const internalDojoConfig = createDojoConfig({
   manifest,
@@ -27,7 +46,7 @@ const internalDojoConfig = createDojoConfig({
 });
 
 export type DojoConfig = DojoConfigInternal & {
-  policies: CallPolicy[];
+  policies: SessionPolicies;
   profile: string;
   chainId: string;
 };
