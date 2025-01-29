@@ -65,6 +65,15 @@ const accountKey = Symbol('controller');
 
 export async function connect(controller: SvelteController) {}
 
+function a2hex(str: string): string {
+  var arr = [];
+  for (var i = 0, l = str.length; i < l; i++) {
+    var hex = Number(str.charCodeAt(i)).toString(16);
+    arr.push(hex);
+  }
+  return '0x' + arr.join('');
+}
+
 export async function setupController(
   config: DojoConfig,
 ): Promise<SvelteController | undefined> {
@@ -78,7 +87,8 @@ export async function setupController(
   }
 
   const controller = new SvelteController({
-    rpc: config.rpcUrl,
+    defaultChainId: a2hex(config.chainId), // SN_SEPOLIA in hex
+    chains: [{ rpcUrl: config.rpcUrl }],
     policies: config.policies,
   });
 
