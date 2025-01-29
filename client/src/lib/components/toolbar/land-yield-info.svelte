@@ -7,34 +7,27 @@
 
   let {
     land,
-    expanded = false,
-  }: { land: LandWithActions; expanded?: boolean } = $props();
+    expanded = $bindable(),
+  }: { land: LandWithActions; expanded: boolean } = $props();
 
   const getAggregatedYield = (yieldInfos: YieldInfo[]) => {
-    console.log('yieldInfos', yieldInfos);
     const aggregatedYield = yieldInfos.reduce(
       (acc, curr) => {
-        if (curr.percent_rate <= 0n) {
-          return acc;
-        }
         const tokenAddress = toHexWithPadding(curr.token);
         acc[tokenAddress] = acc[tokenAddress] ?? 0n;
-        acc[tokenAddress] += curr.percent_rate;
+        acc[tokenAddress] += curr.sell_price;
         return acc;
       },
       {} as Record<string, bigint>,
     );
 
-    return Object.entries(aggregatedYield).map(([token, totalPercentRate]) => {
+    return Object.entries(aggregatedYield).map(([token, sell_price]) => {
       // get token
       const tokenData = data.availableTokens.find((t) => t.address == token);
 
       return {
         token: tokenData,
-        totalPercentRate: CurrencyAmount.fromUnscaled(
-          totalPercentRate,
-          tokenData,
-        ),
+        sell_price: CurrencyAmount.fromUnscaled(sell_price, tokenData),
       };
     });
   };
@@ -87,11 +80,24 @@
       <div class="flex flex-col">
         {#each getAggregatedYield(yieldInfo?.yield_info ?? []) as neighbourYield}
           <div class="flex justify-between gap-1 text-yellow-500">
-            <div>{neighbourYield.totalPercentRate}</div>
+            <div>{neighbourYield.sell_price}</div>
             <div>{neighbourYield.token?.symbol ?? 'unknown'}</div>
           </div>
         {/each}
       </div>
+    </div>
+  {:else}
+    <div class="flex justify-between">
+      <p class="opacity-50">Neighb. earnings</p>
+      <button
+        type="button"
+        class="px-2 bg-white bg-opacity-50"
+        onclick={() => {
+          expanded = true;
+        }}
+      >
+        ...
+      </button>
     </div>
   {/if}
 {:catch error}
