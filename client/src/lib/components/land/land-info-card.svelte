@@ -63,7 +63,7 @@
         {land.stakeAmount}
       </p>
     </div>
-    <LandYieldInfo {land} {expanded} />
+    <LandYieldInfo {land} bind:expanded />
   </div>
 </div>
 
