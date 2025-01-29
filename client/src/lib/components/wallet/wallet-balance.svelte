@@ -82,7 +82,6 @@
           </Avatar.Root>
           <div class="flex flex-col items-end">
             <TokenDisplay amount={balance ?? 0n} token={tokenBalance.token} />
-            <span class="text-gray-500">({balance})</span>
           </div>
         </div>
       {/await}
