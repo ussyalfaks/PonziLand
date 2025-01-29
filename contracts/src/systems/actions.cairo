@@ -611,10 +611,11 @@ pub mod actions {
                 1000
             };
 
-            //TODO: we have to define the correct decay rate
             self
                 .initialize_auction_for_neighbors(
-                    store, land_location, asking_price, FLOOR_PRICE, DECAY_RATE
+                    // The floor price and decay_rate are extracted from the current auction, to always propagate the values
+                    // from the intial auctions
+                    store, land_location, asking_price, auction.floor_price, auction.decay_rate
                 );
         }
 
