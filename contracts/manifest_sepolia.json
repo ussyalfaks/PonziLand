@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x45575a88cc5cef1e444c77ce60b7b4c9e73a01cbbe20926d5a4c72a94011410",
-    "address": "0x7aedd0c3ba07820fa25eb9a85fc40b7cfc1ca65d3f646e4c91e144ffa787a96",
-    "seed": "ponzi_land_internal_8",
+    "address": "0x27a82b1641d3a6b4b0b049afeb6c9f0196fe6b440fcb636e87be0243b23736f",
+    "seed": "ponzi_land_private_1",
     "name": "Ponzi Land",
     "entrypoints": [
       "uuid",
@@ -1252,7 +1252,7 @@
   },
   "contracts": [
     {
-      "address": "0x5775421643653ea23c75304f1c780bd3acbbef7c6b830b715e02955ab44acd8",
+      "address": "0x1f058fe3a5a82cc12c1e38444d3f9f3fd3511ef4c95851a3d4e07ad195e0af6",
       "class_hash": "0x725fd12238e72f272c7ac0a821cab7f6a3ee6d97b8a44d04782f4b7dadef27f",
       "abi": [
         {
