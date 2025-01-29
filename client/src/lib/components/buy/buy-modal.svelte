@@ -1,20 +1,25 @@
 <script lang="ts">
   import { useLands, type LandSetup } from '$lib/api/land.svelte';
+  import { useAccount } from '$lib/contexts/account';
   import type { Token } from '$lib/interfaces';
   import { uiStore, selectedLandMeta } from '$lib/stores/stores.svelte';
   import { toHexWithPadding } from '$lib/utils';
   import { toCalldata } from '$lib/utils/currency';
   import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
   import LandOverview from '../land/land-overview.svelte';
+  import LoadingScreen from '../loading/loading-screen.svelte';
   import Button from '../ui/button/button.svelte';
   import { CardTitle } from '../ui/card';
   import Card from '../ui/card/card.svelte';
   import CloseButton from '../ui/close-button.svelte';
   import BuySellForm from './buy-sell-form.svelte';
+  import ThreeDots from '../loading/three-dots.svelte';
 
   let landStore = useLands();
+  let accountManager = useAccount();
 
   let selectedToken = $state<Token | undefined>();
+  let loading = $state(false);
 
   let stakeAmount = $state<CurrencyAmount>(CurrencyAmount.fromScaled(1));
   let sellAmount = $state<CurrencyAmount>(CurrencyAmount.fromScaled(1));
@@ -30,7 +35,7 @@
     uiStore.modalData = null;
   }
 
-  function handleBuyClick() {
+  async function handleBuyClick() {
     console.log('Buy land');
 
     const landSetup: LandSetup = {
@@ -47,9 +52,31 @@
       return;
     }
 
-    landStore?.buyLand($selectedLandMeta?.location, landSetup).then((res) => {
-      console.log('Land bought:', res);
-    });
+    loading = true;
+
+    try {
+      const result = await landStore?.buyLand(
+        $selectedLandMeta?.location,
+        landSetup,
+      );
+
+      if (result?.transaction_hash) {
+        await accountManager
+          ?.getProvider()
+          ?.getWalletAccount()
+          ?.waitForTransaction(result.transaction_hash);
+
+        console.log('Bought land with TX: ', result.transaction_hash);
+
+        // Close the modal
+        uiStore.showModal = false;
+        uiStore.modalData = null;
+      }
+    } catch (error) {
+      console.error('Error buying land', error);
+    } finally {
+      loading = false;
+    }
   }
 </script>
 
@@ -70,11 +97,17 @@
       </div>
     </div>
     <div class="flex justify-center mt-5">
-      <Button
-        on:click={() => {
-          handleBuyClick();
-        }}>Buy land</Button
-      >
+      {#if loading}
+        <div class="text-3xl h-10 w-20">
+          Buying<ThreeDots />
+        </div>
+      {:else}
+        <Button
+          on:click={() => {
+            handleBuyClick();
+          }}>Buy land</Button
+        >
+      {/if}
     </div>
   </Card>
 </div>
