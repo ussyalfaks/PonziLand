@@ -56,18 +56,20 @@
 <div
   class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
 >
-  <Card class="flex flex-col min-w-96 h-96">
+  <Card class="flex flex-col">
     <CloseButton onclick={handleCancelClick} />
     <CardTitle>Buy Land</CardTitle>
-    <div class="flex h-full">
-      <div class="flex flex-col w-full items-center justify-center">
+    <div class="flex h-full w-full">
+      <div class="flex flex-col w-full items-center justify-center min-w-80">
         {#if $selectedLandMeta}
           <LandOverview land={$selectedLandMeta} />
         {/if}
       </div>
-      <BuySellForm bind:selectedToken bind:stakeAmount bind:sellAmount />
+      <div class="min-w-80">
+        <BuySellForm bind:selectedToken bind:stakeAmount bind:sellAmount />
+      </div>
     </div>
-    <div class="flex justify-center">
+    <div class="flex justify-center mt-5">
       <Button
         on:click={() => {
           handleBuyClick();
