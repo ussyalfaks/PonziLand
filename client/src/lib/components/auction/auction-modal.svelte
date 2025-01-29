@@ -19,6 +19,7 @@
   import CloseButton from '../ui/close-button.svelte';
   import { useDojo } from '$lib/contexts/dojo';
   import ThreeDots from '../loading/three-dots.svelte';
+  import { useAccount } from '$lib/contexts/account';
 
   let extended = $state(false);
 
@@ -67,7 +68,7 @@
   );
 
   let landStore = useLands();
-  const { store, client: sdk, accountManager } = useDojo();
+  let accountManager = useAccount();
 
   function calculateCurrentPrice(
     startPrice: BigNumber,

@@ -15,17 +15,10 @@
     </div>
     <div class="font-bold text-right">{token.symbol}</div>
   </div>
-  <div class="dollars">$0000</div>
 </div>
 
 <style>
   .amount {
-    text-shadow: none;
-  }
-
-  .dollars {
-    font-size: 0.75rem;
-    color: #a0aec0;
     text-shadow: none;
   }
 </style>
