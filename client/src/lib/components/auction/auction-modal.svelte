@@ -17,8 +17,12 @@
   import Button from '../ui/button/button.svelte';
   import { Card } from '../ui/card';
   import CloseButton from '../ui/close-button.svelte';
+  import { useDojo } from '$lib/contexts/dojo';
+  import ThreeDots from '../loading/three-dots.svelte';
 
   let extended = $state(false);
+
+  let loading = $state(false);
 
   let auctionInfo = $state<Auction>();
   let currentTime = $state(Date.now());
@@ -35,12 +39,15 @@
       const startPrice = new BigNumber(auctionInfo.start_price as string, 16);
       const floorPrice = new BigNumber(auctionInfo.floor_price as string, 16);
       const startTime = parseInt(auctionInfo.start_time as string, 16) * 1000;
-      return calculateCurrentPrice(
+      const currentPrice = calculateCurrentPrice(
         startPrice,
         floorPrice,
         startTime,
         currentTime,
       );
+
+      console.log(currentPrice.toString());
+      return currentPrice;
     }
     return null;
   });
@@ -60,6 +67,7 @@
   );
 
   let landStore = useLands();
+  const { store, client: sdk, accountManager } = useDojo();
 
   function calculateCurrentPrice(
     startPrice: BigNumber,
@@ -78,6 +86,7 @@
   }
 
   async function handleBiddingClick() {
+    loading = true;
     console.log('Buying land with data:', auctionInfo);
 
     //fetch auction currentprice
@@ -97,12 +106,33 @@
     };
 
     if (!$selectedLand?.location) {
+      loading = false;
       return;
     }
 
-    landStore?.bidLand($selectedLand?.location, landSetup).then((res) => {
-      console.log('Bought land:', res);
-    });
+    try {
+      const result = await landStore?.bidLand(
+        $selectedLand?.location,
+        landSetup,
+      );
+
+      if (result?.transaction_hash) {
+        await accountManager
+          .getProvider()
+          ?.getWalletAccount()
+          ?.waitForTransaction(result.transaction_hash);
+        console.log('Bought land with TX: ', result.transaction_hash);
+
+        // Close the modal
+        uiStore.showModal = false;
+        uiStore.modalData = null;
+      } else {
+        loading = false;
+      }
+    } catch (e) {
+      console.error('Error buying land:', e);
+      loading = false;
+    }
   }
 
   function handleCancelClick() {
@@ -130,6 +160,10 @@
 
     return () => clearInterval(interval);
   });
+
+  const priceDisplay = $derived(currentPriceDisplay.toString());
+
+  $inspect(priceDisplay);
 </script>
 
 <div
@@ -147,7 +181,7 @@
           {/if}
           <div class="text-shadow-none">0 watching</div>
           <div class="flex items-center gap-1">
-            {#each currentPriceDisplay.toString() as char}
+            {#each priceDisplay as char}
               {#if char === '.'}
                 <div class="text-ponzi-huge text-3xl">.</div>
               {:else}
@@ -178,7 +212,11 @@
         {/if}
       </div>
       <div class="flex items-center justify-center w-36 my-4">
-        {#if extended}
+        {#if loading}
+          <div class="text-5xl h-10 w-20">
+            Buying<ThreeDots />
+          </div>
+        {:else if extended}
           <button onclick={handleBiddingClick}>
             <img
               src="/assets/ui/button/buy/button-buy.png"
