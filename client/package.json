@@ -12,7 +12,7 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
   },
   "devDependencies": {
-    "@cartridge/controller": "^0.5.5",
+    "@cartridge/controller": "^0.5.9",
     "@dojoengine/core": "^1.0.0-alpha.30",
     "@dojoengine/create-burner": "^1.0.0-alpha.30",
     "@dojoengine/recs": "^2.0.13",
