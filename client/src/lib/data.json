@@ -22,7 +22,7 @@
       "lpAddress": "0x04d0390b777b424e43839cd1e744799f3de6c176c7e32c1812a41dbd9c19db6a",
       "decimals": 18,
       "images": {
-        "icon": "/assets/tokens/eth/icon.svg",
+        "icon": "/assets/tokens/paper/icon.svg",
         "castle": {
           "basic": "/assets/tokens/paper/castles/basic.png",
           "advanced": "/assets/tokens/paper/castles/advanced.png",
@@ -37,7 +37,7 @@
       "lpAddress": "0x04d0390b777b424e43839cd1e744799f3de6c176c7e32c1812a41dbd9c19db6a",
       "decimals": 18,
       "images": {
-        "icon": "/assets/tokens/eth/icon.svg",
+        "icon": "/assets/tokens/lords/icon.svg",
         "castle": {
           "basic": "/assets/tokens/lords/castles/basic.png",
           "advanced": "/assets/tokens/lords/castles/advanced.png",
@@ -52,7 +52,7 @@
       "lpAddress": "0x04d0390b777b424e43839cd1e744799f3de6c176c7e32c1812a41dbd9c19db6a",
       "decimals": 18,
       "images": {
-        "icon": "/assets/tokens/eth/icon.svg",
+        "icon": "/assets/tokens/brother/icon.png",
         "castle": {
           "basic": "/assets/tokens/brother/castles/basic.png",
           "advanced": "/assets/tokens/brother/castles/advanced.png",
@@ -67,7 +67,7 @@
       "lpAddress": "0x04d0390b777b424e43839cd1e744799f3de6c176c7e32c1812a41dbd9c19db6a",
       "decimals": 18,
       "images": {
-        "icon": "/assets/tokens/eth/icon.svg",
+        "icon": "/assets/tokens/pal/icon.svg",
         "castle": {
           "basic": "/assets/tokens/pal/castles/basic.png",
           "advanced": "/assets/tokens/pal/castles/advanced.png",

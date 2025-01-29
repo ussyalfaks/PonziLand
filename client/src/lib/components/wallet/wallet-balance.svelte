@@ -74,7 +74,10 @@
             import * as Avatar from '$lib/components/ui/avatar/index.js';
           </script>
           <Avatar.Root class="h-6 w-6">
-            <Avatar.Image src="" alt={tokenBalance.token.symbol} />
+            <Avatar.Image
+              src={tokenBalance.token.images.icon}
+              alt={tokenBalance.token.symbol}
+            />
             <Avatar.Fallback>{tokenBalance.token.symbol}</Avatar.Fallback>
           </Avatar.Root>
           <div class="flex flex-col items-end">
