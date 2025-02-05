@@ -163,7 +163,11 @@
 
   {#if isOwner}
     <div class="absolute top-0 left-1/2 crown -translate-x-1/2">
-      <img src="/assets/ui/crown.png" alt="owned" />
+      <img
+        src="/assets/ui/icons/Icon_Crown.png"
+        alt="owned"
+        style="image-rendering: pixelated;"
+      />
     </div>
   {/if}
 </div>
