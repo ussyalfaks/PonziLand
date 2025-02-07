@@ -1,0 +1,20 @@
+[package]
+name = "ponzi-notifier"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.8.1"
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.0", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+starknet-crypto = "0.7.4"
+starknet-core = "0.12.1"
+
+tokio-stream = "0.1"
+
+torii-client = { git = "https://github.com/dojoengine/dojo.git", tag = "v1.1.2" }
+torii-grpc = { git = "https://github.com/dojoengine/dojo.git", tag = "v1.1.2" }
+dojo-world = { git = "https://github.com/dojoengine/dojo.git", tag = "v1.1.2" }
+dojo-types = { git = "https://github.com/dojoengine/dojo.git", tag = "v1.1.2" }

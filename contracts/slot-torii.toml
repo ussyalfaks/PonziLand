@@ -2,6 +2,13 @@ world_address = "0x027a82b1641d3a6b4b0b049afeb6c9f0196fe6b440fcb636e87be0243b237
 rpc = "https://api.cartridge.gg/x/starknet/sepolia"
 explorer = false
 events.raw = true
+events.historical = [
+    "ponzi_land-AuctionFinishedEvent",
+    "ponzi_land-LandNukedEvent",
+    "ponzi_land-NewLandEvent",
+    "ponzi_land-RemainingStakeEvent",
+    "ponzi_land-NewAuctionEvent",
+]
 
 [indexing]
 contracts = [

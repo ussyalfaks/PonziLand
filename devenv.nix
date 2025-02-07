@@ -19,12 +19,17 @@ in {
     cairo-nix.slot
     jq
     bc
+    protobuf
     colorized-logs
   ];
 
   languages.javascript = {
     enable = true;
     bun.enable = true;
+  };
+
+  languages.rust = {
+    enable = true;
   };
 
   cachix = {
