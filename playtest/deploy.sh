@@ -132,6 +132,7 @@ case $1 in
     TOKEN_ADDRESS=$(find_token "$3")
 
     mint $STRK_TOKEN_ADDRESS $2 150
+    sleep 3
     mint $TOKEN_ADDRESS $2 500
     ;;
   *)

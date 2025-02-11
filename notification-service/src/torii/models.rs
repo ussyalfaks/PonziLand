@@ -5,7 +5,7 @@ use dojo_world::ContractAddress;
 use starknet_core::types::U256;
 
 #[derive(Debug, Clone)]
-struct Location(u64);
+pub struct Location(u64);
 
 impl std::fmt::Display for Location {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
