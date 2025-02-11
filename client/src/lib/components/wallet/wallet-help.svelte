@@ -1,4 +1,4 @@
-<a href="https://example.com">
+<a href="https://docs.ponzi.land">
   <img
     src="/assets/ui/icons/Icon_Thin_Help.png"
     alt="help icon"
