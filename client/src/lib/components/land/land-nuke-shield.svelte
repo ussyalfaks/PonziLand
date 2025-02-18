@@ -1,11 +1,21 @@
 <script lang="ts">
   import * as Tooltip from '$lib/components/ui/tooltip';
+  import { cn } from '$lib/utils';
 
-  let { estimatedNukeTime }: { estimatedNukeTime: number } = $props();
+  let {
+    estimatedNukeTime,
+    class: ClassName = '',
+    lockTime = false,
+  }: {
+    estimatedNukeTime: number;
+    class?: string;
+    lockTime?: boolean;
+  } = $props();
 
-  let estimatedDays = Math.floor(estimatedNukeTime / 60 / 60 / 24);
+  let estimatedDays = $derived(Math.floor(estimatedNukeTime / 60 / 60 / 24));
   let estimatedTimeString = $derived.by(() => {
     // Convert estimatedNukeTime to a human-readable string
+    if (estimatedNukeTime === Infinity) return 'no neighbors = no tax';
     if (estimatedNukeTime < 0) return 'N/A';
     const days = Math.floor(estimatedNukeTime / 60 / 60 / 24);
     const hours = Math.floor((estimatedNukeTime / 60 / 60) % 24);
@@ -51,6 +61,7 @@
 
   $effect(() => {
     // trigger interval to update estimatedTimeString every seconds
+    if (lockTime) return;
     const interval = setInterval(() => {
       estimatedNukeTime -= 1;
     }, 1000);
@@ -62,16 +73,19 @@
 <Tooltip.Root>
   <Tooltip.Trigger>
     <div
-      class="nuke-shield h-2 w-2 flex items-center justify-center leading-none"
+      class={cn(
+        'nuke-shield h-2 w-2 flex items-center justify-center leading-none',
+        ClassName,
+      )}
       style="background-image: {getStyle(estimatedDays)
         .image}; color: {getStyle(estimatedDays).color}"
     >
-      {estimatedDays}
+      {estimatedDays === Infinity ? '∞' : estimatedDays}
     </div>
   </Tooltip.Trigger>
-  <Tooltip.Content class="border-ponzi bg-ponzi text-ponzi"
-    >{estimatedTimeString}</Tooltip.Content
-  >
+  <Tooltip.Content class="border-ponzi bg-ponzi text-ponzi">
+    {estimatedTimeString}
+  </Tooltip.Content>
 </Tooltip.Root>
 
 <style>
