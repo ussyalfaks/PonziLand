@@ -5,6 +5,7 @@
   import { cameraPosition, cameraTransition } from '$lib/stores/camera';
   import { mousePosCoords } from '$lib/stores/stores.svelte';
   import Tile from './tile.svelte';
+  import Characters from './characters.svelte';
 
   const MAP_SIZE = 64;
   const TILE_SIZE = 32;
@@ -196,6 +197,7 @@
           {/each}
         </div>
       {/each}
+      <Characters {tiles} />
     </button>
   </div>
 </div>
