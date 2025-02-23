@@ -5,6 +5,7 @@
   import { cameraPosition, cameraTransition } from '$lib/stores/camera';
   import { mousePosCoords } from '$lib/stores/stores.svelte';
   import Tile from './tile.svelte';
+  import FogOfWar from './fog-of-war.svelte';
 
   const MAP_SIZE = 64;
   const TILE_SIZE = 32;
@@ -189,6 +190,8 @@
       onmouseleave={handleMouseUp}
       style="transform: translate({$cameraPosition.offsetX}px, {$cameraPosition.offsetY}px) scale({$cameraPosition.scale});"
     >
+      <FogOfWar {tiles} tileSize={TILE_SIZE} mapSize={MAP_SIZE} />
+
       {#each tiles as row, y}
         <div class="row">
           {#each row as tile, x}
