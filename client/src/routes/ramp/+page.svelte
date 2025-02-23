@@ -2,7 +2,7 @@
   import type { AccountInterface } from 'starknet';
   import Button from '$lib/components/ui/button/button.svelte';
   import Input from '$lib/components/ui/input/input.svelte';
-  import { AccountManager, setupAccount } from '$lib/contexts/account.svelte';
+  import { AccountManager, setupAccount } from '$lib/contexts/account';
   import { appKit } from '$lib/ramp';
   import { provider, address as ethAddress } from '$lib/ramp/stores.svelte';
   import { BrowserProvider } from 'ethers/providers';
