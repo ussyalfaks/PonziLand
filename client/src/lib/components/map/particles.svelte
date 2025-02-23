@@ -1,55 +1,73 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import Particles, { particlesInit } from '@tsparticles/svelte';
+  import { loadSlim } from '@tsparticles/slim';
+  import type { Container } from '@tsparticles/engine';
 
-  let snowflakes = Array.from({ length: 200 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100 + 'vw',
-    offset: Math.random() * 20 - 10 + 'vw',
-    yoyoTime: Math.random() * 0.5 + 0.3,
-    yoyoY: Math.random() * 100 + 'vh',
-    scale: Math.random(),
-    fallDuration: Math.random() * 20 + 10 + 's',
-    fallDelay: Math.random() * -30 + 's',
-    opacity: Math.random(),
-  }));
+  let particlesConfig = {
+    particles: {
+      color: {
+        value: [
+          '#d3d3d3',
+          '#c0c0c0',
+          '#a9a9a9',
+          '#808080',
+          '#696969',
+          '#505050',
+        ],
+      },
+      links: {
+        enable: false,
+      },
+      move: {
+        enable: true,
+        direction: 'bottom' as const,
+        speed: 0.5,
+      },
+      number: {
+        value: 200,
+      },
+      size: {
+        value: { min: 2, max: 5 },
+        random: true,
+      },
+      opacity: {
+        value: 0.5,
+        random: true,
+      },
+    },
+    interactivity: {
+      events: {
+        onClick: {
+          enable: false,
+        },
+        onHover: {
+          enable: false,
+        },
+      },
+    },
+  };
 
-  onMount(() => {
-    const styleSheet = document.styleSheets[0];
-    snowflakes.forEach((snow) => {
-      const keyframes = `
-          @keyframes fall-${snow.id} {
-            ${Math.round(snow.yoyoTime * 100)}% {
-              transform: translate(calc(${snow.x} + ${snow.offset}), ${snow.yoyoY}) scale(${snow.scale});
-            }
-            to {
-              transform: translate(calc(${snow.x} + (${snow.offset} / 2)), 100vh) scale(${snow.scale});
-            }
-          }
-        `;
-      styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
-    });
+  let onParticlesLoaded = (event: CustomEvent<{ container: Container }>) => {
+    const particlesContainer = event.detail.container;
+  };
+
+  void particlesInit(async (engine) => {
+    await loadSlim(engine);
   });
 </script>
 
-<div class="absolute z-30 h-full w-full overflow-hidden pointer-events-none">
-  {#each snowflakes as snow}
-    <div
-      class="snow"
-      style="
-        opacity: {snow.opacity};
-        transform: translate({snow.x}, -10px) scale({snow.scale});
-        animation: fall-{snow.id} {snow.fallDuration} {snow.fallDelay} linear infinite;
-      "
-    ></div>
-  {/each}
-</div>
+<Particles
+  id="tsparticles"
+  class="absolute z-30 h-full w-full overflow-hidden pointer-events-none"
+  options={particlesConfig}
+  on:particlesLoaded={onParticlesLoaded}
+/>
 
 <style>
-  .snow {
+  #tsparticles {
     position: absolute;
-    width: 10px;
-    height: 10px;
-    background: white;
-    border-radius: 50%;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
   }
 </style>
