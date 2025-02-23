@@ -41,6 +41,7 @@ jobs:
         run: bun run build:sepolia
         working-directory: ./client
         env:
+          LAYERSWAP_TOKEN: ${{ secrets.LAYERSWAP_TOKEN }}
           # Force the auto bundler to prepare for cloudflare (otherwise it does weird things)
           CF_PAGES: "1"
 
