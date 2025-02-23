@@ -13,10 +13,10 @@
   let emptyZones = $derived(calculateEmptyZones(tiles));
 
   function calculateEmptyZones(tiles: Tile[][]) {
-    const zones = [];
+    const zones: { x: number; y: number }[] = [];
     if (!tiles.length) return zones;
 
-    const potentialZones = [];
+    const potentialZones: { x: number; y: number }[] = [];
     for (let zY = 0; zY < mapSize; zY += ZONE_SIZE) {
       for (let zX = 0; zX < mapSize; zX += ZONE_SIZE) {
         let emptyCount = 0;
