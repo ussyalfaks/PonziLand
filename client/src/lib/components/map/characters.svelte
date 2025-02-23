@@ -26,10 +26,10 @@
   async function animateEntity(entity: HTMLElement, buildingPair: number[]) {
     const [from, to] = buildingPair;
 
-    const fromX = (from % 64) * 32;
-    const fromY = Math.floor(from / 64) * 32;
-    const toX = (to % 64) * 32;
-    const toY = Math.floor(to / 64) * 32;
+    const fromX = (from % 64) * 32 - 5;
+    const fromY = Math.floor(from / 64) * 32 - 5;
+    const toX = (to % 64) * 32 - 5;
+    const toY = Math.floor(to / 64) * 32 - 5;
 
     entity.style.opacity = '1';
     entity.style.transition = 'none';
@@ -81,8 +81,12 @@
 
       const entity = document.createElement('div');
       entity.className =
-        'character h-2 w-2 bg-red-600 absolute transition-transform ease-linear';
+        'character h-2 w-2 absolute transition-transform ease-linear';
       entity.style.opacity = '0';
+
+      const duckNumber = Math.floor(Math.random() * 5) + 1;
+      entity.style.backgroundImage = `url(/assets/Ducks/Duck${duckNumber}.png)`;
+      entity.style.backgroundSize = 'cover';
 
       const container = document.querySelector('.map-container');
       container?.appendChild(entity);
