@@ -32,7 +32,7 @@
         value: 200,
       },
       size: {
-        value: { min: 3, max: 8 },
+        value: { min: 2, max: 6 },
         random: true,
       },
       opacity: {
