@@ -13,7 +13,12 @@
           '#808080',
           '#696969',
           '#505050',
+          '#ffd700',
         ],
+        random: {
+          enable: true,
+          minimumValue: 0.1,
+        },
       },
       links: {
         enable: false,
@@ -27,12 +32,23 @@
         value: 200,
       },
       size: {
-        value: { min: 2, max: 5 },
+        value: { min: 3, max: 8 },
         random: true,
       },
       opacity: {
-        value: 0.5,
-        random: true,
+        value: [
+          { value: 0.5, color: '#d3d3d3' },
+          { value: 0.5, color: '#c0c0c0' },
+          { value: 0.5, color: '#a9a9a9' },
+          { value: 0.5, color: '#808080' },
+          { value: 0.5, color: '#696969' },
+          { value: 0.5, color: '#505050' },
+          { value: 0.8, color: '#ffd700' },
+        ],
+        random: false,
+      },
+      shape: {
+        type: 'triangle',
       },
     },
     interactivity: {
