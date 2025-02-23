@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Tile } from '$lib/api/tile-store.svelte';
+  import Fog from './fog-tile.svelte';
 
   let { tiles, tileSize, mapSize } = $props<{
     tiles: Tile[][];
@@ -147,14 +148,11 @@
 </script>
 
 {#each emptyZones as zone}
-  <div
-    class="empty-zone"
-    style="
-      left: {zone.x * tileSize}px;
-      top: {zone.y * tileSize}px;
-      width: {ZONE_SIZE * tileSize}px;
-      height: {ZONE_SIZE * tileSize}px;
-    "
+  <Fog
+    left={zone.x * tileSize}
+    top={zone.y * tileSize}
+    width={ZONE_SIZE * tileSize}
+    height={ZONE_SIZE * tileSize}
   />
 {/each}
 
