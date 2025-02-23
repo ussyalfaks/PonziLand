@@ -6,6 +6,7 @@
   import { mousePosCoords } from '$lib/stores/stores.svelte';
   import Tile from './tile.svelte';
   import Characters from './characters.svelte';
+  import Particles from './particles.svelte';
 
   const MAP_SIZE = 64;
   const TILE_SIZE = 32;
@@ -150,6 +151,8 @@
     isDragging = false;
   }
 </script>
+
+<Particles />
 
 <div class="map-wrapper" bind:this={mapWrapper}>
   <!-- Column numbers -->
