@@ -21,7 +21,7 @@ use ponzi_land::systems::auth::{IAuthDispatcher, IAuthDispatcherTrait};
 use ponzi_land::models::land::{Land, Level, PoolKeyConversion, PoolKey};
 use ponzi_land::models::auction::{Auction};
 use ponzi_land::consts::{TIME_SPEED, MAX_AUCTIONS};
-use ponzi_land::helpers::coord::{left, right, up, down};
+use ponzi_land::helpers::coord::{left, right, up, down, up_left, up_right, down_left, down_right};
 use ponzi_land::store::{Store, StoreTrait};
 use ponzi_land::mocks::ekubo_core::{IEkuboCoreTestingDispatcher, IEkuboCoreTestingDispatcherTrait};
 
@@ -201,6 +201,13 @@ fn setup_test() -> (Store, IActionsDispatcher, IERC20CamelDispatcher, IEkuboCore
     (store, actions_system, erc20, testing_dispatcher)
 }
 
+pub enum Direction {
+    Left,
+    Right,
+    Up,
+    Down,
+}
+
 // Helper function for initializing lands
 fn initialize_land(
     actions_system: IActionsDispatcher,
@@ -287,18 +294,44 @@ fn verify_land(
     assert(land.token_used == expected_token_used, 'incorrect token used');
 }
 
-fn verify_auction_for_neighbor(
-    store: Store, location: u64, expected_sell_price: u256, expected_start_time: u64
+fn bid_and_verify_next_auctions(
+    actions_system: IActionsDispatcher,
+    store: Store,
+    main_currency: IERC20CamelDispatcher,
+    locations: Array<u64>,
+    next_direction: u8, // 0=left, 1=up, 2=right, 3=down
+    pool_key: PoolKey
 ) {
-    let neighbor = store.land(location);
-    let neighbor_auction = store.auction(neighbor.location);
-    assert(neighbor.sell_price == expected_sell_price, 'Err in neighbor sell price');
-    assert(
-        neighbor_auction.start_time * TIME_SPEED.into() == expected_start_time,
-        'Err in neighbor start time'
-    );
-}
+    // Bid on all locations
+    let mut i = 0;
+    loop {
+        if i >= locations.len() {
+            break;
+        }
+        let location = *locations.at(i);
+        actions_system.bid(location, main_currency.contract_address, 2, 10, pool_key);
+        i += 1;
+    };
 
+    // Verify next auctions were created in the specified direction
+    i = 0;
+    loop {
+        if i >= locations.len() {
+            break;
+        }
+        let location = *locations.at(i);
+        let next_auction = match next_direction {
+            0 => store.auction(left(location).unwrap()),
+            1 => store.auction(up(location).unwrap()),
+            2 => store.auction(right(location).unwrap()),
+            3 => store.auction(down(location).unwrap()),
+            _ => panic_with_felt252('Invalid direction')
+        };
+        assert(next_auction.start_price > 0, 'auction not started');
+        assert(next_auction.start_time > 0, 'auction not started');
+        i += 1;
+    };
+}
 
 #[test]
 fn test_buy_action() {
@@ -362,13 +395,6 @@ fn test_bid_and_buy_action() {
     // Validate bid/buy updates
     verify_land(store, 11, RECIPIENT(), 100, pool, 50, 100, main_currency.contract_address);
 
-    //right neighbor
-    verify_auction_for_neighbor(store, 12, 1000, 100);
-    //left neighbor
-    verify_auction_for_neighbor(store, 10, 1000, 100);
-    //down neighbor
-    verify_auction_for_neighbor(store, 75, 1000, 100);
-
     // Setup buyer with tokens and approvals
     setup_buyer_with_tokens(main_currency, actions_system, RECIPIENT(), NEW_BUYER(), 1000);
 
@@ -386,12 +412,8 @@ fn test_bid_and_buy_action() {
         160 * TIME_SPEED.into(),
         main_currency.contract_address
     );
-    //Verify auctions for neighbors
-
 }
 
-//TODO: EL PROBLEMA CON ESTO ES QUE NO SE SUMA EL STAKE AMOUNT, Y DESPUES HAY UN PROBLEMA CON EL PAY
-//AMOUNT QUE HAY MENOS
 #[test]
 fn test_claim_and_add_taxes() {
     let (store, actions_system, main_currency, ekubo_testing_dispatcher) = setup_test();
@@ -400,7 +422,6 @@ fn test_claim_and_add_taxes() {
         .set_pool_liquidity(
             PoolKeyConversion::to_ekubo(pool_key(main_currency.contract_address)), 10000
         );
-
     // Deploy ERC20 tokens for neighbors
     let erc20_neighbor_1 = deploy_erc20_with_pool(
         ekubo_testing_dispatcher, main_currency.contract_address, NEIGHBOR_1()
@@ -409,7 +430,6 @@ fn test_claim_and_add_taxes() {
     let erc20_neighbor_2 = deploy_erc20_with_pool(
         ekubo_testing_dispatcher, main_currency.contract_address, NEIGHBOR_2()
     );
-
     let erc20_neighbor_3 = deploy_erc20_with_pool(
         ekubo_testing_dispatcher, main_currency.contract_address, NEIGHBOR_3()
     );
@@ -798,4 +818,92 @@ fn check_invalid_liquidity_pool() {
         100,
         main_currency.contract_address
     );
+}
+
+#[test]
+fn test_organic_auction() {
+    let (store, actions_system, main_currency, ekubo_testing_dispatcher) = setup_test();
+
+    set_block_timestamp(10);
+    ekubo_testing_dispatcher
+        .set_pool_liquidity(
+            PoolKeyConversion::to_ekubo(pool_key(main_currency.contract_address)), 10000
+        );
+
+    setup_buyer_with_tokens(main_currency, actions_system, RECIPIENT(), NEW_BUYER(), 90000);
+
+    // Initial head locations
+    let heads: Array<u64> = array![1080, 1050, 1002, 1007];
+
+    let pool = pool_key(main_currency.contract_address);
+
+    // Step 1: Bid on heads and verify LEFT auctions
+    bid_and_verify_next_auctions(actions_system, store, main_currency, heads.clone(), 0, pool);
+
+    // Get LEFT locations
+    let mut left_locations: Array<u64> = ArrayTrait::new();
+    let mut i = 0;
+    loop {
+        if i >= heads.len() {
+            break;
+        }
+        let left_loc = left(*heads.at(i)).unwrap();
+        left_locations.append(left_loc);
+        i += 1;
+    };
+
+    // Step 2: Bid on LEFT locations and verify UP auctions
+    bid_and_verify_next_auctions(
+        actions_system, store, main_currency, left_locations.clone(), 1, pool
+    );
+
+    // Get UP locations
+    let mut up_locations: Array<u64> = ArrayTrait::new();
+    i = 0;
+    loop {
+        if i >= left_locations.len() {
+            break;
+        }
+        let up_loc = up(*left_locations.at(i)).unwrap();
+        up_locations.append(up_loc);
+        i += 1;
+    };
+
+    bid_and_verify_next_auctions(
+        actions_system, store, main_currency, up_locations.clone(), 2, pool
+    );
+
+    // Get RIGHT locations
+    let mut right_locations: Array<u64> = ArrayTrait::new();
+    i = 0;
+    loop {
+        if i >= up_locations.len() {
+            break;
+        }
+        let right_loc = right(*up_locations.at(i)).unwrap();
+
+        right_locations.append(right_loc);
+        i += 1;
+    };
+
+    // Get second RIGHT locations
+    let mut right2_locations: Array<u64> = ArrayTrait::new();
+    i = 0;
+    loop {
+        if i >= right_locations.len() {
+            break;
+        }
+        let right2_loc = right(*right_locations.at(i)).unwrap();
+
+        right2_locations.append(right2_loc);
+        i += 1;
+    };
+
+    // Step 4: Bid on second RIGHT locations and verify DOWN auctions
+    bid_and_verify_next_auctions(
+        actions_system, store, main_currency, right2_locations.clone(), 3, pool
+    );
+
+    let final_active_auctions = actions_system.get_active_auctions();
+    assert(final_active_auctions <= MAX_AUCTIONS, 'Too many active auctions');
 }
