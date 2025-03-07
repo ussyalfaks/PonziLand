@@ -6,6 +6,7 @@
   import WalletBalance from './wallet-balance.svelte';
   import WalletHelp from './wallet-help.svelte';
   import accountDataProvider, { setup } from '$lib/account.svelte';
+  import Leaderboard from '../ui/leaderboard/Leaderboard.svelte';
   import { getSocialink } from '$lib/accounts/social/index.svelte';
 
   setup();
@@ -104,6 +105,7 @@
       <hr class="my-3" />
       <WalletBalance />
     </Card>
+    <Leaderboard />
   {:else}
     <Button
       class="m-2"
