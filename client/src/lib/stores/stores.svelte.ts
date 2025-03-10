@@ -2,7 +2,7 @@ import { useLands, type LandWithActions } from '$lib/api/land.svelte';
 import { useAccount } from '$lib/contexts/account.svelte';
 import data from '$lib/data.json';
 import type { TileInfo, Token } from '$lib/interfaces';
-import { toHexWithPadding } from '$lib/utils';
+import { padAddress, toHexWithPadding } from '$lib/utils';
 import { derived, readable, writable, type Readable } from 'svelte/store';
 import account from '$lib/account.svelte';
 
@@ -109,7 +109,7 @@ export function usePlayerLands() {
       console.log('No value in store!');
       return [];
     }
-    const address = accountAddress;
+    const address = padAddress(accountAddress); // here to prevent controller address removing zeros from the start
     return $landsStore.filter((land) => land.owner == address);
   });
 }
