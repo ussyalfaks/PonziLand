@@ -1003,3 +1003,59 @@ fn test_reimburse_stakes() {
     );
 }
 
+#[test]
+fn test_claim_all() {
+    let (store, actions_system, main_currency, ekubo_testing_dispatcher) = setup_test();
+
+    set_block_timestamp(10);
+    ekubo_testing_dispatcher
+        .set_pool_liquidity(
+            PoolKeyConversion::to_ekubo(pool_key(main_currency.contract_address)), 10000
+        );
+
+    // Deploy ERC20 tokens for neighbors
+    let erc20_neighbor_1 = deploy_erc20_with_pool(
+        ekubo_testing_dispatcher, main_currency.contract_address, NEIGHBOR_1()
+    );
+
+    let erc20_neighbor_2 = deploy_erc20_with_pool(
+        ekubo_testing_dispatcher, main_currency.contract_address, NEIGHBOR_2()
+    );
+    let erc20_neighbor_3 = deploy_erc20_with_pool(
+        ekubo_testing_dispatcher, main_currency.contract_address, NEIGHBOR_3()
+    );
+
+    set_block_timestamp(100);
+    initialize_land(actions_system, main_currency, RECIPIENT(), 1280, 500, 1000, main_currency);
+
+    // Setup neighbor lands
+    set_block_timestamp(300);
+    initialize_land(actions_system, main_currency, NEIGHBOR_1(), 1281, 500, 1000, erc20_neighbor_1);
+
+    set_block_timestamp(500);
+    initialize_land(actions_system, main_currency, RECIPIENT(), 1216, 500, 1000, main_currency);
+
+    set_block_timestamp(600);
+    initialize_land(actions_system, main_currency, NEIGHBOR_3(), 1217, 500, 1000, erc20_neighbor_3);
+
+    set_block_timestamp(5000);
+    set_contract_address(RECIPIENT());
+
+    let land_locations = array![1280, 1216];
+
+    actions_system.claim_all(land_locations);
+
+    //Get claimer lands and verify taxes
+    let land_1280 = store.land(1280);
+    let land_1216 = store.land(1216);
+    let land_1280_taxes = actions_system.get_pending_taxes_for_land(1280, land_1280.owner);
+    let land_1216_taxes = actions_system.get_pending_taxes_for_land(1216, land_1216.owner);
+
+    assert(land_1280_taxes.len() == 0, 'have pending taxes');
+    assert(land_1216_taxes.len() == 0, 'have pending taxes');
+    assert(erc20_neighbor_1.balanceOf(land_1280.owner) > 0, 'fail in claim taxes');
+    assert(erc20_neighbor_3.balanceOf(land_1280.owner) > 0, 'fail in claim taxes');
+    assert(erc20_neighbor_1.balanceOf(land_1216.owner) > 0, 'fail in claim taxes');
+    assert(erc20_neighbor_3.balanceOf(land_1216.owner) > 0, 'fail in claim taxes');
+}
+
