@@ -7,6 +7,9 @@
   import { Button } from '../ui/button';
   import ThreeDots from '../loading/three-dots.svelte';
   import { refresh } from '$lib/account.svelte';
+  import { useAccount } from '$lib/contexts/account.svelte';
+  import type { SvelteController } from '$lib/accounts/controller';
+  import { Cone } from 'lucide-svelte';
 
   let username = $state('');
   let usernameAvailable = $state(true);
@@ -42,7 +45,23 @@
       refresh();
       loading = false;
     } catch (error) {
-      console.error(error);
+      console.error('Got: ', error);
+      if (typeof error !== 'string') {
+        // Handle non-string errors
+        console.error(error);
+      } else if ((error as string)?.includes('Account not deployed')) {
+        // Sign a dummy tx to deploy the account
+        useAccount()
+          ?.getProvider()
+          ?.getWalletAccount()
+          ?.execute({
+            contractAddress:
+              '0x00ed474ec67f690901bcc56ee69491163c4203ededf473198e08c24fe2ab0a29',
+            entrypoint: 'increase_balance',
+            calldata: [BigInt(1)],
+          });
+      }
+
       loading = false;
     }
   }

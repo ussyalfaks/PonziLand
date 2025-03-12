@@ -87,9 +87,12 @@ export async function register(username: string) {
     console.log('Sending signature request: ', signatureResponse);
 
     const account = useAccount()?.getProvider()?.getWalletAccount();
+
+    const hash = await account?.hashMessage(signatureResponse);
+
     const signature = await account?.signMessage(signatureResponse);
 
-    console.log('Signature:', signature);
+    console.log('Signature:', signature, 'for hash:', hash);
 
     // Submit the response to the server
     await sendRegister(signatureResponse, signature!);
@@ -99,6 +102,7 @@ export async function register(username: string) {
     console.log(
       'An error occurred while signing and send the response message',
     );
+    throw e;
   }
 }
 
