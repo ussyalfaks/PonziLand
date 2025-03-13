@@ -145,5 +145,5 @@ export async function addressesLookup(addresses: string[]) {
     }
   }
 
-  return (await response.json()) as {addresses: string[], username: string}[];
+  return (await response.json()) as { addresses: string[]; username: string }[];
 }
