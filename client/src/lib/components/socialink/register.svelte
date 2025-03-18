@@ -17,6 +17,8 @@
   let usernameError: string | undefined = $state();
   let checking = $state(false);
 
+  let registerError: string | undefined = $state();
+
   let loading = $state(false);
 
   let debouncedUsername = debounce(() => username);
@@ -58,6 +60,8 @@
       }
     } catch (error) {
       console.error('Got: ', error);
+      registerError =
+        error instanceof Error ? error.message : (error as any).toString();
 
       loading = false;
     }
@@ -90,6 +94,12 @@
         {/if}
       </div>
     </div>
+
+    {#if registerError != undefined}
+      <div class="p-2">
+        <span class="text-red-500">{registerError}</span>
+      </div>
+    {/if}
 
     {#if loading}
       <div class="flex items-center justify-center">
