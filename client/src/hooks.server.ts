@@ -6,7 +6,12 @@ import { redirect, type Handle } from '@sveltejs/kit';
 export const handle: Handle = async ({ event, resolve }) => {
   // Bypass all this trickery if the bypass token is set to '' (default), or if we're building
   // Or if we are after the DATE_GATE
+
   if (BYPASS_TOKEN === '' || building || new Date() > DATE_GATE) {
+    if (event.url.pathname === '/maintenance') {
+      return redirect(302, '/');
+    }
+
     return await resolve(event);
   }
 
@@ -27,11 +32,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   if (event.url.pathname === '/maintenance') {
     // Resolve as normal
-    if (new Date() > DATE_GATE) {
-      return redirect(302, '/');
-    } else {
-      return await resolve(event);
-    }
+    return await resolve(event);
   }
 
   // For the others, check the cookies, and if we have the good value, resolve as normal. Otherwise redirect to /maintenance
