@@ -46,6 +46,7 @@
 
   async function handleRegister() {
     loading = true;
+    registerError = undefined;
 
     const usernameLower = username!.toLowerCase();
 
