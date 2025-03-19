@@ -38,6 +38,9 @@ sozo -P sepolia migrate --fee ETH
 echo "Deployment completed successfully."
 
 # Re-deploy torii
+echo "Skip redeployment"
+exit 1
+
 echo "Deleting torii deployment"
 slot deployments delete ponziland-sepolia torii -f
 echo "Creating new torii deployment"
