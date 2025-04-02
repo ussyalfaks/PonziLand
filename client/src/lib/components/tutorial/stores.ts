@@ -2,8 +2,6 @@ import { writable } from 'svelte/store';
 import type { Tile } from '$lib/api/tile-store.svelte';
 import { toHexWithPadding } from '$lib/utils';
 
-export const tutorialProgression = writable<number>(1);
-
 const MAP_SIZE = 16;
 
 export function createFakeTiles(): Tile[][] {
@@ -19,21 +17,37 @@ export function createFakeTiles(): Tile[][] {
     );
 }
 
-export function createEmptyTiles(): Tile[][] {
-  return Array(MAP_SIZE)
-    .fill(null)
-    .map((_, i) =>
-      Array(MAP_SIZE)
-        .fill(null)
-        .map((_, j) => ({
-          location: toHexWithPadding(i * MAP_SIZE + j),
-          type: 'empty',
-          block_date_bought: null,
-          owner: null,
-          sell_price: 0,
-          token_used: null,
-        })),
-    );
+export function addAuctionToTiles(): void {
+  tiles.update((currentTiles) => {
+    const newTiles = [...currentTiles];
+
+    if (newTiles[8] && newTiles[8][8]) {
+      newTiles[8] = [...newTiles[8]];
+      newTiles[8][8] = {
+        ...newTiles[8][8],
+        type: 'auction',
+      };
+    }
+
+    return newTiles;
+  });
+}
+
+export function removeAuctionFromTiles(): void {
+  tiles.update((currentTiles) => {
+    const newTiles = [...currentTiles];
+
+    if (newTiles[8] && newTiles[8][8]) {
+      newTiles[8] = [...newTiles[8]];
+      newTiles[8][8] = {
+        ...newTiles[8][8],
+        type: 'grass',
+      };
+    }
+
+    return newTiles;
+  });
 }
 
 export const tiles = writable<Tile[][]>(createFakeTiles());
+export const tutorialProgression = writable<number>(1);
