@@ -11,7 +11,7 @@
 
 <div class="z-50 absolute top-0 left-0">
   <!-- Wallet Lookup -->
-  <WalletLookup />
+  <!-- <WalletLookup /> -->
 
   <!-- Leaderboard-->
   <!-- <Leaderboard /> -->

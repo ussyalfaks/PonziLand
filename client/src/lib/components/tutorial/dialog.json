@@ -1,0 +1,77 @@
+[
+  {
+    "id": 1,
+    "text": "Welcome to the tutorial!",
+    "image_id": 1
+  },
+  {
+    "id": 2,
+    "text": "Let's start by learning the basics.",
+    "image_id": 2
+  },
+  {
+    "id": 3,
+    "text": "This is your dashboard.",
+    "image_id": 3
+  },
+  {
+    "id": 4,
+    "text": "Here you can see your progress.",
+    "image_id": 4
+  },
+  {
+    "id": 5,
+    "text": "Click on the menu to explore more options.",
+    "image_id": 1
+  },
+  {
+    "id": 6,
+    "text": "You can customize your settings here.",
+    "image_id": 2
+  },
+  {
+    "id": 7,
+    "text": "Check out the leaderboard to see top players.",
+    "image_id": 3
+  },
+  {
+    "id": 8,
+    "text": "Visit the shop to buy new items.",
+    "image_id": 4
+  },
+  {
+    "id": 9,
+    "text": "Complete tasks to earn rewards.",
+    "image_id": 1
+  },
+  {
+    "id": 10,
+    "text": "Join a community to interact with other players.",
+    "image_id": 2
+  },
+  {
+    "id": 11,
+    "text": "Participate in events to win exclusive prizes.",
+    "image_id": 3
+  },
+  {
+    "id": 12,
+    "text": "Use the help section if you need assistance.",
+    "image_id": 4
+  },
+  {
+    "id": 13,
+    "text": "Keep an eye on notifications for updates.",
+    "image_id": 1
+  },
+  {
+    "id": 14,
+    "text": "You can log out from the settings menu.",
+    "image_id": 2
+  },
+  {
+    "id": 15,
+    "text": "Thank you for completing the tutorial!",
+    "image_id": 3
+  }
+]

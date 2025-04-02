@@ -1,3 +1,3 @@
 import { writable } from 'svelte/store';
 
-export const tutorialProgression = writable<number>(0);
+export const tutorialProgression = writable<number>(1);
