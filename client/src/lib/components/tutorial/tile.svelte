@@ -17,7 +17,7 @@
   import LandNukeShield from '../land/land-nuke-shield.svelte';
   import LandTaxClaimer from '../land/land-tax-claimer.svelte';
   import Button from '../ui/button/button.svelte';
-  import RatesOverlay from './rates-overlay.svelte';
+  import RatesOverlay from '$lib/components/map/rates-overlay.svelte';
   import { onMount } from 'svelte';
   import { getAggregatedTaxes } from '$lib/utils/taxes';
   import NukeExplosion from '../animation/nuke-explosion.svelte';
@@ -71,10 +71,10 @@
     uiStore.modalData = {
       location: hexStringToNumber($selectedLandMeta!.location),
       // TODO: Enforce null checks here
-      sellPrice: $selectedLandMeta!.sellPrice ?? 0,
-      tokenUsed: $selectedLandMeta!.tokenUsed ?? '',
-      tokenAddress: $selectedLandMeta!.tokenAddress ?? '',
-      owner: $selectedLandMeta!.owner || undefined,
+      sellPrice: 0,
+      tokenUsed: '',
+      tokenAddress: '',
+      owner: undefined,
     };
   };
 

@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 import type { Tile } from '$lib/api/tile-store.svelte';
 import { toHexWithPadding } from '$lib/utils';
-
+import { selectedLand } from '$lib/stores/stores.svelte';
 const MAP_SIZE = 16;
 
 export function createFakeTiles(): Tile[][] {
@@ -49,6 +49,8 @@ export function removeAuctionFromTiles(): void {
     return newTiles;
   });
 }
+
+export function setSelectedlandAsTheAuctionLand(): void {}
 
 export const tiles = writable<Tile[][]>(createFakeTiles());
 export const tutorialProgression = writable<number>(1);

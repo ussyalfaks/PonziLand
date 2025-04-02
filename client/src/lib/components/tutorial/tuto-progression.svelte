@@ -4,6 +4,8 @@
     addAuctionToTiles,
     removeAuctionFromTiles,
   } from './stores';
+  import { selectedLandPosition } from '$lib/stores/stores.svelte';
+  import { toHexWithPadding } from '$lib/utils';
   import dialogData from './dialog.json';
 
   let currentDialog = $derived(dialogData[$tutorialProgression - 1]);
@@ -32,6 +34,15 @@
     } else if ($tutorialProgression < 3) {
       removeAuctionFromTiles();
     }
+    if ($tutorialProgression === 4) {
+      // Select the auction tile at position [8][8]
+      const auctionLocation = toHexWithPadding(8 * 16 + 8);
+      selectedLandPosition.set(auctionLocation);
+    }
+
+    $effect(() => {
+      console.log('selecedé', $selectedLandPosition);
+    });
   });
 </script>
 
