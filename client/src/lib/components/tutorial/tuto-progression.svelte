@@ -4,6 +4,10 @@
 
   let currentDialog = $derived(dialogData[$tutorialProgression - 1]);
 
+  function formatText(text: string) {
+    return text.replace(/\n/g, '<br>');
+  }
+
   function nextStep() {
     if ($tutorialProgression < 15) {
       tutorialProgression.set($tutorialProgression + 1);
@@ -35,7 +39,9 @@
     >
       <div class="mx-14 p-4 text-left text-black" style="width: 550px;">
         <div class="relative text-md">
-          <span class="block">{currentDialog.text}</span>
+          <span class="block" style="white-space: pre-line;"
+            >{@html formatText(currentDialog.text)}</span
+          >
         </div>
       </div>
     </div>
