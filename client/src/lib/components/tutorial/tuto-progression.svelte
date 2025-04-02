@@ -3,6 +3,18 @@
   import dialogData from './dialog.json';
 
   let currentDialog = $derived(dialogData[$tutorialProgression - 1]);
+
+  function nextStep() {
+    if ($tutorialProgression < 15) {
+      tutorialProgression.set($tutorialProgression + 1);
+    }
+  }
+
+  function previousStep() {
+    if ($tutorialProgression > 1) {
+      tutorialProgression.set($tutorialProgression - 1);
+    }
+  }
 </script>
 
 <div
@@ -30,8 +42,10 @@
   {/if}
 </div>
 
-<div
-  class="fixed bottom-8 right-24 z-[9999] flex flex-col items-center pointer-events-none"
+<button
+  class="fixed bottom-8 right-24 z-[9999] flex flex-col items-center cursor-pointer"
+  onclick={nextStep}
+  tabindex="0"
 >
   <img
     src="/tutorial/Ponzi_Arrow.png"
@@ -39,7 +53,7 @@
     class="h-auto w-[60px] -scale-x-100"
   />
   <span class="mt-1 text-sm font-bold text-white text-ponzi">Next</span>
-</div>
+</button>
 
 <div
   class="fixed bottom-16 left-0 right-0 mx-auto z-[9999] flex w-fit flex-col items-center pointer-events-none"
@@ -49,8 +63,10 @@
   </span>
 </div>
 
-<div
-  class="fixed bottom-8 left-24 z-[9999] flex flex-col items-center pointer-events-none"
+<button
+  class="fixed bottom-8 left-24 z-[9999] flex flex-col items-center cursor-pointer"
+  onclick={previousStep}
+  tabindex="0"
 >
   <img
     src="/tutorial/Ponzi_Arrow.png"
@@ -58,4 +74,4 @@
     class="h-auto w-[60px]"
   />
   <span class="mt-1 text-sm font-bold text-white text-ponzi">Previous</span>
-</div>
+</button>
