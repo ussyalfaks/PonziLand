@@ -7,7 +7,7 @@
   import { claimStore } from '$lib/stores/claim.svelte';
   import { mousePosCoords } from '$lib/stores/stores.svelte';
   import { padAddress, toHexWithPadding } from '$lib/utils';
-  import TileCell from '$lib/components/map/tile.svelte';
+  import TileCell from './tile.svelte';
   import { tiles } from './stores';
 
   const MAP_SIZE = 16;
