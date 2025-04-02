@@ -26,6 +26,7 @@ export function addAuctionToTiles(): void {
       newTiles[8][8] = {
         ...newTiles[8][8],
         type: 'auction',
+        owner: '0x',
       };
     }
 
