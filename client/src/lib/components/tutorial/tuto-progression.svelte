@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { tutorialProgression } from './stores';
+  import {
+    tutorialProgression,
+    addAuctionToTiles,
+    removeAuctionFromTiles,
+  } from './stores';
   import dialogData from './dialog.json';
 
   let currentDialog = $derived(dialogData[$tutorialProgression - 1]);
@@ -19,6 +23,16 @@
       tutorialProgression.set($tutorialProgression - 1);
     }
   }
+
+  // Tutorial progression handler:
+  // This effect manages special tutorial elements based on the current step
+  $effect(() => {
+    if ($tutorialProgression === 3) {
+      addAuctionToTiles();
+    } else if ($tutorialProgression < 3) {
+      removeAuctionFromTiles();
+    }
+  });
 </script>
 
 <div
