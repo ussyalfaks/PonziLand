@@ -16,6 +16,7 @@
   const MAX_SCALE = 16;
   let isDragging = false;
   let dragged = $state(false);
+  let cameraEnabled = $state(false);
   let startX = 0;
   let startY = 0;
 
@@ -31,7 +32,7 @@
     const scaleX = containerWidth / (MAP_SIZE * TILE_SIZE);
     const scaleY = containerHeight / (MAP_SIZE * TILE_SIZE);
 
-    const fitScale = Math.min(scaleX, scaleY) * 3;
+    const fitScale = Math.min(scaleX, scaleY) * 5.5;
 
     const mapWidthScaled = MAP_SIZE * TILE_SIZE * fitScale;
     const mapHeightScaled = MAP_SIZE * TILE_SIZE * fitScale;
@@ -39,8 +40,9 @@
     cameraTransition.set(
       {
         scale: Math.max(MIN_SCALE, Math.min(MAX_SCALE, fitScale)),
-        offsetX: (containerWidth - mapWidthScaled) / 2,
-        offsetY: (containerHeight - mapHeightScaled) / 2,
+        offsetX: (containerWidth - mapWidthScaled) / 2 - containerWidth * 0.098,
+        offsetY:
+          (containerHeight - mapHeightScaled) / 2 - containerHeight * 0.15,
       },
       { duration: 0 },
     );
@@ -92,6 +94,7 @@
   });
 
   function handleWheel(event: WheelEvent) {
+    if (!cameraEnabled) return;
     event.preventDefault();
     let delta;
 
@@ -145,6 +148,7 @@
   }
 
   function handleMouseDown(event: MouseEvent) {
+    if (!cameraEnabled) return;
     dragged = false;
     isDragging = true;
     startX = event.clientX - $cameraPosition.offsetX;
@@ -152,7 +156,7 @@
   }
 
   function handleMouseMove(event: MouseEvent) {
-    if (isDragging) {
+    if (isDragging && cameraEnabled) {
       const newOffsetX = event.clientX - startX;
       const newOffsetY = event.clientY - startY;
 
