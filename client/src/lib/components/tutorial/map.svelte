@@ -8,6 +8,7 @@
   import { mousePosCoords } from '$lib/stores/stores.svelte';
   import { padAddress, toHexWithPadding } from '$lib/utils';
   import TileCell from '$lib/components/map/tile.svelte';
+  import { tiles } from './stores';
 
   const MAP_SIZE = 16;
   const TILE_SIZE = 32;
@@ -59,21 +60,6 @@
   } catch (e) {
     console.log('Error in map.svelte', e);
   }
-
-  const createFakeTiles = (): Tile[][] => {
-    return Array(MAP_SIZE)
-      .fill(null)
-      .map((_, i) =>
-        Array(MAP_SIZE)
-          .fill(null)
-          .map((_, j) => ({
-            location: toHexWithPadding(i * MAP_SIZE + j),
-            type: 'grass',
-          })),
-      );
-  };
-
-  let tiles = createFakeTiles();
 
   $effect(() => {
     const address = account.address;
@@ -257,7 +243,7 @@
         onmouseleave={handleMouseUp}
         style="transform: translate({$cameraPosition.offsetX}px, {$cameraPosition.offsetY}px) scale({$cameraPosition.scale});"
       >
-        {#each tiles as row, y}
+        {#each $tiles as row, y}
           <div class="row">
             {#each row as tile, x}
               <TileCell land={tile} {dragged} scale={$cameraPosition.scale} />
