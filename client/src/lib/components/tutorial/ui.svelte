@@ -2,7 +2,7 @@
   import { uiStore } from '$lib/stores/ui.store.svelte';
   import AuctionModal from '$lib/components/auction/auction-modal.svelte';
   import BuyModal from '$lib/components/buy/buy-modal.svelte';
-  import LandHud from '$lib/components/land/hud/land-hud.svelte';
+  import LandHud from './land/hud/land-hud.svelte';
   import LandInfoModal from '$lib/components/land/land-info-modal.svelte';
   import Toolbar from '$lib/components/toolbar/toolbar.svelte';
   import WalletLookup from './wallet.svelte';
@@ -17,9 +17,12 @@
   <!-- <Leaderboard /> -->
 
   <!-- Tile HUD -->
-  <!-- <LandHud />
 
-  <Toolbar /> -->
+  <div class="absolute">
+    <LandHud />
+  </div>
+
+  <!-- <Toolbar /> -->
 
   <!-- Modals -->
   <!-- {#if uiStore.showModal}

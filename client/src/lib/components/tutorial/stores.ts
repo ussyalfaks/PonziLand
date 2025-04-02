@@ -1,7 +1,6 @@
 import { writable } from 'svelte/store';
 import type { Tile } from '$lib/api/tile-store.svelte';
 import { toHexWithPadding } from '$lib/utils';
-import { selectedLand } from '$lib/stores/stores.svelte';
 const MAP_SIZE = 16;
 
 export function createFakeTiles(): Tile[][] {
