@@ -6,6 +6,7 @@
   import LandInfoModal from '$lib/components/land/land-info-modal.svelte';
   import Toolbar from '$lib/components/toolbar/toolbar.svelte';
   import WalletLookup from './wallet.svelte';
+  import TutoProgression from './tuto-progression.svelte';
 </script>
 
 <div class="z-50 absolute top-0 left-0">
@@ -31,4 +32,5 @@
     {/if}
   {/if}
    -->
+  <TutoProgression />
 </div>
