@@ -108,11 +108,7 @@ mod setup {
                     .with_writer_of([dojo::utils::bytearray_hash(@"ponzi_land")].span())
                     .with_init_calldata(
                         [
-                            erc20_address, 1080.into(), // land_1
-                            1050.into(), // land_2
-                            1002.into(), // land_3
-                            1007.into(), // land_4
-                            2_u256.low.into(), // start_price (low)
+                            erc20_address, 2_u256.low.into(), // start_price (low)
                             2_u256.high.into(), // start_price (high)
                             1.into(), // floor_price (low)
                             0.into(), // floor_price (high)
