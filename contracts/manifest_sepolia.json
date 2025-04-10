@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x75fc75bcd1a7f8b4bf64b74978b0f89c8cee44bb755c1dae6f82284756451ec",
-    "address": "0x4e831a44fa6f6d04ed882ff9f88594b590d20309eee25bf309292883ba98c80",
-    "seed": "ponzi_land-tourney-internal",
+    "address": "0x77309789e5f10bcf2977b25b11f64be812c145b13a492d9976993ed06af5afe",
+    "seed": "ponzi_land-tourney-internal-2",
     "name": "Ponzi Land",
     "entrypoints": [
       "uuid",
@@ -1312,8 +1312,8 @@
   },
   "contracts": [
     {
-      "address": "0x7191af9b862acd2928da8c229958a02314f4aae96e1adadf2a2998c8ea99880",
-      "class_hash": "0x78626a3352a7eacc45e78fb264a0fc2dccf4657c6b4e9ea96ada70892757f2d",
+      "address": "0x5c6b6b4e62de83b1c76e61719e31eeb2bfcf8e41b928c8e4f070e5c0b9f70d4",
+      "class_hash": "0x1e0b4b69474080f7938f95e5e30fcfae160e4a357f92ea1b3b21d2e802b14ca",
       "abi": [
         {
           "type": "impl",
@@ -1386,22 +1386,6 @@
             {
               "name": "token_address",
               "type": "core::starknet::contract_address::ContractAddress"
-            },
-            {
-              "name": "land_1",
-              "type": "core::integer::u64"
-            },
-            {
-              "name": "land_2",
-              "type": "core::integer::u64"
-            },
-            {
-              "name": "land_3",
-              "type": "core::integer::u64"
-            },
-            {
-              "name": "land_4",
-              "type": "core::integer::u64"
             },
             {
               "name": "start_price",
@@ -2099,10 +2083,6 @@
       ],
       "init_calldata": [
         "0x071de745c1ae996cfd39fb292b4342b7c086622e3ecf3a5692bd623060ff3fa0",
-        "0x410",
-        "0xc10",
-        "0x430",
-        "0xc30",
         "128000000000000000000",
         "0",
         "1000000000000000000",
@@ -2126,7 +2106,7 @@
       ]
     },
     {
-      "address": "0x446d90c1772311c43f0ecdcbcd9c0b45c6dab0dd655214d760a2d063e4a5008",
+      "address": "0x116e3170ddb0dcea39368ca006700bc5dbaeb3cd22a7ba6abb17d54defaf192",
       "class_hash": "0x531cfd15a6f245c976674f50f81025e29cef683ae93e4e20090c99e98c0ed4a",
       "abi": [
         {
