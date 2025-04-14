@@ -1,11 +1,3 @@
-export let nukeStore = $state<{
-  pending: { [location: string]: boolean };
-  nuking: { [location: string]: boolean };
-}>({
-  pending: {},
-  nuking: {},
-});
-
 import type { Tile } from '$lib/api/tile-store.svelte';
 class LocationsToNuke {
   public locations: { location: string; nukable: boolean }[] = $state([]);
@@ -28,7 +20,6 @@ class LocationsToNuke {
     } else {
       return false;
     }
-    return false;
   };
 
   checkIfNukable(location: string) {
