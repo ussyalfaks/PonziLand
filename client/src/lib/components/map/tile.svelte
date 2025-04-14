@@ -23,6 +23,7 @@
   import Button from '../ui/button/button.svelte';
   import RatesOverlay from './rates-overlay.svelte';
   import NukeExplosion from '../animation/nuke-explosion.svelte';
+  import { locationsToNuke } from '$lib/stores/nuke.svelte';
 
   let {
     land,
@@ -88,13 +89,16 @@
     uiStore.modalType = 'bid';
   };
 
+  let isNukable = $state(false);
+
   $effect(() => {
-    if (isNuking) {
-      setTimeout(() => {
-        land.type = 'auction';
-        clearNuking(land.location);
-        clearPending(land.location);
-      }, 5000);
+    if (land.type === 'grass') return;
+    if (land.type === 'house' && land.token) {
+      locationsToNuke.callNukableLocation(land).then((res) => {
+        isNukable = res;
+      });
+    } else {
+      isNukable = false;
     }
   });
 </script>
@@ -173,7 +177,7 @@
     </div>
   {/if}
 
-  {#if isPending && land.type == 'house'}
+  {#if isNukable}
     <div
       class="absolute bottom-1/4 left-1/2 -translate-x-1/2 text-ponzi animate-pulse text-[4px]"
       onclick={handleClick}

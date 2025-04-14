@@ -58,16 +58,6 @@
   async function fetchTaxes() {
     const result = await getAggregatedTaxes(land);
     aggregatedTaxes = result.taxes;
-
-    const nukables = result.nukables;
-
-    nukables.forEach((land) => {
-      if (land.nukable) {
-        setPending(land.location);
-      } else if (!land.nukable && nukeStore.pending[land.location]) {
-        clearPending(land.location);
-      }
-    });
   }
   let aggregatedTaxes: TaxData[] = $state([]);
 

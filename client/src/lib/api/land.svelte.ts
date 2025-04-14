@@ -96,7 +96,7 @@ export type LandWithActions = LandWithMeta & {
   nuke(): TransactionResult;
   getPendingTaxes(): Promise<PendingTax[] | undefined>;
   getNextClaim(): Promise<NextClaimInformation[] | undefined>;
-  getNukable(): Promise<number | undefined>;
+  getNukable(): Promise<bigint | undefined>;
   getCurrentAuctionPrice(): Promise<CurrencyAmount | undefined>;
   getYieldInfo(): Promise<LandYieldInfo | undefined>;
   getEstimatedNukeTime(): number | undefined;
@@ -255,7 +255,7 @@ export function useLands(): LandsStore | undefined {
         async getNukable() {
           const result = (await sdk.client.actions.getTimeToNuke(
             land.location,
-          )) as unknown as number | undefined;
+          )) as any[] | undefined;
           return result;
         },
         async getCurrentAuctionPrice() {
