@@ -5,29 +5,63 @@ use ponzi_land::models::auction::Auction;
 use ponzi_land::helpers::coord::{
     left, right, up, down, max_neighbors, up_left, up_right, down_left, down_right,
 };
+use core::nullable::{Nullable, NullableTrait, match_nullable, FromNullableResult};
+use core::dict::{Felt252Dict, Felt252DictTrait, Felt252DictEntryTrait};
+
+
+fn process_neighbors_of_neighbors(
+    mut store: Store, neighbors: Array<Land>,
+) -> Felt252Dict<Nullable<Array<Land>>> {
+    let mut neighbors_with_their_neighbors: Felt252Dict<Nullable<Array<Land>>> = Default::default();
+
+    for neighbor in neighbors {
+        let their_neighbors = get_land_neighbors(store, neighbor.location);
+        neighbors_with_their_neighbors
+            .insert(neighbor.location.into(), NullableTrait::new(their_neighbors));
+    };
+
+    neighbors_with_their_neighbors
+}
+
+fn neighbors_with_their_neighbors(
+    ref dict: Felt252Dict<Nullable<Array<Land>>>, location: u16,
+) -> Array<Land> {
+    let (entry, arr) = dict.entry(location.into());
+    let array = arr.deref_or(array![]);
+    let neighbors = array.clone();
+    dict = entry.finalize(NullableTrait::new(array));
+    neighbors
+}
 
 
 fn get_land_neighbors(mut store: Store, land_location: u16) -> Array<Land> {
     let mut lands: Array<Land> = ArrayTrait::new();
+    let mut land_cache = LandCacheImpl::new();
 
-    for direction in get_directions(land_location) {
-        add_land_neighbor(store, ref lands, direction);
+    for location in get_directions(land_location) {
+        match location {
+            Option::Some(loc) => {
+                let land = land_cache.get(loc);
+                match land {
+                    Option::Some(land) => { if !land.owner.is_zero() {
+                        lands.append(land);
+                    } },
+                    Option::None => {
+                        let land = store.land(loc);
+                        land_cache.insert(loc, land);
+                        if !land.owner.is_zero() {
+                            lands.append(land);
+                        }
+                    },
+                }
+            },
+            Option::None => {},
+        }
     };
 
     lands
 }
 
-fn add_land_neighbor(mut store: Store, ref lands: Array<Land>, land_location: Option<u16>) {
-    match land_location {
-        Option::Some(location) => {
-            let land = store.land(location);
-            if !land.owner.is_zero() {
-                lands.append(land);
-            }
-        },
-        Option::None => {},
-    }
-}
 
 fn get_auction_neighbors(mut store: Store, land_location: u16) -> Array<Auction> {
     let mut auctions: Array<Auction> = ArrayTrait::new();
@@ -82,4 +116,41 @@ fn get_directions(land_location: u16) -> Array<Option<u16>> {
         down_left(land_location),
         down_right(land_location),
     ]
+}
+
+
+#[derive(Drop, Serde)]
+struct LandCache {
+    locations: Array<u16>,
+    lands: Array<Land>,
+}
+
+#[generate_trait]
+impl LandCacheImpl of LandCacheTrait {
+    fn new() -> LandCache {
+        LandCache { locations: ArrayTrait::new(), lands: ArrayTrait::new() }
+    }
+
+    fn get(self: @LandCache, location: u16) -> Option<Land> {
+        let len = self.locations.len();
+        let mut found = false;
+        let mut index = 0;
+        for i in 0..len {
+            if *self.locations.at(i) == location {
+                found = true;
+                index = i;
+                break;
+            }
+        };
+
+        if found {
+            return Option::Some(*self.lands.at(index));
+        }
+        Option::None
+    }
+
+    fn insert(ref self: LandCache, location: u16, land: Land) {
+        self.locations.append(location);
+        self.lands.append(land);
+    }
 }
