@@ -18,8 +18,10 @@
       <span
         class="inline-block h-5 w-5 transform rounded-full bg-white transition duration-200 ease-in-out
       {proMode.isProMode ? 'translate-x-6' : 'translate-x-1'}"
-      ></span>
+      />
     </div>
-    <span class="text-sm font-medium w-[85px]">Pro Mode</span>
+    <span class="text-sm font-medium w-[85px]"
+      >Pro Mode {proMode.isProMode ? 'On' : 'Off'}</span
+    >
   </button>
 </Card>

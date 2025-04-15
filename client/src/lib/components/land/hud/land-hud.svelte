@@ -9,8 +9,9 @@
   import LandHudOther from './land-hud-other.svelte';
   import LandHudOwned from './land-hud-owned.svelte';
   import LandHudPro from './land-hud-pro.svelte';
-  import LandNukeTime from '../land-nuke-time.svelte';
   import { proMode } from '$lib/stores/ui.store.svelte';
+
+  const { store, client: sdk } = useDojo();
 
   const address = $derived(account.address);
 
@@ -29,7 +30,7 @@
     {:else if $selectedLandMeta.type === 'grass'}
       <LandHudEmpty />
     {:else if proMode.isProMode}
-      <LandHudPro {land} />
+      <LandHudPro />
     {:else if isOwner}
       <LandHudOwned />
     {:else}
