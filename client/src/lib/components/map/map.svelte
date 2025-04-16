@@ -13,8 +13,6 @@
   import { padAddress } from '$lib/utils';
   import Tile from './tile.svelte';
   import { GRID_SIZE, TILE_SIZE } from '$lib/const';
-  import { nukeStore } from '$lib/stores/nuke.svelte';
-  import { onMount } from 'svelte';
 
   // Camera position
   const MIN_SCALE = 0.6;
