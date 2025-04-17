@@ -1,2 +1,6 @@
 target
+dojo_mainnet.toml
 .env*
+
+# Torii database
+db

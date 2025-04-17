@@ -40,6 +40,10 @@ pub struct LiquidityResponse {
     pub tick: I129,
 }
 
+/// Read the pool price from the given contract address and pool key.
+///
+/// # Errors
+/// Returns an error if the RPC call fails or if the response cannot be decoded.
 #[cfg_attr(feature = "tracing", tracing::instrument)]
 pub async fn read_pool_price<T: starknet::providers::Provider + Send + Sync + std::fmt::Debug>(
     rpc_client: T,
@@ -47,7 +51,8 @@ pub async fn read_pool_price<T: starknet::providers::Provider + Send + Sync + st
     pool: &PoolKey,
 ) -> Result<LiquidityResponse, Error> {
     let mut call_data = Vec::new();
-    pool.encode(&mut call_data).unwrap();
+    pool.encode(&mut call_data)
+        .map_err(|_| Error::RpcError("Impossible to encode the pool data".to_string()))?;
 
     let response = rpc_client
         .call(

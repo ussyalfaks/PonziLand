@@ -1313,7 +1313,7 @@
   "contracts": [
     {
       "address": "0x19b9cef5b903e9838d649f40a8bfc34fbaf644c71f8b8768ece6a6ca1c46dc0",
-      "class_hash": "0x7a5cca7f91da54172796216087a612af24ab75b8c74f167f9294661ea1dd5b",
+      "class_hash": "0x9602a46c4ad514dfa0e83a4aa376f078082a2f4545752ed96c8156335da6a7",
       "abi": [
         {
           "type": "impl",
@@ -1613,6 +1613,24 @@
             {
               "name": "sold_at_price",
               "type": "core::option::Option::<core::integer::u256>"
+            }
+          ]
+        },
+        {
+          "type": "enum",
+          "name": "ponzi_land::utils::common_strucs::LandOrAuction",
+          "variants": [
+            {
+              "name": "None",
+              "type": "()"
+            },
+            {
+              "name": "Land",
+              "type": "ponzi_land::models::land::Land"
+            },
+            {
+              "name": "Auction",
+              "type": "ponzi_land::models::auction::Auction"
             }
           ]
         },
@@ -1918,6 +1936,33 @@
               "outputs": [
                 {
                   "type": "(core::array::Array::<ponzi_land::utils::common_strucs::TokenInfo>, core::array::Array::<ponzi_land::utils::common_strucs::TokenInfo>)"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_game_speed",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::integer::u64"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_neighbors",
+              "inputs": [
+                {
+                  "name": "land_location",
+                  "type": "core::integer::u16"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::array::Array::<ponzi_land::utils::common_strucs::LandOrAuction>"
                 }
               ],
               "state_mutability": "view"

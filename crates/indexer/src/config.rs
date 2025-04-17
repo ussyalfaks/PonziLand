@@ -29,6 +29,12 @@ pub struct Conf {
     #[config(nested)]
     pub starknet: RpcConfig,
 
+    #[config(nested)]
+    pub torii: ToriiConfig,
+
+    #[config(nested)]
+    pub gg_xyz: GgXyzConfig,
+
     pub default_token: String,
 }
 
@@ -36,6 +42,14 @@ pub struct Conf {
 pub struct Token {
     pub symbol: String,
     pub address: Felt,
+}
+
+#[derive(Config, Debug, Clone)]
+pub struct ToriiConfig {
+    #[config(env = "WORLD_ADDRESS")]
+    pub world_address: Felt,
+    #[config(env = "TORII_URL")]
+    pub torii_url: Url,
 }
 
 #[derive(Config, Debug, Clone)]
@@ -50,6 +64,16 @@ pub struct EkuboConfig {
 pub struct RpcConfig {
     #[config(env = "RPC_URL")]
     pub rpc_url: Url,
+}
+
+#[derive(Config, Debug, Clone)]
+pub struct GgXyzConfig {
+    #[config(default = false, env = "GGXYZ_ENABLED")]
+    pub enabled: bool,
+    #[config(env = "GGXYZ_API_URL")]
+    pub api_url: Url,
+    #[config(env = "GGXYZ_API_KEY")]
+    pub api_key: String,
 }
 
 #[derive(Config, Debug, Clone)]

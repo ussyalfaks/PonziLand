@@ -13,12 +13,44 @@ jobs:
   rust-testing:
     name: Run rust tests
     runs-on: ubuntu-latest
+    # Include the services to make integration tests work
+    services:
+      postgres:
+        image: postgres:17.2
+        env:
+          POSTGRES_PASSWORD: admin
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --name postgres
+        ports:
+          - 5432:5432
+
     steps:
       - uses: actions/checkout@v3
-
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
-      - run: cargo test --all-features
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+
+      - name: Install nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+
+      - name: migrate sqlx
+        run: cargo run --package migrations migrate
+        env:
+          DATABASE_URL: postgres://postgres:admin@localhost:5432/postgres
+          CARGO_TERM_COLOR: always
+
+      - run: cargo nextest run --all-features
+        env:
+          DATABASE_URL: postgres://postgres:admin@localhost:5432/postgres
+          CARGO_TERM_COLOR: always
 
   rust-format:
     name: Rustfmt Check
@@ -46,5 +78,5 @@ jobs:
 
       - uses: giraffate/clippy-action@v1
         with:
-          reporter: 'github-pr-review'
+          reporter: "github-pr-review"
           github_token: ${{ secrets.GITHUB_TOKEN }}

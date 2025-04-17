@@ -1,5 +1,6 @@
 use std::{collections::HashMap, str::FromStr, sync::Arc};
 
+use anyhow::{Context, Result};
 use apalis::prelude::*;
 use apalis_cron::{CronContext, CronStream, Schedule};
 use arc_swap::ArcSwap;
@@ -48,8 +49,9 @@ impl EkuboService {
         config: &Conf,
         token_service: Arc<TokenService>,
         monitor: &MonitorManager,
-    ) -> Arc<Self> {
-        let schedule = Schedule::from_str("0/30 * * * * *").expect("Could not parse Schedule");
+    ) -> Result<Arc<Self>> {
+        let schedule =
+            Schedule::from_str("0/30 * * * * *").with_context(|| "Could not parse Schedule")?;
 
         let rpc_client = JsonRpcClient::new(HttpTransport::new(config.starknet.rpc_url.clone()));
 
@@ -77,13 +79,15 @@ impl EkuboService {
 
         monitor.register(move |mon| mon.register(worker));
 
-        this
+        Ok(this)
     }
 
     pub fn get_price_of(&self, token: &str) -> Option<EkuboTokenInformation> {
         self.exchange_rate.load().inner.get(token).cloned()
     }
 
+    #[allow(clippy::missing_panics_doc)]
+    /// Update the exchange rate information.
     pub async fn update(&self) {
         let main_token = self.token_service.main_token().address;
 
@@ -108,7 +112,7 @@ impl EkuboService {
             let price = match self.client.read_pool_price(&pool.key).await {
                 Ok(price) => price,
                 Err(err) => {
-                    error!("Failed to fetch price for pool {}: {}", pool.key, err);
+                    error!("Failed to fetch price for pool {}: {:#?}", pool.key, err);
                     continue 'token_loop;
                 }
             };

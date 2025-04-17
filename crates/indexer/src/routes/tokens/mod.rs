@@ -15,6 +15,7 @@ pub struct Token {
 pub struct TokenRoute(Arc<TokenService>);
 
 impl TokenRoute {
+    #[must_use]
     pub fn new(token_service: Arc<TokenService>) -> Self {
         Self(token_service)
     }
@@ -25,6 +26,7 @@ impl TokenRoute {
             .with_state(self.0.clone())
     }
 
+    #[allow(clippy::unused_async)] // required for axum
     async fn list_tokens(State(token_service): State<Arc<TokenService>>) -> Json<Vec<Token>> {
         let tokens = token_service
             .tokens

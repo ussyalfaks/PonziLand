@@ -50,6 +50,10 @@ where
         }
     }
 
+    /// Get all pools for a given token pair.
+    ///
+    /// # Errors
+    /// Returns an error if the request to the Ekubo API fails
     pub async fn get_pools(&self, token0: Felt, token1: Felt) -> Result<Vec<Pool>, Error> {
         Ok(get_all_pools(
             &self.http_client,
@@ -60,6 +64,10 @@ where
         .await?)
     }
 
+    /// Reads the price of a pool.
+    ///
+    /// # Errors
+    /// Returns an error if the request to the Ekubo API fails
     pub async fn read_pool_price(&self, pool: &PoolKey) -> Result<PairRatio, Error> {
         let response = read_pool_price(&self.rpc_client, self.contract_address, pool).await?;
         // Then do the conversion

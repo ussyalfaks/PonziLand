@@ -25,3 +25,6 @@ tokio = { workspace = true, features = ["full"] }
 
 [[example]]
 name = "get_price"
+
+[lints]
+workspace = true

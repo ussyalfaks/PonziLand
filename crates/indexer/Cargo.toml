@@ -12,8 +12,9 @@ apalis = { version = "0.7.0", features = [
     "limit",
     "prometheus",
 ] }
-chrono = "0.4.40"
+chrono.workspace = true
 apalis-cron = "0.7.0"
+chaindata-service = { path = "../chaindata/service" }
 axum = { workspace = true, features = [
     "ws",
     "macros",
@@ -27,7 +28,7 @@ tracing-subscriber.workspace = true
 metrics-exporter-prometheus = "0.16.2"
 apalis-core = "0.7.0"
 tower = "0.5.2"
-anyhow = "1.0.98"
+anyhow.workspace = true
 ekubo = { path = "../ekubo" }
 url = { workspace = true, features = ["serde"] }
 starknet.workspace = true
@@ -36,3 +37,16 @@ metrics = "0.24.1"
 pin-project-lite = "0.2.16"
 tower-http = { workspace = true, features = ["cors"] }
 http = { workspace = true }
+sqlx = { workspace = true, features = [
+    "derive",
+    "runtime-tokio",
+    "postgres",
+    "uuid",
+    "chrono",
+    "bigdecimal",
+] }
+dotenv = "0.15.0"
+
+[lints]
+workspace = true
+

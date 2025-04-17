@@ -35,9 +35,49 @@ in {
     udev
     libusb1
     pkgs.stdenv.cc.cc
-  ];
 
-  env.LD_LIBRARY_PATH = lib.makeLibraryPath config.packages;
+    # Required for torii compilation
+    protobuf
+
+    # Postgres language server
+    postgres-lsp
+
+    # Faster test pattern
+    cargo-nextest
+    sqlx-cli
+  ];
+  env = {
+    LD_LIBRARY_PATH = lib.makeLibraryPath config.packages;
+  };
+
+  enterShell = ''
+    export DB_HOST=$(printf %s "$PGHOST" | jq -sRr @uri)
+    export DATABASE_URL="postgres://$DBHOST/chaindata"
+    export PGDATABASE=chaindata
+  '';
+
+  scripts.migrate.exec = ''
+    set -e
+    cd $DEVENV_ROOT/crates/chaindata/migration
+    cargo run
+    cd $DEVENV_ROOT/crates/chaindata/entity
+    sea-orm-cli generate entity -o ./src/entities --database-url $DATABASE_URL
+
+    echo "Generated files!"
+  '';
+
+  scripts.new-migration.exec = ''
+    if [ "$#" -ne 1 ]; then
+        echo "$0 <migration_name>"
+        exit 1
+    fi
+
+    cd crates/migrations
+    cargo run -- add $1
+  '';
+
+  # Enable devcontainer for remote coding
+  devcontainer.enable = true;
 
   languages.javascript = {
     enable = true;
@@ -47,6 +87,17 @@ in {
   languages.rust = {
     enable = true;
     mold.enable = true;
+  };
+
+  services.postgres = {
+    enable = true;
+    initialDatabases = [
+      {
+        name = "chaindata";
+        user = "chaindata";
+        pass = "chaindata";
+      }
+    ];
   };
 
   cachix = {

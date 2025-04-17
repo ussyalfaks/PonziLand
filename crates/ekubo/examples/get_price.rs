@@ -34,7 +34,7 @@ pub async fn main() {
         println!(
             "- Pool ({}) => tvl(0): {}, tvl(1): {}",
             pool.key, pool.tvl0_total, pool.tvl1_total
-        )
+        );
     }
 
     println!("=====================\n");
@@ -50,6 +50,6 @@ pub async fn main() {
 
     let price = client.read_pool_price(&popular.key).await.unwrap();
 
-    println!("Pair ratio: 1 ePAPER = {} eSTRK", price);
+    println!("Pair ratio: 1 ePAPER = {price} eSTRK");
     println!("Pair ratio: 1 eSTRK = {} ePAPER", price.inverse());
 }

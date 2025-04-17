@@ -6,6 +6,7 @@ use crate::math::u256fd128::U256FD128;
 pub struct PairRatio(pub U256FD128);
 
 impl PairRatio {
+    #[must_use]
     pub fn inverse(&self) -> Self {
         PairRatio(U256FD128::from_whole(1) / self.0)
     }
