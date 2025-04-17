@@ -11,7 +11,7 @@ pub struct TokenInfo {
 pub struct ClaimInfo {
     token_address: ContractAddress,
     amount: u256,
-    land_location: u16,
+    land_location: u64,
     can_be_nuked: bool,
 }
 
@@ -27,7 +27,7 @@ pub struct YieldInfo {
     sell_price: u256,
     per_hour: u256,
     percent_rate: u256,
-    location: u16,
+    location: u64,
 }
 
 #[derive(Drop, Serde, Debug)]

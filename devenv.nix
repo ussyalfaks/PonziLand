@@ -7,6 +7,7 @@
   ...
 }: let
   system = pkgs.stdenv.system;
+  dojo-nix = inputs.cairo-nix.legacyPackages.${system};
   cairo-nix = inputs.cairo-nix.packages.${system};
 in {
   packages = with pkgs; [
@@ -20,23 +21,11 @@ in {
     colorized-logs
     wrangler
     graphite-cli
-
-    # Utilities
-    just
-
-    # Cargo dependencies
-    pkgs.openssl
-    pkgs.pkg-config
   ];
 
   languages.javascript = {
     enable = true;
     bun.enable = true;
-  };
-
-  languages.rust = {
-    enable = true;
-    mold.enable = true;
   };
 
   cachix = {
