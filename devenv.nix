@@ -35,6 +35,9 @@ in {
     udev
     libusb1
     pkgs.stdenv.cc.cc
+
+    # Required for torii compilation
+    protobuf
   ];
 
   env.LD_LIBRARY_PATH = lib.makeLibraryPath config.packages;
