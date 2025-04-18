@@ -16,6 +16,7 @@ import type { BigNumberish } from 'starknet';
 import { derived, get, type Readable } from 'svelte/store';
 import { Neighbors } from './neighbors';
 import { GAME_SPEED, LEVEL_UP_TIME } from '$lib/const';
+import { notificationQueue } from '$lib/stores/event.store.svelte';
 
 export type TransactionResult = Promise<
   | {
@@ -194,11 +195,16 @@ export function useLands(): LandsStore | undefined {
             amount.toBignumberish(),
           );
         },
-        claim() {
-          return sdk.client.actions.claim(
+        async claim() {
+          let res = await sdk.client.actions.claim(
             account()?.getAccount()!,
             land.location,
           );
+          notificationQueue.addNotification(
+            res?.transaction_hash ?? null,
+            'claim',
+          );
+          return res;
         },
         nuke() {
           return sdk.client.actions.nuke(
@@ -298,8 +304,8 @@ export function useLands(): LandsStore | undefined {
 
   return {
     ...landEntityStore,
-    buyLand(location, setup) {
-      return sdk.client.actions.buy(
+    async buyLand(location, setup) {
+      let res = await sdk.client.actions.buy(
         account()?.getWalletAccount()!,
         location,
         setup.tokenForSaleAddress,
@@ -309,11 +315,16 @@ export function useLands(): LandsStore | undefined {
         setup.tokenAddress,
         setup.currentPrice!.toBignumberish(),
       );
+      notificationQueue.addNotification(
+        res?.transaction_hash ?? null,
+        'buy land',
+      );
+      return res;
     },
 
     // TODO(#53): Split this action in two, and migrate the call to the session account
-    bidLand(location, setup) {
-      return sdk.client.actions.bid(
+    async bidLand(location, setup) {
+      let res = await sdk.client.actions.bid(
         account()?.getWalletAccount()!,
         location,
         setup.tokenForSaleAddress,
@@ -323,6 +334,8 @@ export function useLands(): LandsStore | undefined {
         setup.tokenAddress,
         setup.currentPrice!.toBignumberish(),
       );
+      notificationQueue.addNotification(res?.transaction_hash ?? null, 'claim');
+      return res;
     },
     auctionLand(location, startPrice, floorPrice, decayRate) {
       return sdk.client.actions.auction(
