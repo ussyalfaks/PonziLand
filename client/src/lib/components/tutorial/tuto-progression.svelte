@@ -20,7 +20,7 @@
   }
 
   function nextStep() {
-    if (step.value < 15) {
+    if (step.value < 25) {
       step.increment();
       changeMap();
     }
@@ -71,6 +71,30 @@
       tileState.buyAuction(7, 8, 1);
       tileState.buyAuction(9, 8, 2);
       tileState.buyAuction(9, 9, 3);
+    }
+    if (step.value === 13) {
+      tileState.reduceTimeToNuke(8, 8);
+    }
+    if (step.value === 14) {
+      tileState.reduceTimeToNuke(8, 8);
+    }
+    if (step.value === 15) {
+      tileState.reduceTimeToNuke(8, 8);
+    }
+    if (step.value === 16) {
+      tileState.reduceTimeToNuke(8, 8);
+    }
+    if (step.value === 19) {
+      tileState.reduceTimeToNuke(8, 8);
+    }
+    if (step.value === 20) {
+      tileState.reduceTimeToNuke(8, 8);
+    }
+    if (step.value === 21) {
+      tileState.setNuke(true);
+      setTimeout(() => {
+        tileState.removeAuction(8, 8);
+      }, 1000);
     }
   }
 </script>
@@ -131,7 +155,7 @@
   class="fixed bottom-16 left-0 right-0 mx-auto z-[9999] flex w-fit flex-col items-center pointer-events-none"
 >
   <span class="text-2xl font-bold text-white text-ponzi">
-    Step {step.value}/15
+    Step {step.value}/25
   </span>
 </div>
 

@@ -18,6 +18,7 @@
   import Button from '../ui/button/button.svelte';
   import RatesOverlay from './rates-tutorial.svelte';
   import NukeExplosion from '../animation/nuke-explosion.svelte';
+  import { tileState } from './stores.svelte';
 
   let { land, dragged, scale } = $props<{
     land: Tile;
@@ -25,7 +26,7 @@
     scale: number;
   }>();
 
-  let isNuking = false;
+  let isNuking = $derived(tileState.getNuke());
   let isOwner = false;
 
   const estimatedNukeTime = $derived(land.timeToNuke);
@@ -82,7 +83,7 @@
     onmouseout={() => (hovering = false)}
     onblur={() => (hovering = false)}
   >
-    {#if isNuking || land.type == 'grass'}
+    {#if land.type == 'grass'}
       <LandDisplay grass road seed={land.location} {selected} {hovering} />
     {:else if land.type == 'auction'}
       <LandDisplay auction road {selected} {hovering} />
@@ -144,16 +145,7 @@
     </div>
   {/if}
 
-  {#if false}
-    <div
-      class="absolute bottom-1/4 left-1/2 -translate-x-1/2 text-ponzi animate-pulse text-[4px]"
-      onclick={handleClick}
-    >
-      NUKABLE
-    </div>
-  {/if}
-
-  {#if isNuking}
+  {#if isNuking && land == tileState.getTiles()[8][8]}
     {#if land.type == 'house' && land.token}
       <NukeExplosion
         biomeX={land.token.images.biome.x}

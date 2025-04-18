@@ -20,9 +20,17 @@ function createFakeTiles(): Tile[][] {
 
 class TileState {
   public tilesStore: Tile[][] = $state(createFakeTiles());
-
+  public nuke = $state(false);
   getTiles() {
     return this.tilesStore;
+  }
+
+  getNuke() {
+    return this.nuke;
+  }
+
+  setNuke(nuke: boolean) {
+    this.nuke = nuke;
   }
 
   addAuction(x: number = 8, y: number = 8): void {
@@ -52,6 +60,12 @@ class TileState {
         level: 1 as ( 1 | 2 | 3),
         token: data.availableTokens[tokenId],
       };
+    }
+  }
+
+  reduceTimeToNuke(x: number, y: number): void {
+    if (this.tilesStore[x] && this.tilesStore[x][y]) {
+      this.tilesStore[x][y].timeToNuke = this.tilesStore[x][y].timeToNuke / 2;
     }
   }
 
