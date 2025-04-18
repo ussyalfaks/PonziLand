@@ -24,46 +24,48 @@ class TileState {
     return this.tilesStore;
   }
 
-  addAuction(): void {
-    if (this.tilesStore[8] && this.tilesStore[8][8]) {
-      this.tilesStore[8][8] = {
-        ...this.tilesStore[8][8],
+  addAuction(x: number = 8, y: number = 8): void {
+    if (this.tilesStore[x] && this.tilesStore[x][y]) {
+      this.tilesStore[x][y] = {
+        ...this.tilesStore[x][y],
         type: 'auction',
         owner: '0x',
       };
     }
   }
 
-  removeAuction(): void {
-    if (this.tilesStore[8] && this.tilesStore[8][8]) {
-      this.tilesStore[8][8] = {
-        ...this.tilesStore[8][8],
+  removeAuction(x: number = 8, y: number = 8): void {
+    if (this.tilesStore[x] && this.tilesStore[x][y]) {
+      this.tilesStore[x][y] = {
+        ...this.tilesStore[x][y],
         type: 'grass',
       };
     }
   }
 
-  buyAuction(): void {
-    if (this.tilesStore[8] && this.tilesStore[8][8]) {
-      this.tilesStore[8][8] = {
-        ...this.tilesStore[8][8],
+  buyAuction(x: number = 8, y: number = 8): void {
+    if (this.tilesStore[x] && this.tilesStore[x][y]) {
+      this.tilesStore[x][y] = {
+        ...this.tilesStore[x][y],
         type: 'house',
-        level: 1,
+        level: '1',
         token: data.availableTokens[0],
       };
     }
   }
 
   levelUp(x: number, y: number): void {
+    console.log('qsdfkjmqdsfl',this.tilesStore[x][y]);
     if (
       this.tilesStore[x] &&
       this.tilesStore[x][y] &&
       this.tilesStore[x][y].type === 'house' &&
       'level' in this.tilesStore[x][y]
     ) {
+      console.log('This is a house');
       this.tilesStore[x][y] = {
         ...this.tilesStore[x][y],
-        level: this.tilesStore[x][y].level + 1,
+        level: Number(this.tilesStore[x][y].level) + 1,
       };
     }
   }
