@@ -13,6 +13,7 @@ function createFakeTiles(): Tile[][] {
         .map((_, j) => ({
           location: toHexWithPadding(i * MAP_SIZE + j),
           type: 'grass',
+          timeToNuke: 10000000,
         })),
     );
 }

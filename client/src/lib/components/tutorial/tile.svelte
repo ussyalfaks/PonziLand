@@ -28,7 +28,7 @@
   let isNuking = false;
   let isOwner = false;
 
-  const estimatedNukeTime = 100000000000;
+  const estimatedNukeTime = $derived(land.timeToNuke);
 
   let selected = $derived($selectedLandPosition === land.location);
 
