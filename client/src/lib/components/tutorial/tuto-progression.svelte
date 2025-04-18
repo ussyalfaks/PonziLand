@@ -62,6 +62,16 @@
     if (step.value === 10) {
       tileState.levelUp(8, 8);
     }
+    if (step.value === 11) {
+      tileState.addAuction(7, 8);
+      tileState.addAuction(9, 8);
+      tileState.addAuction(9, 9);
+    }
+    if (step.value === 12) {
+      tileState.buyAuction(7, 8, 1);
+      tileState.buyAuction(9, 8, 2);
+      tileState.buyAuction(9, 9, 3);
+    }
   }
 </script>
 

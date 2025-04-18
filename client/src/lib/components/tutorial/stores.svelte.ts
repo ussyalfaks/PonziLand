@@ -43,13 +43,13 @@ class TileState {
     }
   }
 
-  buyAuction(x: number = 8, y: number = 8): void {
+  buyAuction(x: number = 8, y: number = 8, tokenId: number = 0): void {
     if (this.tilesStore[x] && this.tilesStore[x][y]) {
       this.tilesStore[x][y] = {
         ...this.tilesStore[x][y],
         type: 'house',
-        level: '1',
-        token: data.availableTokens[0],
+        level: 1 as ( 1 | 2 | 3),
+        token: data.availableTokens[tokenId],
       };
     }
   }
@@ -65,7 +65,7 @@ class TileState {
       console.log('This is a house');
       this.tilesStore[x][y] = {
         ...this.tilesStore[x][y],
-        level: Number(this.tilesStore[x][y].level) + 1,
+        level: Number(this.tilesStore[x][y].level) + 1 as ( 1 | 2 | 3),
       };
     }
   }
