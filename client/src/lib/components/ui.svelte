@@ -7,6 +7,7 @@
   import Toolbar from './toolbar/toolbar.svelte';
   import WalletLookup from './wallet/wallet-lookup.svelte';
   import WarningBanner from './ui/warning-banner.svelte';
+  import TxNotificationZone from './ui/tx-notification-zone.svelte';
 </script>
 
 <div class="z-50 absolute top-0 left-0">
@@ -22,6 +23,8 @@
   <Toolbar />
 
   <WarningBanner />
+
+  <TxNotificationZone />
 
   <!-- Modals -->
   {#if uiStore.showModal}
