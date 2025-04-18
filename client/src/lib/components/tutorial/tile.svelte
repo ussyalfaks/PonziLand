@@ -16,7 +16,7 @@
   import LandNukeShield from '../land/land-nuke-shield.svelte';
   import LandTaxClaimer from '../land/land-tax-claimer.svelte';
   import Button from '../ui/button/button.svelte';
-  import RatesOverlay from '$lib/components/map/rates-overlay.svelte';
+  import RatesOverlay from './rates-tutorial.svelte';
   import NukeExplosion from '../animation/nuke-explosion.svelte';
 
   let { land, dragged, scale } = $props<{
