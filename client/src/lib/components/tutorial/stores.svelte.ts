@@ -1,8 +1,30 @@
-import type { Tile } from '$lib/api/tile-store.svelte';
 import { toHexWithPadding } from '$lib/utils';
 import data from '$lib/data.json';
 
 export const MAP_SIZE = 16;
+
+interface BaseTile {
+  location: string;
+  timeToNuke: number;
+  owner?: string;
+}
+
+interface GrassTile extends BaseTile {
+  type: 'grass';
+}
+
+interface AuctionTile extends BaseTile {
+  type: 'auction';
+}
+
+interface HouseTile extends BaseTile {
+  type: 'house';
+  level: 1 | 2 | 3;
+  token: typeof data.availableTokens[number];
+}
+
+// Union type for all possible tiles
+export type Tile = GrassTile | AuctionTile | HouseTile;
 
 function createFakeTiles(): Tile[][] {
   return Array(MAP_SIZE)

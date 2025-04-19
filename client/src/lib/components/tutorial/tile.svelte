@@ -19,6 +19,7 @@
   import RatesOverlay from './rates-tutorial.svelte';
   import NukeExplosion from '../animation/nuke-explosion.svelte';
   import { tileState } from './stores.svelte';
+  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
 
   let { land, dragged, scale } = $props<{
     land: Tile;
@@ -53,8 +54,7 @@
     uiStore.modalType = 'buy';
     uiStore.modalData = {
       location: hexStringToNumber($selectedLandMeta!.location),
-      // TODO: Enforce null checks here
-      sellPrice: 0,
+      sellPrice: CurrencyAmount.fromScaled(0),
       tokenUsed: '',
       tokenAddress: '',
       owner: undefined,
@@ -110,7 +110,7 @@
       </Button>
     {/if}
     {#if land.type == 'house'}
-      <RatesOverlay {land} />
+      <RatesOverlay />
       {#if isOwner}
         <Button
           size="sm"
