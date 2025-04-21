@@ -66,6 +66,10 @@
       tileState.addAuction(7, 8);
       tileState.addAuction(9, 8);
       tileState.addAuction(9, 9);
+    } else if (step.value <= 11) {
+      tileState.removeAuction(7, 8);
+      tileState.removeAuction(9, 8);
+      tileState.removeAuction(9, 9);
     }
     if (step.value === 12) {
       tileState.buyAuction(7, 8, 1);
