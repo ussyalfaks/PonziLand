@@ -158,20 +158,12 @@ pub mod actions {
         token_used: ContractAddress,
     }
 
-    #[derive(Drop, Serde)]
-    #[dojo::event]
-    pub struct RemainingStakeEvent {
-        #[key]
-        land_location: u16,
-        remaining_stake: u256,
-    }
 
     #[derive(Drop, Serde)]
     #[dojo::event]
     pub struct NewAuctionEvent {
         #[key]
         land_location: u16,
-        start_time: u64,
         start_price: u256,
         floor_price: u256,
     }
@@ -182,8 +174,6 @@ pub mod actions {
         #[key]
         land_location: u16,
         buyer: ContractAddress,
-        start_time: u64,
-        final_time: u64,
         final_price: u256,
     }
 
@@ -434,16 +424,6 @@ pub mod actions {
             assert(land.owner == caller, 'not the owner');
             assert(amount_to_stake > 0, 'amount has to be > 0');
             self.stake._add(amount_to_stake, land, store);
-
-            // Could be removed now that the remaining stake is stored in the world contrect
-            // #52 issue
-            store
-                .world
-                .emit_event(
-                    @RemainingStakeEvent {
-                        land_location: land.location, remaining_stake: land.stake_amount,
-                    },
-                );
         }
 
         fn level_up(ref self: ContractState, land_location: u16) -> bool {
@@ -679,13 +659,7 @@ pub mod actions {
             land.token_used = self.main_currency.read();
 
             store.set_land(land);
-            store
-                .world
-                .emit_event(
-                    @NewAuctionEvent {
-                        land_location, start_time: auction.start_time, start_price, floor_price,
-                    },
-                );
+            store.world.emit_event(@NewAuctionEvent { land_location, start_price, floor_price });
         }
 
         fn nuke(ref self: ContractState, land_location: u16, has_liquidity_requirements: bool) {
@@ -786,8 +760,6 @@ pub mod actions {
                     @AuctionFinishedEvent {
                         land_location: land.location,
                         buyer: caller,
-                        start_time: auction.start_time,
-                        final_time: get_block_timestamp(),
                         final_price: auction.get_current_price_decay_rate(),
                     },
                 );
