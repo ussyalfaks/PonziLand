@@ -58,25 +58,16 @@ mod TaxesComponent {
             ref self: ComponentState<TContractState>,
             mut store: Store,
             ref land: Land,
-            ref neighbors_dict: Felt252Dict<Nullable<Array<Land>>>,
-        ) -> bool {
-            let neighbors = neighbors_with_their_neighbors(ref neighbors_dict, land.location);
-            let neighbors_with_owners = neighbors.len();
-
-            if neighbors_with_owners == 0 {
-                land.last_pay_time = get_block_timestamp();
-                store.set_land(land);
-                return false;
-            }
-
+            ref neighbors: Array<Land>,
+        ) -> Array<bool> {
             let current_time = get_block_timestamp();
             let mut total_distributed: u256 = 0;
-            let mut is_nuke = false;
+            let mut is_nuke: Array<bool> = ArrayTrait::new();
 
             for i in 0
                 ..neighbors
                     .len() {
-                        let neighbor = *neighbors.at(i);
+                        let mut neighbor = *neighbors.at(i);
                         let pair = (land.location, neighbor.location);
 
                         let last_time = self.last_claim_time.read(pair);
@@ -85,36 +76,41 @@ mod TaxesComponent {
                         } else {
                             last_time
                         };
-                        let elapsed_time = current_time - last_time;
+                        let elapsed_time = (current_time - last_time) * TIME_SPEED.into();
 
                         if elapsed_time == 0 {
                             continue;
                         }
 
-                        let rate = get_taxes_per_neighbor(land);
-                        let tax = rate * elapsed_time.into();
+                        let rate = get_tax_rate_per_neighbor(land);
+                        let tax_to_distribute = (rate * elapsed_time.into())
+                            / (100 * BASE_TIME.into());
 
-                        if tax > 0 {
+                        let (tax_to_distribute, nuking) = if neighbor
+                            .stake_amount <= tax_to_distribute {
+                            neighbor.stake_amount = 0;
+                            (land.stake_amount, true)
+                        } else {
+                            neighbor.stake_amount -= tax_to_distribute;
+                            (tax_to_distribute, false)
+                        };
+
+                        if tax_to_distribute > 0 {
                             let mut payable = get_dep_component_mut!(ref self, Payable);
                             let validation = payable
-                                .validate(land.token_used, get_contract_address(), tax);
+                                .validate(
+                                    neighbor.token_used, get_contract_address(), tax_to_distribute
+                                );
 
-                            let success = payable.transfer(neighbor.owner, validation);
+                            let success = payable.transfer(land.owner, validation);
                             assert(success, 'ERC20_TRANSFER_CLAIM_FAILED');
 
                             self.last_claim_time.write(pair, current_time);
-                            total_distributed += tax;
+                            total_distributed += tax_to_distribute;
                         }
+                        store.set_land(neighbor);
+                        is_nuke.append(nuking);
                     };
-
-            if total_distributed > 0 {
-                if land.stake_amount <= total_distributed {
-                    is_nuke = true;
-                    land.stake_amount = 0;
-                } else {
-                    land.stake_amount -= total_distributed;
-                }
-            }
 
             land.last_pay_time = current_time;
             store.set_land(land);
