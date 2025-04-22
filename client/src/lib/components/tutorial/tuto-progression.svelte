@@ -4,6 +4,7 @@
   import { toHexWithPadding } from '$lib/utils';
   import dialogData from './dialog.json';
   import { countOffset } from '@tsparticles/engine';
+  import { N } from 'ethers';
 
   const step = tutorialProgression();
 
@@ -149,11 +150,20 @@
   tabindex="0"
   disabled={isCountdownActive}
 >
-  <img
-    src="/tutorial/Ponzi_Arrow.png"
-    alt="Ponzi Arrow"
-    class="h-auto w-[60px] -scale-x-100"
-  />
+  <div class="relative">
+    {#if isCountdownActive}
+      <div
+        class="absolute z-50 text-5xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+      >
+        ❌
+      </div>
+    {/if}
+    <img
+      src="/tutorial/Ponzi_Arrow.png"
+      alt="Ponzi Arrow"
+      class="h-auto w-[60px] -scale-x-100"
+    />
+  </div>
   <span class="mt-1 text-sm font-bold text-white text-ponzi">Next</span>
 </button>
 
@@ -164,17 +174,25 @@
     Step {step.value}/25
   </span>
 </div>
-
 <button
   class="fixed bottom-8 left-24 z-[9999] flex flex-col items-center cursor-pointer"
   onclick={previousStep}
   tabindex="0"
   disabled={isCountdownActive}
 >
-  <img
-    src="/tutorial/Ponzi_Arrow.png"
-    alt="Ponzi Arrow"
-    class="h-auto w-[60px]"
-  />
+  <div class="relative">
+    {#if isCountdownActive}
+      <div
+        class="absolute text-5xl top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+      >
+        ❌
+      </div>
+    {/if}
+    <img
+      src="/tutorial/Ponzi_Arrow.png"
+      alt="Ponzi Arrow"
+      class="h-auto w-[60px]"
+    />
+  </div>
   <span class="mt-1 text-sm font-bold text-white text-ponzi">Previous</span>
 </button>
