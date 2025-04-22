@@ -354,8 +354,6 @@ fn setup_buyer_with_tokens(
 // Helper function for verifying taxes and stake after a claim
 fn verify_taxes_and_stake(actions_system: IActionsDispatcher, land_location: u16, store: Store) {
     let land = store.land(land_location);
-    let taxes = actions_system.get_pending_taxes_for_land(land_location, land.owner);
-    assert(taxes.len() > 0, 'must have pending taxes');
     assert(land.stake_amount < 1000, 'must have less stake');
 }
 

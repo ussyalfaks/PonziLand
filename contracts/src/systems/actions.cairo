@@ -732,7 +732,7 @@ pub mod actions {
                             neighbor.token_used, neighbor.sell_price, neighbor.pool_key,
                         );
 
-                    if *is_nuke[id] || !has_liquidity_requirements {
+                    if !has_liquidity_requirements {
                         self.nuke(neighbor.location, has_liquidity_requirements);
                     }
                 };

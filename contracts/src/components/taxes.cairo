@@ -61,7 +61,6 @@ mod TaxesComponent {
             ref neighbors: Array<Land>,
         ) -> Array<bool> {
             let current_time = get_block_timestamp();
-            let mut total_distributed: u256 = 0;
             let mut is_nuke: Array<bool> = ArrayTrait::new();
 
             for i in 0
@@ -83,36 +82,32 @@ mod TaxesComponent {
                         }
 
                         let rate = get_tax_rate_per_neighbor(land);
-                        let tax_to_distribute = (rate * elapsed_time.into())
+                        let mut tax_to_distribute = (rate * elapsed_time.into())
                             / (100 * BASE_TIME.into());
 
-                        let (tax_to_distribute, nuking) = if neighbor
-                            .stake_amount <= tax_to_distribute {
+                        if neighbor.stake_amount <= tax_to_distribute {
+                            tax_to_distribute = neighbor.stake_amount;
                             neighbor.stake_amount = 0;
-                            (land.stake_amount, true)
+                            is_nuke.append(true);
                         } else {
                             neighbor.stake_amount -= tax_to_distribute;
-                            (tax_to_distribute, false)
+                            is_nuke.append(false);
                         };
 
                         if tax_to_distribute > 0 {
                             let mut payable = get_dep_component_mut!(ref self, Payable);
                             let validation = payable
-                                .validate(
-                                    neighbor.token_used, get_contract_address(), tax_to_distribute
-                                );
+                                .validate(neighbor.token_used, neighbor.owner, tax_to_distribute);
 
                             let success = payable.transfer(land.owner, validation);
                             assert(success, 'ERC20_TRANSFER_CLAIM_FAILED');
 
                             self.last_claim_time.write(pair, current_time);
-                            total_distributed += tax_to_distribute;
                         }
+                        neighbor.last_pay_time = current_time;
                         store.set_land(neighbor);
-                        is_nuke.append(nuking);
                     };
 
-            land.last_pay_time = current_time;
             store.set_land(land);
 
             is_nuke
