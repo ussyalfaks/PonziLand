@@ -23,6 +23,8 @@
 
   let ponziMaster = $state(false);
 
+  let flashOpacity = $state(0);
+
   function formatText(text: string) {
     return text.replaceAll('\n', '<br>');
   }
@@ -95,6 +97,20 @@
   function startAutoDecreaseNukeTime() {
     isCountdownActive = true;
     vignette = 0;
+
+    flashOpacity = 0.7;
+    const startTime = Date.now();
+    const fadeOutDuration = 1000;
+
+    const fadeOutInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      if (elapsed >= fadeOutDuration) {
+        clearInterval(fadeOutInterval);
+        flashOpacity = 0;
+        return;
+      }
+      flashOpacity = 0.7 * (1 - elapsed / fadeOutDuration);
+    }, 16);
 
     const vignetteInterval = setInterval(() => {
       vignette += 0.05;
@@ -246,7 +262,13 @@
   <div
     class="fixed inset-0 pointer-events-none z-[9998]"
     style="box-shadow: inset 0 0 {vignette * 100}px rgba(0,0,0,{vignette})"
-  />
+  ></div>
+{/if}
+{#if flashOpacity > 0}
+  <div
+    class="fixed inset-0 pointer-events-none z-[9999] bg-white"
+    style="opacity: {flashOpacity}; transition: opacity 100ms ease-in, opacity 1000ms ease-out"
+  ></div>
 {/if}
 
 <style>
