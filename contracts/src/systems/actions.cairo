@@ -41,9 +41,6 @@ trait IActions<T> {
     fn reimburse_stakes(ref self: T);
 
     fn get_land(self: @T, land_location: u16) -> Land;
-    fn get_pending_taxes_for_land(
-        self: @T, land_location: u16, owner: ContractAddress,
-    ) -> Array<TokenInfo>;
     fn get_current_auction_price(self: @T, land_location: u16) -> u256;
     fn get_next_claim_info(self: @T, land_location: u16) -> Array<ClaimInfo>;
     fn get_neighbors_yield(self: @T, land_location: u16) -> LandYieldInfo;
@@ -53,7 +50,7 @@ trait IActions<T> {
     fn get_unclaimed_taxes_per_neighbor(self: @T, land_location: u16) -> u256;
     // returns (pending_taxes, unclaimed_taxes)
     fn get_claimable_taxes_for_land(
-        self: @T, land_location: u16, owner: ContractAddress,
+        self: @T, land_location: u16,
     ) -> (Array<TokenInfo>, Array<TokenInfo>);
     //  fn get_neighbors(self: @T, land_location: u16) -> Array<(Land, LandYieldInfo)>;
 }
@@ -488,18 +485,10 @@ pub mod actions {
             };
 
             self.stake._reimburse(store, active_lands.span());
-
-            self._distribute_adjusted_taxes(active_lands);
         }
 
 
         //GETTERS FUNCTIONS
-
-        fn get_pending_taxes_for_land(
-            self: @ContractState, land_location: u16, owner: ContractAddress,
-        ) -> Array<TokenInfo> {
-            self.taxes._get_pending_taxes(owner, land_location)
-        }
 
         fn get_land(self: @ContractState, land_location: u16) -> Land {
             assert(is_valid_position(land_location), 'Land location not valid');
@@ -618,26 +607,14 @@ pub mod actions {
         }
 
         fn get_claimable_taxes_for_land(
-            self: @ContractState, land_location: u16, owner: ContractAddress,
+            self: @ContractState, land_location: u16,
         ) -> (Array<TokenInfo>, Array<TokenInfo>) {
             let world = self.world_default();
             let store = StoreTrait::new(world);
+            let land = store.land(land_location);
 
-            let pending_taxes = self.get_pending_taxes_for_land(land_location, owner);
-
-            let neighbors = get_land_neighbors(store, land_location);
-
-            let mut unclaimed_taxes: Array<TokenInfo> = ArrayTrait::new();
-
-            for neighbor in neighbors {
-                let taxes_per_neighbor = self.get_unclaimed_taxes_per_neighbor(neighbor.location);
-                let tax_info = TokenInfo {
-                    token_address: neighbor.token_used, amount: taxes_per_neighbor,
-                };
-                unclaimed_taxes.append(tax_info);
-            };
-
-            (pending_taxes, unclaimed_taxes)
+            let claimable = self.taxes.get_claimable(store, land);
+            (claimable.clone(), claimable)
         }
     }
 
@@ -700,10 +677,7 @@ pub mod actions {
 
             assert(land.stake_amount == 0, 'land not valid to nuke');
 
-            let pending_taxes = self.get_pending_taxes_for_land(land.location, land.owner);
-            if pending_taxes.len() != 0 {
-                self.taxes._claim(pending_taxes, land.owner, land.location);
-            }
+            self.taxes.claim(store, land);
 
             let owner_nuked = land.owner;
             store.delete_land(land);
@@ -721,29 +695,7 @@ pub mod actions {
         }
 
         fn internal_claim(ref self: ContractState, mut store: Store, land: Land) {
-            //generate taxes for each neighbor of claimer
-            let neighbors = get_land_neighbors(store, land.location);
-            let mut neighbors_dict = process_neighbors_of_neighbors(store, neighbors.clone());
-
-            if neighbors.len() != 0 {
-                for mut neighbor in neighbors {
-                    let is_nuke = self
-                        .taxes
-                        ._calculate_and_distribute(store, ref neighbor, ref neighbors_dict);
-                    let has_liquidity_requirements = self
-                        .check_liquidity_pool_requirements(
-                            neighbor.token_used, neighbor.sell_price, neighbor.pool_key,
-                        );
-
-                    if is_nuke || !has_liquidity_requirements {
-                        self.nuke(neighbor.location, has_liquidity_requirements);
-                    }
-                };
-            }
-
-            //claim taxes for the land
-            let taxes = self.get_pending_taxes_for_land(land.location, land.owner);
-            self._claim_and_discount_taxes(taxes, land.owner, land.location);
+            self.taxes.claim(store, land);
         }
 
         fn buy_from_bid(
@@ -886,30 +838,35 @@ pub mod actions {
         ) {
             if taxes.len() != 0 {
                 self.stake._discount_total_stake(taxes.span());
-                self.taxes._claim(taxes, owner, location);
+                // self.taxes.claim(taxes, owner, location);
             }
         }
 
-        fn _distribute_adjusted_taxes(ref self: ContractState, active_lands: Array<Land>) {
-            for land in active_lands.span() {
-                let land = *land;
-                let mut adjusted_taxes: Array<TokenInfo> = ArrayTrait::new();
-                let taxes = self.get_pending_taxes_for_land(land.location, land.owner);
-                for tax in taxes.span() {
-                    let tax = *tax;
-                    let token_ratio = self.stake._get_token_ratios(tax.token_address);
-                    let adjuested_tax_amount = calculate_refund_amount(tax.amount, token_ratio);
-                    adjusted_taxes
-                        .append(
-                            TokenInfo {
-                                token_address: tax.token_address, amount: adjuested_tax_amount,
-                            },
-                        )
-                };
+        // fn _distribute_adjusted_taxes(ref self: ContractState, active_lands: Array<Land>) {
+        //     for land in active_lands
+        //         .span() {
+        //             let land = *land;
+        //             let mut adjusted_taxes: Array<TokenInfo> = ArrayTrait::new();
+        //             let taxes = self.get_pending_taxes_for_land(land.location, land.owner);
+        //             for tax in taxes
+        //                 .span() {
+        //                     let tax = *tax;
+        //                     let token_ratio = self.stake._get_token_ratios(tax.token_address);
+        //                     let adjuested_tax_amount = calculate_refund_amount(
+        //                         tax.amount, token_ratio
+        //                     );
+        //                     adjusted_taxes
+        //                         .append(
+        //                             TokenInfo {
+        //                                 token_address: tax.token_address,
+        //                                 amount: adjuested_tax_amount,
+        //                             },
+        //                         )
+        //                 };
 
-                self._claim_and_discount_taxes(adjusted_taxes, land.owner, land.location);
-            };
-        }
+        //             self._claim_and_discount_taxes(adjusted_taxes, land.owner, land.location);
+        //         };
+        // }
 
         fn generate_new_auctions(ref self: ContractState, start_price: u256) {
             let active_auctions = self.active_auctions.read();
