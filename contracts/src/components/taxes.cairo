@@ -77,11 +77,7 @@ mod TaxesComponent {
                 ..neighbors
                     .len() {
                         let neighbor = *neighbors.at(i);
-                        let pair = if land.location < neighbor.location {
-                            (land.location, neighbor.location)
-                        } else {
-                            (neighbor.location, land.location)
-                        };
+                        let pair = (land.location, neighbor.location);
 
                         let last_time = self.last_claim_time.read(pair);
                         let last_time = if last_time == 0 {
