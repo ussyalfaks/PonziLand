@@ -100,8 +100,14 @@ class TileState {
     }
   }
 
+  getNukeTime(x: number, y: number): number {
+    if (this.tilesStore[x] && this.tilesStore[x][y]) {
+      return this.tilesStore[x][y].timeToNuke;
+    }
+    return 0;
+  }
+
   levelUp(x: number, y: number): void {
-    console.log('qsdfkjmqdsfl', this.tilesStore[x][y]);
     if (
       this.tilesStore[x] &&
       this.tilesStore[x][y] &&

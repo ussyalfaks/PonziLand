@@ -15,6 +15,8 @@
   // The images are named according to the activeImage variable.
   let activeImage = $state('');
 
+  let isCountdownActive = $state(false);
+
   function formatText(text: string) {
     return text.replaceAll('\n', '<br>');
   }
@@ -79,7 +81,7 @@
       tileState.setDisplayRates(true);
     }
     if (step.value === 13) {
-      tileState.reduceTimeToNuke(8, 8);
+      startAutoDecreaseNukeTime();
     }
     if (step.value === 14) {
       tileState.reduceTimeToNuke(8, 8);
@@ -102,6 +104,22 @@
         tileState.removeAuction(8, 8);
       }, 1000);
     }
+  }
+
+  function startAutoDecreaseNukeTime() {
+    isCountdownActive = true;
+    const interval = setInterval(() => {
+      tileState.reduceTimeToNuke(8, 8);
+      if (tileState.getNukeTime(8, 8) <= 80000) {
+        clearInterval(interval);
+        isCountdownActive = false;
+        console.log('Nuke time reached 0');
+        tileState.setNuke(true);
+        setTimeout(() => {
+          tileState.removeAuction(8, 8);
+        }, 1000);
+      }
+    }, 1000);
   }
 </script>
 
@@ -148,6 +166,7 @@
   class="fixed bottom-8 right-24 z-[9999] flex flex-col items-center cursor-pointer"
   onclick={nextStep}
   tabindex="0"
+  disabled={isCountdownActive}
 >
   <img
     src="/tutorial/Ponzi_Arrow.png"
@@ -169,6 +188,7 @@
   class="fixed bottom-8 left-24 z-[9999] flex flex-col items-center cursor-pointer"
   onclick={previousStep}
   tabindex="0"
+  disabled={isCountdownActive}
 >
   <img
     src="/tutorial/Ponzi_Arrow.png"
