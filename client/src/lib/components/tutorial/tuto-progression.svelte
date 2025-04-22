@@ -102,7 +102,6 @@
       if (tileState.getNukeTime(8, 8) <= 80000) {
         clearInterval(nukeInterval);
         clearInterval(vignetteInterval);
-        isCountdownActive = false;
         console.log('Nuke time reached 0');
         tileState.setNuke(true);
         setTimeout(() => {

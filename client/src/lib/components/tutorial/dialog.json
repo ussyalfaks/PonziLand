@@ -22,17 +22,17 @@
   {
     "_step": "5",
     "text": "The land price will decrease over time, until a player buys it.\n\n This is what we call a dutch auction. Make sure to snipe!",
-    "image_id": 1
+    "image_id": 2
   },
   {
     "_step": "6",
     "text": "You need to provide 3 inputs:\n\n1. The token you want to sell the land for\n2. The price you sell the land for\n3. The stake you are willing to put in the land",
-    "image_id": 2
+    "image_id": 4
   },
   {
     "_step": "7",
     "text": "When you buy a land you must set a SELL PRICE. As the tax rate you pay to your 8 neighbors is a % of the sell price.",
-    "image_id": 3
+    "image_id": 1
   },
   {
     "_step": "8",
@@ -42,17 +42,17 @@
   {
     "_step": "9",
     "text": "OHHHHH, Look your house leveled up!! This is great.\n\n You can level up your house twice. You can only do it if you own the land for long enough.",
-    "image_id": 1
+    "image_id": 3
   },
   {
     "_step": "10",
     "text": "Wouh. That a cool castle.",
-    "image_id": 2
+    "image_id": 1
   },
   {
     "_step": "11",
     "text": "New auctions! let's see if other players will buy them!",
-    "image_id": 3
+    "image_id": 2
   },
   {
     "_step": "12",
@@ -72,26 +72,26 @@
   {
     "_step": "15",
     "text": "If it hits 0 something bad will happen.",
-    "image_id": 1
+    "image_id": 2
   },
   {
     "_step": "16",
     "text": "So make sure that never happens....",
-    "image_id": 2
+    "image_id": 4
   },
   {
     "_step": "17",
     "text": "Wait what's going on? Why is the Stake going down so fast?",
-    "image_id": 2
+    "image_id": 3
   },
   {
     "_step": "18",
     "text": "Quickly, REFILL THE STAKE!!!!",
-    "image_id": 2
+    "image_id": 3
   },
   {
     "_step": "19",
     "text": "NOOOOOO",
-    "image_id": 2
+    "image_id": 3
   }
 ]
