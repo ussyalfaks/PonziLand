@@ -240,8 +240,8 @@
     class="fixed top-8 pt-28 left-1/2 -translate-x-1/2 z-[998] flex flex-col items-center justify-center gap-4"
     transition:fly={{ y: 1000, duration: 1000, delay: 2000 }}
   >
-    <img src="/logo.png" alt="Logo" class="h-auto w-[300px]" />
-    <Button>Start Game</Button>
+    <img src="/logo.png" alt="Logo" class="h-auto w-[500px]" />
+    <Button onclick={() => goto('/game')}>Start Game</Button>
   </div>
   <div
     class="fixed inset-y-0 right-[12.5%] z-[998] flex items-center justify-center text-white text-4xl font-bold"
