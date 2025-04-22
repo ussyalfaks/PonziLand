@@ -3,8 +3,6 @@
   import { selectedLandPosition } from '$lib/stores/stores.svelte';
   import { toHexWithPadding } from '$lib/utils';
   import dialogData from './dialog.json';
-  import { countOffset } from '@tsparticles/engine';
-  import { N } from 'ethers';
 
   const step = tutorialProgression();
 
@@ -17,6 +15,8 @@
   let activeImage = $state('');
 
   let isCountdownActive = $state(false);
+
+  let vignette = $state(0);
 
   function formatText(text: string) {
     return text.replaceAll('\n', '<br>');
@@ -89,11 +89,19 @@
 
   function startAutoDecreaseNukeTime() {
     isCountdownActive = true;
-    const interval = setInterval(() => {
+    vignette = 0;
+
+    const vignetteInterval = setInterval(() => {
+      vignette += 0.05;
+    }, 50);
+
+    const nukeInterval = setInterval(() => {
       tileState.reduceTimeToNuke(8, 8);
       step.increment();
+
       if (tileState.getNukeTime(8, 8) <= 80000) {
-        clearInterval(interval);
+        clearInterval(nukeInterval);
+        clearInterval(vignetteInterval);
         isCountdownActive = false;
         console.log('Nuke time reached 0');
         tileState.setNuke(true);
@@ -196,3 +204,10 @@
   </div>
   <span class="mt-1 text-sm font-bold text-white text-ponzi">Previous</span>
 </button>
+
+{#if vignette > 0}
+  <div
+    class="fixed inset-0 pointer-events-none z-[9998]"
+    style="box-shadow: inset 0 0 {vignette * 100}px rgba(0,0,0,{vignette})"
+  />
+{/if}
