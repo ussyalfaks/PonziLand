@@ -3,6 +3,9 @@
   import { selectedLandPosition } from '$lib/stores/stores.svelte';
   import { toHexWithPadding } from '$lib/utils';
   import dialogData from './dialog.json';
+  import { fly } from 'svelte/transition';
+  import Button from '../ui/button/button.svelte';
+  import { goto } from '$app/navigation';
 
   const step = tutorialProgression();
 
@@ -17,6 +20,8 @@
   let isCountdownActive = $state(false);
 
   let vignette = $state(0);
+
+  let ponziMaster = $state(false);
 
   function formatText(text: string) {
     return text.replaceAll('\n', '<br>');
@@ -102,11 +107,12 @@
       if (tileState.getNukeTime(8, 8) <= 80000) {
         clearInterval(nukeInterval);
         clearInterval(vignetteInterval);
-        console.log('Nuke time reached 0');
+
         tileState.setNuke(true);
         setTimeout(() => {
           tileState.removeAuction(8, 8);
         }, 1000);
+        ponziMaster = true;
       }
     }, 4000);
   }
@@ -203,10 +209,48 @@
   </div>
   <span class="mt-1 text-sm font-bold text-white text-ponzi">Previous</span>
 </button>
-
+{#if ponziMaster}
+  <div
+    class="fixed inset-y-0 left-[12.5%] z-[998] flex items-center justify-center"
+    transition:fly={{ x: -1000, duration: 1000, delay: 1000 }}
+  >
+    <img
+      src="/tutorial/PONZIMASTER.png"
+      alt="Ponzi master"
+      class="h-auto w-[500px]"
+    />
+  </div>
+  <div
+    class="fixed top-8 pt-28 left-1/2 -translate-x-1/2 z-[998] flex flex-col items-center justify-center gap-4"
+    transition:fly={{ y: 1000, duration: 1000, delay: 2000 }}
+  >
+    <img src="/logo.png" alt="Logo" class="h-auto w-[300px]" />
+    <Button>Start Game</Button>
+  </div>
+  <div
+    class="fixed inset-y-0 right-[12.5%] z-[998] flex items-center justify-center text-white text-4xl font-bold"
+    transition:fly={{ x: 1000, duration: 1000, delay: 1000 }}
+  >
+    <div class="max-w-[400px] text-center text-ponzi-number leading-relaxed">
+      HAHAHAHAHA
+      <br />
+      THis is what the PONZI LAND is about.
+      <br />
+      Fight or Die.
+      <br />
+      Welcome to the arena
+    </div>
+  </div>
+{/if}
 {#if vignette > 0}
   <div
     class="fixed inset-0 pointer-events-none z-[9998]"
     style="box-shadow: inset 0 0 {vignette * 100}px rgba(0,0,0,{vignette})"
   />
 {/if}
+
+<style>
+  .text-ponzi-number {
+    font-family: 'PonziNumber', sans-serif;
+  }
+</style>
