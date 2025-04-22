@@ -20,7 +20,7 @@ interface AuctionTile extends BaseTile {
 interface HouseTile extends BaseTile {
   type: 'house';
   level: 1 | 2 | 3;
-  token: typeof data.availableTokens[number];
+  token: (typeof data.availableTokens)[number];
 }
 
 // Union type for all possible tiles
@@ -43,6 +43,15 @@ function createFakeTiles(): Tile[][] {
 class TileState {
   public tilesStore: Tile[][] = $state(createFakeTiles());
   public nuke = $state(false);
+  public displayRates = $state(false);
+
+  getDisplayRates() {
+    return this.displayRates;
+  }
+
+  setDisplayRates(displayRates: boolean) {
+    this.displayRates = displayRates;
+  }
   getTiles() {
     return this.tilesStore;
   }
@@ -79,7 +88,7 @@ class TileState {
       this.tilesStore[x][y] = {
         ...this.tilesStore[x][y],
         type: 'house',
-        level: 1 as ( 1 | 2 | 3),
+        level: 1 as 1 | 2 | 3,
         token: data.availableTokens[tokenId],
       };
     }
@@ -92,7 +101,7 @@ class TileState {
   }
 
   levelUp(x: number, y: number): void {
-    console.log('qsdfkjmqdsfl',this.tilesStore[x][y]);
+    console.log('qsdfkjmqdsfl', this.tilesStore[x][y]);
     if (
       this.tilesStore[x] &&
       this.tilesStore[x][y] &&
@@ -102,7 +111,7 @@ class TileState {
       console.log('This is a house');
       this.tilesStore[x][y] = {
         ...this.tilesStore[x][y],
-        level: Number(this.tilesStore[x][y].level) + 1 as ( 1 | 2 | 3),
+        level: (Number(this.tilesStore[x][y].level) + 1) as 1 | 2 | 3,
       };
     }
   }

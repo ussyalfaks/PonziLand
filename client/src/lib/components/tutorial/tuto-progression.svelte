@@ -70,11 +70,13 @@
       tileState.removeAuction(7, 8);
       tileState.removeAuction(9, 8);
       tileState.removeAuction(9, 9);
+      tileState.setDisplayRates(false);
     }
     if (step.value === 12) {
       tileState.buyAuction(7, 8, 1);
       tileState.buyAuction(9, 8, 2);
       tileState.buyAuction(9, 9, 3);
+      tileState.setDisplayRates(true);
     }
     if (step.value === 13) {
       tileState.reduceTimeToNuke(8, 8);
