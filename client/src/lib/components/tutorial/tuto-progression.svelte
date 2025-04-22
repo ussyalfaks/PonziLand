@@ -80,29 +80,9 @@
       tileState.buyAuction(9, 9, 3);
       tileState.setDisplayRates(true);
     }
-    if (step.value === 13) {
+    if (step.value >= 13) {
+      tileState.setDisplayRates(false);
       startAutoDecreaseNukeTime();
-    }
-    if (step.value === 14) {
-      tileState.reduceTimeToNuke(8, 8);
-    }
-    if (step.value === 15) {
-      tileState.reduceTimeToNuke(8, 8);
-    }
-    if (step.value === 16) {
-      tileState.reduceTimeToNuke(8, 8);
-    }
-    if (step.value === 19) {
-      tileState.reduceTimeToNuke(8, 8);
-    }
-    if (step.value === 20) {
-      tileState.reduceTimeToNuke(8, 8);
-    }
-    if (step.value === 21) {
-      tileState.setNuke(true);
-      setTimeout(() => {
-        tileState.removeAuction(8, 8);
-      }, 1000);
     }
   }
 
@@ -110,6 +90,7 @@
     isCountdownActive = true;
     const interval = setInterval(() => {
       tileState.reduceTimeToNuke(8, 8);
+      step.increment();
       if (tileState.getNukeTime(8, 8) <= 80000) {
         clearInterval(interval);
         isCountdownActive = false;
@@ -119,7 +100,7 @@
           tileState.removeAuction(8, 8);
         }, 1000);
       }
-    }, 1000);
+    }, 4000);
   }
 </script>
 

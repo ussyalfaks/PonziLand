@@ -113,7 +113,7 @@
         <div
           class="text-ponzi-number text-[3px] flex items-center justify-center leading-none relative"
         >
-          <span class="whitespace-nowrap text-red-500"> -50 eSTARK/h</span>
+          <span class="whitespace-nowrap text-red-500"> -5 eSTARK/h</span>
         </div>
       {:else}
         <div
