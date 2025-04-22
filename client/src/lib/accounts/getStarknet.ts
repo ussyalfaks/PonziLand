@@ -84,11 +84,7 @@ export abstract class CommonStarknetWallet implements AccountProvider {
   }
 
   getWalletAccount() {
-    if (this._wallet != undefined) {
-      return this._wallet;
-    } else {
-      return undefined;
-    }
+    return this._wallet;
   }
 
   get icon(): string {

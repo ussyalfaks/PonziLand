@@ -24,10 +24,21 @@
   >([]);
   let totalYieldValue: number = $state(0);
 
-  //TODO correctly calculate this
-  let burnRate: number = $derived(
-    land?.sellPrice.rawValue().dividedBy(4).toNumber() || 0,
-  );
+  let burnRate: number = $derived(calculateBurnRate()?.toNumber() || 0);
+
+  function calculateBurnRate() {
+    if (land == undefined) return;
+    let landInfo = land.sellPrice
+      .rawValue()
+      .multipliedBy(0.02)
+      .multipliedBy(GAME_SPEED);
+
+    let burnRate = landInfo.multipliedBy(
+      yieldInfo?.yield_info.filter((y) => y.percent_rate).length ?? 0,
+    );
+
+    return burnRate;
+  }
 
   $effect(() => {
     if (land == undefined) return;
@@ -108,38 +119,45 @@
   {/if}
 
   {#if formattedYields.length > 0}
-    <div class="yield-info flex flex-col items-center">
-      <div class="text-center pb-2 text-xl">
+    <div class="yield-info flex flex-col items-center text-ponzi-number">
+      <div class="text-center pb-2 text-xl low-opacity">
         Total Tokens Earned
         <div
           class="{totalYieldValue - burnRate >= 0
             ? 'text-green-500'
-            : 'text-red-500'} text-2xl text-ponzi-number"
+            : 'text-red-500'} text-2xl flex items-center justify-center"
         >
-          {totalYieldValue - burnRate >= 0 ? '+ ' : '- '}{Math.abs(
-            totalYieldValue - burnRate,
-          ).toFixed(2)}
+          <span
+            >{totalYieldValue - burnRate >= 0 ? '+ ' : '- '}{Math.abs(
+              totalYieldValue - burnRate,
+            ).toFixed(2)}</span
+          >
+          <img src="/tokens/eSTRK/icon.png" alt="" class="ml-1 h-5 w-5" />
         </div>
       </div>
 
-      <div class="flex w-full justify-between">
+      <div class="flex w-full justify-between low-opacity">
         <div class="flex flex-col items-center">
           <div class="text-xs">Earning / day :</div>
-          <div class="text-green-500 text-sm text-ponzi-number">
-            + {totalYieldValue.toFixed(2)}
+          <div class="text-green-500 text-sm flex items-center">
+            <span>+ {totalYieldValue.toFixed(2)}</span>
+            <img src="/tokens/eSTRK/icon.png" alt="" class="ml-1 h-4 w-4" />
           </div>
         </div>
 
         <div class="flex flex-col items-center">
           <div class="text-xs">Burning / day :</div>
-          <div class="text-red-500 text-sm text-ponzi-number">
-            + {burnRate.toFixed(2)}
+          <div class="text-red-500 text-sm flex items-center">
+            <span>- {burnRate.toFixed(2)}</span>
+            <img src="/tokens/eSTRK/icon.png" alt="" class="ml-1 h-4 w-4" />
           </div>
         </div>
       </div>
       <div class="flex text-xs justify-between w-full pt-2">
-        <div>Token :</div>
-        <div>${land?.token?.symbol}</div>
+        <div class="low-opacity">Token :</div>
+        <div class="text-opacity-30">
+          ${land?.token?.symbol}
+        </div>
       </div>
     </div>
   {/if}
@@ -148,5 +166,9 @@
 <style>
   .text-ponzi-number {
     font-family: 'PonziNumber', sans-serif;
+  }
+
+  .low-opacity {
+    opacity: 0.7;
   }
 </style>

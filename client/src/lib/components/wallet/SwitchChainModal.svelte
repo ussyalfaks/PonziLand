@@ -10,8 +10,7 @@
   let chainId: string | undefined = $state();
 
   let visible = $derived(
-    chainId != undefined &&
-      PUBLIC_DOJO_CHAIN_ID.toLowerCase() !== chainId?.toLowerCase(),
+    chainId && PUBLIC_DOJO_CHAIN_ID.toLowerCase() !== chainId?.toLowerCase(),
   );
 
   $inspect('Should be shown', visible);
@@ -33,7 +32,6 @@
     await accountProvider.wait();
 
     if (!accountProvider.getProvider()?.getWalletAccount()) {
-      chainId = undefined;
       return;
     }
 
@@ -48,7 +46,10 @@
       } else if (event.type === 'connected') {
         loadChainId();
       } else if (event.type === 'disconnected') {
-        chainId = undefined;
+        if (providerName != null) {
+          accountProvider.selectAndLogin(providerName);
+          providerName = undefined;
+        }
       }
     });
 

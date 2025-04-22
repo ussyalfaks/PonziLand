@@ -37,8 +37,10 @@
   // Form
   let selectedToken = $state<Token | undefined>();
   //TODO: Change defaults values into an error component
-  let stakeAmount = $state<CurrencyAmount>(CurrencyAmount.fromScaled('10'));
-  let sellAmount = $state<CurrencyAmount>(CurrencyAmount.fromScaled('1'));
+  let stakeAmount = $state<CurrencyAmount>(
+    CurrencyAmount.fromScaled('0.0000001'),
+  );
+  let sellAmount = $state<CurrencyAmount>(CurrencyAmount.fromScaled('0.0001'));
 
   async function handleBiddingClick() {
     loading = true;
@@ -71,13 +73,11 @@
       );
 
       if (result?.transaction_hash) {
-        // Only wait for the land update, not the total TX confirmation (should be fine)
-        await $selectedLand.wait();
-
+        await accountManager!
+          .getProvider()
+          ?.getWalletAccount()
+          ?.waitForTransaction(result.transaction_hash);
         console.log('Bought land with TX: ', result.transaction_hash);
-
-        // Still wait for the tx, just to rollback in the event of an issue
-        notificationQueue.addNotification(result.transaction_hash, 'buy land');
 
         // Close the modal
         uiStore.showModal = false;

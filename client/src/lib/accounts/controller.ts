@@ -1,7 +1,6 @@
 import { getContext, onMount, setContext } from 'svelte';
 import Controller from '@cartridge/controller';
 import { type DojoConfig } from '$lib/dojoConfig';
-import preset from './utils/preset.json';
 import type { AccountInterface, WalletAccount } from 'starknet';
 import type {
   AccountProvider,
@@ -100,8 +99,7 @@ export async function setupController(
   const controller = new SvelteController({
     defaultChainId: a2hex(config.chainId), // SN_SEPOLIA in hex
     chains: [{ rpcUrl: config.rpcUrl }],
-    preset: 'ponziland',
-    policies: preset.chains.SN_MAIN.policies as any,
+    policies: config.policies,
   });
 
   console.info('Starting controller!');

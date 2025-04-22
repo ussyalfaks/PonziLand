@@ -3,11 +3,7 @@
   import type { LandsStore } from '$lib/api/land.svelte';
   import { useLands } from '$lib/api/land.svelte';
   import { useTiles } from '$lib/api/tile-store.svelte';
-  import {
-    cameraPosition,
-    cameraTransition,
-    moveCameraToLocation,
-  } from '$lib/stores/camera';
+  import { cameraPosition, cameraTransition } from '$lib/stores/camera';
   import { claimStore } from '$lib/stores/claim.svelte';
   import { mousePosCoords } from '$lib/stores/stores.svelte';
   import { padAddress } from '$lib/utils';
@@ -35,10 +31,6 @@
 
   let tiles = $derived($tileStore ?? []);
 
-  onMount(() => {
-    moveCameraToLocation(2080, 3);
-  });
-
   $effect(() => {
     const address = account.address;
     if (!address || !landStore) return;
@@ -52,9 +44,6 @@
             land: land,
             claimable: true,
           };
-          if (nukeStore.nuking[land.location]) {
-            claimStore.value[land.location].land.type = 'auction';
-          }
         }
       }
     });

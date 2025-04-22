@@ -6,7 +6,7 @@ import process from 'node:process';
 import dotenv from 'dotenv';
 dotenv.config();
 
-let profile = process.env.DOJO_PROFILE?.toLowerCase() ?? 'dev';
+const profile = process.env.DOJO_PROFILE?.toLowerCase() ?? 'dev';
 
 process.env.PUBLIC_DOJO_PROFILE = profile;
 
@@ -44,28 +44,6 @@ const profiles = {
     BYPASS_TOKEN: '',
     PUBLIC_SOCIALINK_URL: 'https://social.ponzi.land',
   },
-  'mainnet-test': {
-    PUBLIC_DOJO_RPC_URL: 'https://api.cartridge.gg/x/starknet/mainnet',
-    PUBLIC_DOJO_TORII_URL: 'https://api.cartridge.gg/x/ponziland-testing/torii',
-    PUBLIC_DOJO_CHAIN_ID: 'SN_MAIN',
-    PUBLIC_AVNU_URL: 'https://starknet.api.avnu.fi',
-    PUBLIC_EKUBO_URL: 'https://mainnet-api.ekubo.org',
-    PUBLIC_DOJO_BURNER_ADDRESS: null,
-    PUBLIC_DOJO_BURNER_PRIVATE: null,
-    BYPASS_TOKEN: '',
-    PUBLIC_SOCIALINK_URL: 'https://socialink.ponzi.land',
-  },
-  mainnet: {
-    PUBLIC_DOJO_RPC_URL: 'https://api.cartridge.gg/x/starknet/mainnet',
-    PUBLIC_DOJO_TORII_URL: 'https://api.cartridge.gg/x/ponziland-tourney/torii',
-    PUBLIC_DOJO_CHAIN_ID: 'SN_MAIN',
-    PUBLIC_AVNU_URL: 'https://starknet.api.avnu.fi',
-    PUBLIC_EKUBO_URL: 'https://mainnet-api.ekubo.org',
-    PUBLIC_DOJO_BURNER_ADDRESS: null,
-    PUBLIC_DOJO_BURNER_PRIVATE: null,
-    BYPASS_TOKEN: '',
-    PUBLIC_SOCIALINK_URL: 'https://social.ponzi.land',
-  },
 };
 
 const envProfile = profiles[profile];
@@ -83,8 +61,6 @@ for (const val of Object.entries(envProfile)) {
 
 console.log(process.env['BYPASS_TOKEN']);
 
-const manifestPath = `../contracts/manifest_${profile}.json`;
-console.log('Manifest: ', manifestPath);
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   // Consult https://svelte.dev/docs/kit/integrations
@@ -97,7 +73,7 @@ const config = {
     // See https://svelte.dev/docs/kit/adapters for more information about adapters.
     adapter: adapter(),
     alias: {
-      $manifest: manifestPath,
+      $manifest: `../contracts/manifest_${profile}.json`,
     },
   },
 };

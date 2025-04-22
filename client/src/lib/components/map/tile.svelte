@@ -164,7 +164,7 @@
     {/if}
   {/if}
 
-  {#if isOwner && scale > 1.5 && land.type === 'house' && !isNuking}
+  {#if isOwner && scale > 1.5 && land.type === 'house'}
     <div
       class="absolute z-20 top-1 left-1/2"
       style="transform: translate(-50%, -100%)"
@@ -191,12 +191,12 @@
         height={32}
       />
     {/if}
-    <div class="absolute top-[-15%] right-0 w-full h-full z-20">
+    <div class="absolute top-0 right-0 w-full h-full z-20">
       <LandNukeAnimation />
     </div>
   {/if}
 
-  {#if isOwner && !isNuking && land.type == 'house'}
+  {#if isOwner}
     <div
       class={cn(
         'absolute top-0 left-1/2 -translate-x-1/2 z-20',
@@ -206,7 +206,7 @@
       onclick={handleClick}
     ></div>
   {/if}
-  {#if land.type == 'house' && !isNuking}
+  {#if land.type == 'house'}
     <div class="absolute top-0 right-0 text-[4px]" onclick={handleClick}>
       {#if estimatedNukeTime == -1}
         inf.
