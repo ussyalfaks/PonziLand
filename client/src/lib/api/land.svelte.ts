@@ -163,9 +163,8 @@ export function useLands(): LandsStore | undefined {
       .getEntitiesByModel('ponzi_land', 'Land')
       .map((e) => {
         const land = e.models['ponzi_land']['Land'] as Land;
-        const locationHex = toHexWithPadding(ensureNumber(land.location));
         const landStake = landsStakes.find(
-          (stake) => stake.location === locationHex,
+          (stake) => stake.location === land.location,
         );
         return {
           ...land,
@@ -200,7 +199,7 @@ export function useLands(): LandsStore | undefined {
           tokenUsed: getTokenInfo(land.token_used)?.name ?? 'Unknown Token',
           tokenAddress: land.token_used,
           stakeAmount: CurrencyAmount.fromUnscaled(landStake?.amount ?? 0),
-          lastPayTime: landStake?.last_pay_time ?? 0,
+          lastPayTime: Number(landStake?.last_pay_time) ?? 0,
           token,
         };
       })
