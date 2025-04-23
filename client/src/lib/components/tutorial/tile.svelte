@@ -16,8 +16,10 @@
   import LandNukeShield from '../land/land-nuke-shield.svelte';
   import LandTaxClaimer from '../land/land-tax-claimer.svelte';
   import Button from '../ui/button/button.svelte';
-  import RatesOverlay from '$lib/components/map/rates-overlay.svelte';
+  import RatesOverlay from './rates-tutorial.svelte';
   import NukeExplosion from '../animation/nuke-explosion.svelte';
+  import { tileState } from './stores.svelte';
+  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
 
   let { land, dragged, scale } = $props<{
     land: Tile;
@@ -25,10 +27,10 @@
     scale: number;
   }>();
 
-  let isNuking = false;
+  let isNuking = $derived(tileState.getNuke());
   let isOwner = false;
 
-  const estimatedNukeTime = 100000000000;
+  const estimatedNukeTime = $derived(land.timeToNuke);
 
   let selected = $derived($selectedLandPosition === land.location);
 
@@ -36,13 +38,6 @@
 
   function handleClick() {
     console.log('clicked', dragged);
-    if (dragged) return;
-
-    if (selected) {
-      moveCameraToLocation(Number(land.location));
-    }
-
-    selectLand(land as LandWithActions);
   }
 
   const handleBuyLandClick = () => {
@@ -52,8 +47,7 @@
     uiStore.modalType = 'buy';
     uiStore.modalData = {
       location: hexStringToNumber($selectedLandMeta!.location),
-      // TODO: Enforce null checks here
-      sellPrice: 0,
+      sellPrice: CurrencyAmount.fromScaled(0),
       tokenUsed: '',
       tokenAddress: '',
       owner: undefined,
@@ -82,7 +76,7 @@
     onmouseout={() => (hovering = false)}
     onblur={() => (hovering = false)}
   >
-    {#if isNuking || land.type == 'grass'}
+    {#if land.type == 'grass'}
       <LandDisplay grass road seed={land.location} {selected} {hovering} />
     {:else if land.type == 'auction'}
       <LandDisplay auction road {selected} {hovering} />
@@ -109,7 +103,7 @@
       </Button>
     {/if}
     {#if land.type == 'house'}
-      <RatesOverlay {land} />
+      <RatesOverlay />
       {#if isOwner}
         <Button
           size="sm"
@@ -144,17 +138,7 @@
     </div>
   {/if}
 
-  //TODO: add nuke explanation to the tutorial
-  {#if false}
-    <div
-      class="absolute bottom-1/4 left-1/2 -translate-x-1/2 text-ponzi animate-pulse text-[4px]"
-      onclick={handleClick}
-    >
-      NUKABLE
-    </div>
-  {/if}
-
-  {#if isNuking}
+  {#if isNuking && land == tileState.getTiles()[8][8]}
     {#if land.type == 'house' && land.token}
       <NukeExplosion
         biomeX={land.token.images.biome.x}
