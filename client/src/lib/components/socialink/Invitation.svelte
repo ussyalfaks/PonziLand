@@ -1,9 +1,11 @@
 <script lang="ts">
   import { getSocialink } from '$lib/accounts/social/index.svelte';
   import { Button } from '../ui/button';
-  import { refresh, state } from '$lib/account.svelte';
+  import { refresh, state as accountState } from '$lib/account.svelte';
 
   const socialink = getSocialink();
+
+  let showAcceptPopup = $state(false);
 
   const {
     onfinish,
@@ -19,6 +21,9 @@
         console.log('Invitation finished, tx:', tx);
         await refresh();
 
+        // If the profile is still not whitelisted, but we got the success message
+        // we might be in the state where the invitation is still pending.
+
         if (onfinish) {
           onfinish();
         }
@@ -27,7 +32,7 @@
         // The user might have closed after a successful invitation
         await refresh();
 
-        if (state.profile?.exists && state.profile?.whitelisted) {
+        if (accountState.profile?.exists && accountState.profile?.whitelisted) {
           // User is whitelisted, so do as if it was successful
           if (onfinish) {
             onfinish();
