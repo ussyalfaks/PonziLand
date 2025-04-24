@@ -64,7 +64,7 @@ const profiles = {
     PUBLIC_DOJO_BURNER_ADDRESS: null,
     PUBLIC_DOJO_BURNER_PRIVATE: null,
     BYPASS_TOKEN: '',
-    PUBLIC_SOCIALINK_URL: 'https://social.ponzi.land',
+    PUBLIC_SOCIALINK_URL: 'https://socialink.ponzi.land',
   },
 };
 
