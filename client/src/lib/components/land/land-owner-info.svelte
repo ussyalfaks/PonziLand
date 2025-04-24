@@ -1,9 +1,8 @@
 <script lang="ts">
   import { Card } from '../ui/card';
+  import CopyAddress from '../ui/copy-address.svelte';
   import type { SelectedLand } from '$lib/stores/stores.svelte';
   import { AI_AGENT_ADDRESS } from '$lib/const';
-  import { usernamesStore } from '$lib/stores/account.svelte';
-  import { padAddress } from '$lib/utils';
 
   let {
     land,
@@ -22,11 +21,6 @@
       isAiAgent = false;
     }
   });
-
-  export function formatAddress(address: string): string {
-    if (!address) return '';
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-  }
 </script>
 
 <div class="absolute left-0 -translate-y-12">
@@ -45,10 +39,7 @@
   {:else}
     <Card>
       <div class="flex items-center gap-2 text-ponzi-number">
-        <span>
-          {usernamesStore.getUsernames()[padAddress(land?.owner || '')!] ||
-            formatAddress(land?.owner || '')}
-        </span>
+        <CopyAddress address={land?.owner || ''} showUsername={true} />
       </div>
     </Card>
   {/if}
