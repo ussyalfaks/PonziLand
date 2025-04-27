@@ -217,27 +217,20 @@ export function calculateBurnRate(
   land: LandWithActions,
   neighborCount: number,
 ) {
-  let discount_for_level = calculateDiscount(land.level);
-  land.token;
-  let maxN = 8;
+  const discount_for_level = calculateDiscount(land.level);
+  const maxN = 8;
+
+  let base = land.sellPrice
+    .rawValue()
+    .multipliedBy(TAX_RATE)
+    .multipliedBy(GAME_SPEED)
+    .dividedBy(maxN * 100)
+    .multipliedBy(neighborCount);
 
   if (discount_for_level > 0) {
-    return CurrencyAmount.fromRaw(
-      land.sellPrice
-        .rawValue()
-        .multipliedBy(TAX_RATE)
-        .multipliedBy(discount_for_level)
-        .dividedBy(maxN * 100)
-        .multipliedBy(neighborCount),
-    );
+    return base.multipliedBy(100 - discount_for_level).dividedBy(100);
   } else {
-    return CurrencyAmount.fromRaw(
-      land.sellPrice
-        .rawValue()
-        .multipliedBy(2)
-        .dividedBy(maxN)
-        .multipliedBy(neighborCount),
-    );
+    return base;
   }
 }
 
@@ -245,9 +238,9 @@ function calculateDiscount(level: number) {
   if (level == 1) {
     return 0;
   } else if (level == 2) {
-    return 15;
+    return 10;
   } else if (level == 3) {
-    return 30;
+    return 15;
   }
   return 0;
 }
