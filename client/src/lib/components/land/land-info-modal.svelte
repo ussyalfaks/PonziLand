@@ -184,12 +184,7 @@
               </div>
             {/if}
           </div>
-          <BuyInsights
-            {land}
-            selectedToken={land.token}
-            sellAmountVal={priceIncrease}
-            stakeAmountVal={stakeAfter.toString()}
-          />
+          <BuyInsights {land} selectedToken={land.token} />
         </div>
       </div>
     {/if}
