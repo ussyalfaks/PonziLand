@@ -1,0 +1,11 @@
+[package]
+name = "service"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+
+[dependencies]
+serde = { workspace = true, features = ["serde"] }
+entity = { path = "../entity" }
+torii-ingester = { path = "../../torii-ingester" }

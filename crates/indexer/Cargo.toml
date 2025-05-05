@@ -27,7 +27,7 @@ tracing-subscriber.workspace = true
 metrics-exporter-prometheus = "0.16.2"
 apalis-core = "0.7.0"
 tower = "0.5.2"
-anyhow = "1.0.98"
+anyhow.workspace = true
 ekubo = { path = "../ekubo" }
 url = { workspace = true, features = ["serde"] }
 starknet.workspace = true

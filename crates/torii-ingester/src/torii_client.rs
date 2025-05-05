@@ -1,5 +1,6 @@
 use crate::torii_sql::SqlClient;
 use async_stream::stream;
+use chrono::{DateTime, Utc};
 use dojo_types::schema::Struct;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -38,9 +39,23 @@ pub struct ToriiClient {
 ///
 /// Due to the current system limitations, two types of messages can be returned by the `subscribe_and_catchup` function
 #[derive(Clone, Debug)]
-pub enum RawEvent {
-    Json { name: String, data: Value },
+pub enum RawToriiData {
+    Json {
+        name: String,
+        data: Value,
+        at: DateTime<Utc>,
+    },
     Grpc(Struct),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct QueryResponse {
+    selector: String,
+    #[serde(deserialize_with = "deserialize_nested_json")]
+    data: Value,
+    event_id: String,
+    // TODO(red): MIgrate this to a datetime dependency like chrono
+    created_at: chrono::DateTime<Utc>,
 }
 
 impl ToriiClient {
@@ -58,58 +73,31 @@ impl ToriiClient {
         })
     }
 
-    pub async fn get_all_events(&self) -> Result<impl Stream<Item = RawEvent>, Error> {
-        #[derive(Serialize, Deserialize, Debug)]
-        struct QueryResponse {
-            selector: String,
-            #[serde(deserialize_with = "deserialize_nested_json")]
-            data: Value,
-            event_id: String,
-            // TODO(red): MIgrate this to a datetime dependency like chrono
-            created_at: String,
-        }
-
-        let sql_client = self.sql_client.clone();
-
-        let (tx, rx) = mpsc::channel::<RawEvent>(32);
-
-        tokio::spawn(async move {
-            let mut current_offset = 0;
-
-            loop {
-                // TODO(red): Add base offset support
-                let request: Vec<QueryResponse> = sql_client.query(format!(r#"
-                    SELECT concat(m.namespace, '-',  m.name) as selector, em.data as data, em.event_id as event_id, em.created_at as created_at
-                    FROM event_messages_historical em
-                    LEFT JOIN models m on em.model_id = m.id
-                    LIMIT 100 OFFSET {current_offset};
-                    "#))
-                .await
-                // TODO: Remove usage of panics
-                .expect("ohno");
-
-                if request.is_empty() {
-                    break;
-                } else {
-                    current_offset += 100;
-                }
-
-                // We can send data through the wire.
-                for elem in request {
-                    let event = RawEvent::Json {
-                        name: elem.selector,
-                        data: elem.data,
-                    };
-                    // TODO: Migrate this to something else than panics
-                    tx.send(event).await.expect("Error");
-                }
-            }
-        });
-
-        Ok(ReceiverStream::new(rx))
+    pub async fn get_all_events_after(
+        &self,
+        instant: chrono::DateTime<Utc>,
+    ) -> Result<impl Stream<Item = RawToriiData>, Error> {
+        self.do_events_sql_request(format!("em.created_at > {}", instant.to_rfc3339()))
+            .await
     }
 
-    pub async fn subscribe_events(&self) -> Result<impl Stream<Item = RawEvent>, Error> {
+    pub async fn get_all_events(&self) -> Result<impl Stream<Item = RawToriiData>, Error> {
+        self.do_events_sql_request("1=1").await
+    }
+
+    pub async fn get_all_entities(&self) -> Result<impl Stream<Item = RawToriiData>, Error> {
+        self.do_entities_sql_request("1=1").await
+    }
+
+    pub async fn get_all_entities_after(
+        &self,
+        instant: chrono::DateTime<Utc>,
+    ) -> Result<impl Stream<Item = RawToriiData>, Error> {
+        self.do_entities_sql_request(format!("em.created_at > {}", instant.to_rfc3339()))
+            .await
+    }
+
+    pub async fn subscribe_events(&self) -> Result<impl Stream<Item = RawToriiData>, Error> {
         let grpc_stream = self
             .grpc_client
             .on_event_message_updated(vec![])
@@ -125,15 +113,95 @@ impl ToriiClient {
             for await value in grpc_stream {
                 if let Ok((_subscription_id, entity)) = value {
                     for model in entity.models {
-                        yield RawEvent::Grpc(model)
+
+                        yield RawToriiData::Grpc(model)
                     }
                 }
             }
         };
 
-        // Join the two streams (one with the backdated events, then the newer ones)
-
         Ok(event_stream)
+    }
+
+    async fn do_entities_sql_request(
+        &self,
+        r#where: impl Into<String>,
+    ) -> Result<impl Stream<Item = RawToriiData>, Error> {
+        let r#where = r#where.into();
+        self.do_request(move |current_offset| {
+            format!(r#"
+                SELECT concat( m.namespace, '-', m.name) as selector, e.data as data, e.event_id as event_id, e.created_at as created_at
+                FROM entities_historical e
+                LEFT JOIN models m on e.model_id = m.id
+                WHERE {where}
+                LIMIT 100 OFFSET {current_offset};
+                "#)
+        }).await
+    }
+
+    async fn do_events_sql_request(
+        &self,
+        r#where: impl Into<String>,
+    ) -> Result<impl Stream<Item = RawToriiData>, Error> {
+        let r#where = r#where.into();
+        self.do_request(move |current_offset| {
+            format!(r#"
+                SELECT concat(m.namespace, '-',  m.name) as selector, em.data as data, em.event_id as event_id, em.created_at as created_at
+                FROM event_messages_historical em
+                LEFT JOIN models m on em.model_id = m.id
+                WHERE {where}
+                LIMIT 100 OFFSET {current_offset};
+                "#)
+        }).await
+    }
+
+    async fn do_request<'a, F, T>(
+        &'a self,
+        request: F,
+    ) -> Result<impl Stream<Item = RawToriiData>, Error>
+    where
+        T: Into<String>,
+        // We need a function that:
+        // - can be send between threads (for the tokio::spawn)
+        // - that lives for the entire duration of the program (easy if no internal state is used)
+        // - Takes a u64 as a parameter, and returns something that can be .into() to a String (for move sementics purposes)
+        F: 'static + Send + Fn(u64) -> T,
+    {
+        let sql_client = self.sql_client.clone();
+
+        let (tx, rx) = mpsc::channel::<RawToriiData>(32);
+
+        tokio::spawn(async move {
+            let mut current_offset = 0;
+
+            loop {
+                // TODO(red): Add base offset support
+                let request: Vec<QueryResponse> = sql_client
+                    .query(request(current_offset).into())
+                    .await
+                    // TODO: Remove usage of panics
+                    .expect("ohno");
+
+                if request.is_empty() {
+                    break;
+                } else {
+                    current_offset += 100;
+                }
+
+                // We can send data through the wire.
+                for elem in request {
+                    let event = RawToriiData::Json {
+                        name: elem.selector,
+                        data: elem.data,
+                        at: elem.created_at,
+                    };
+                    // TODO: Migrate this to something else than panics
+                    tx.send(event).await.expect("Error");
+                }
+            }
+        });
+
+        Ok(ReceiverStream::new(rx))
     }
 }
 
