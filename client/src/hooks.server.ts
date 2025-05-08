@@ -3,6 +3,8 @@ import { BYPASS_TOKEN } from '$env/static/private';
 import { CLOSING_DATE, DATE_GATE } from '$lib/const';
 import { redirect, type Handle } from '@sveltejs/kit';
 
+const allowedUrls = ['/maintenance', '/dashboard'];
+
 export function isMaintenanceModeEnabled(
   bypassToken: string,
   now: Date,
@@ -55,7 +57,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
   }
 
-  if (event.url.pathname === '/maintenance') {
+  if (allowedUrls.includes(event.url.pathname)) {
     // Resolve as normal
     return await resolve(event);
   }
