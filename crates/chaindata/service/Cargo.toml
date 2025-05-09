@@ -6,6 +6,20 @@ edition = "2021"
 [lib]
 
 [dependencies]
-serde = { workspace = true, features = ["serde"] }
-entity = { path = "../entity" }
+starknet.workspace = true
+serde = { workspace = true, features = ["derive"] }
 torii-ingester = { path = "../../torii-ingester" }
+tokio.workspace = true
+serde_json.workspace = true
+sqlx = { workspace = true, features = [
+    "derive",
+    "runtime-tokio",
+    "postgres",
+    "uuid",
+    "chrono",
+] }
+chrono.workspace = true
+uuid = { workspace = true, features = ["serde"] }
+
+[profile.dev.package.sqlx-macros]
+opt-level = 3

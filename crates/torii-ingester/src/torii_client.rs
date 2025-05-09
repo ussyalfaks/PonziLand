@@ -54,7 +54,6 @@ struct QueryResponse {
     #[serde(deserialize_with = "deserialize_nested_json")]
     data: Value,
     event_id: String,
-    // TODO(red): MIgrate this to a datetime dependency like chrono
     created_at: chrono::DateTime<Utc>,
 }
 

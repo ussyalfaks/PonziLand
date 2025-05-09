@@ -8,7 +8,6 @@ name = "test"
 
 [dependencies]
 tracing.workspace = true
-
 starknet = { workspace = true }
 tokio.workspace = true
 tokio-stream = "0.1"

@@ -39,8 +39,8 @@ in {
     # Required for torii compilation
     protobuf
 
-    # Useful for the testing ORM
-    sea-orm-cli
+    # Postgres language server
+    postgres-lsp
   ];
   env = {
     LD_LIBRARY_PATH = lib.makeLibraryPath config.packages;
@@ -68,8 +68,8 @@ in {
         exit 1
     fi
 
-    cd crates/chaindata
-    sea-orm-cli migrate generate $1
+    cd crates/migrations
+    cargo run -- add $1
   '';
 
   # Enable devcontainer for remote coding

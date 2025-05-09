@@ -1,4 +1,6 @@
 {
+  "socialinkAccount": "0x008ea9029cec9c339e0513a17336e9af43278ebd81858aee0af110c3e810fce6",
+  "tokenGranterAddress": "0x02d9ec36cd62c36e2b3cb2256cd07af0e5518e9e462a8091d73b0ba045fc1446",
   "tokens": [
     {
       "name": "Emulated STRK",
