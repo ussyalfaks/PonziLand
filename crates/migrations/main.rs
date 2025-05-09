@@ -3,8 +3,8 @@ use std::{env, fs};
 use clap::{Parser, Subcommand};
 use migrations::MIGRATOR;
 use sqlx::{
-    postgres::{PgConnectOptions, PgPoolOptions},
-    query, ConnectOptions, Connection, PgConnection,
+    postgres::PgConnectOptions,
+    query, ConnectOptions, Connection,
 };
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
@@ -53,7 +53,7 @@ async fn create_new_migration(name: String) {
     // Create a new file in the sql directory
     let file_name = format!("sql/{:0>4}_{}.sql", current_count + 1, name);
 
-    if fs::exists("./sql").unwrap_or(false) == false {
+    if !fs::exists("./sql").unwrap_or(false) {
         println!("PWD: {:#?}", env::var("PWD"));
         panic!("No sql directory found! Are you in the good directory?");
     }

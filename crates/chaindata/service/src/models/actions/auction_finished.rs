@@ -69,12 +69,12 @@ impl From<AuctionFinishedEvent> for AuctionFinishedEventModel {
 impl EventModelRepository for AuctionFinishedEventModel {
     const TABLE_NAME: &'static str = "event_auction_finished";
 
-    fn push_parameters<'a>(query: &mut QueryBuilder<'a, sqlx::Postgres>) {
+    fn push_parameters(query: &mut QueryBuilder<'_, sqlx::Postgres>) {
         query.push("id, location, start_time, buyer, at, price");
     }
 
-    fn push_tuple<'args>(
-        mut args: sqlx::query_builder::Separated<'_, 'args, sqlx::Postgres, &'static str>,
+    fn push_tuple(
+        mut args: sqlx::query_builder::Separated<'_, '_, sqlx::Postgres, &'static str>,
         model: &Self,
     ) {
         args.push_bind(model.id)

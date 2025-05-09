@@ -40,7 +40,7 @@ impl FromPrimitive for Location {
             Some(e) => Ok(Location(e as u64)),
             None => Err(Error::InvalidValue {
                 expected: "Location (u16)",
-                actual: primitive.clone(),
+                actual: *primitive,
             }),
         }
     }

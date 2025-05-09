@@ -28,7 +28,7 @@ impl ChainDataService {
     pub async fn new(config: &ChainDataServiceConfiguration) -> Self {
         let config = ToriiConfiguration {
             base_url: config.torii_url.clone(),
-            world_address: Felt::from_hex(&*config.world_address)
+            world_address: Felt::from_hex(&config.world_address)
                 .expect("Unexpected world address."),
         };
 

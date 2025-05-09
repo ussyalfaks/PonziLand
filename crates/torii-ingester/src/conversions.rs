@@ -20,7 +20,7 @@ pub trait PrimitiveInto<T: Sized> {
 
 impl<T: FromPrimitive> PrimitiveInto<T> for Primitive {
     fn to_value(&self) -> Result<T, Error> {
-        T::from_primitive(&self)
+        T::from_primitive(self)
     }
 }
 
@@ -55,7 +55,7 @@ impl_from_primitive!(as_bool, bool);
 // Handle the special felt case
 impl FromPrimitive for Felt {
     fn from_primitive(primitive: &Primitive) -> Result<Self, Error> {
-        match primitive.clone() {
+        match *primitive {
             Primitive::Felt252(Some(e)) => Ok(e),
             Primitive::ContractAddress(Some(e)) => Ok(e),
             Primitive::ClassHash(Some(e)) => Ok(e),

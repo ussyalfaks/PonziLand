@@ -1,4 +1,3 @@
-use std::error::Error;
 
 use sqlx::{query, query_as};
 use uuid::Uuid;

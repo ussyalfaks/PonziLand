@@ -195,7 +195,7 @@ impl FromPrimitive for U256 {
             Some(u) => Ok(U256::from(u)),
             None => Err(Error::InvalidValue {
                 expected: "U256",
-                actual: primitive.clone(),
+                actual: *primitive,
             }),
         }
     }
@@ -290,8 +290,8 @@ mod test {
         );
         
         // Non-zero values in all words
-        let low = (0x1234 as u128) | ((0x5678 as u128) << 64);
-        let high = (0x9ABC as u128) | ((0xDEF0 as u128) << 64);
+        let low = 0x1234_u128 | (0x5678_u128 << 64);
+        let high = 0x9ABC_u128 | (0xDEF0_u128 << 64);
         let val = U256::from_words(low, high);
         assert_eq!(val.to_u64_words(), [0x1234, 0x5678, 0x9ABC, 0xDEF0]);
         

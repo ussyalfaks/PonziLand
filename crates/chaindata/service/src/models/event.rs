@@ -1,14 +1,11 @@
 use super::actions::*;
 use super::auth::*;
 use chrono::NaiveDateTime;
-use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use sqlx::types::Uuid;
-use sqlx::{Decode, Encode};
 use torii_ingester::error::ToriiConversionError;
 use torii_ingester::prelude::Struct;
-use torii_ingester::RawToriiData;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, sqlx::Type, Hash, Serialize, Deserialize)]
 #[sqlx(transparent, type_name = "uuid")]

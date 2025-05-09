@@ -24,8 +24,8 @@ pub trait EventModelRepository: Sized + for<'r> FromRow<'r, PgRow> + Unpin + Sen
         query.build_query_as().fetch_optional(db).await
     }
 
-    fn push_parameters<'a>(query: &mut QueryBuilder<'a, sqlx::Postgres>);
-    fn push_tuple<'args>(args: Separated<'_, 'args, sqlx::Postgres, &'static str>, model: &Self);
+    fn push_parameters(query: &mut QueryBuilder<'_, sqlx::Postgres>);
+    fn push_tuple(args: Separated<'_, '_, sqlx::Postgres, &'static str>, model: &Self);
 
     async fn save<'e, Conn>(db: Conn, model: &Self) -> Result<(), Error>
     where
