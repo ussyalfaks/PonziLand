@@ -1,6 +1,21 @@
+use crate::models::event::EventId;
+use crate::models::model_repository::EventModelRepository;
+use crate::models::shared::{EventPrint, Location};
+use crate::models::types::U256;
+use chrono::{DateTime, NaiveDateTime};
+use sqlx::prelude::FromRow;
+use sqlx::QueryBuilder;
 use torii_ingester::{error::ToriiConversionError, prelude::*};
 
-use crate::models::shared::{EventPrint, Location};
+#[derive(Debug, Clone, FromRow)]
+pub struct AuctionFinishedEventModel {
+    pub id: EventId,
+    pub location: i16,
+    pub start_time: NaiveDateTime,
+    pub buyer: String,
+    pub at: NaiveDateTime,
+    pub price: U256,
+}
 
 #[derive(Debug, Clone)]
 pub struct AuctionFinishedEvent {
@@ -31,5 +46,42 @@ impl TryFrom<Struct> for AuctionFinishedEvent {
             final_time: get!(entity, "final_time", u64)?,
             final_price: get!(entity, "final_price", U256)?,
         })
+    }
+}
+
+impl From<AuctionFinishedEvent> for AuctionFinishedEventModel {
+    fn from(event: AuctionFinishedEvent) -> Self {
+        Self {
+            id: EventId(sqlx::types::Uuid::new_v4()),
+            location: event.land_location.into(),
+            start_time: DateTime::from_timestamp(event.start_time as i64, 0)
+                .unwrap()
+                .naive_utc(),
+            buyer: format!("{:#x}", event.buyer),
+            at: DateTime::from_timestamp(event.final_time as i64, 0)
+                .unwrap()
+                .naive_utc(),
+            price: event.final_price,
+        }
+    }
+}
+
+impl EventModelRepository for AuctionFinishedEventModel {
+    const TABLE_NAME: &'static str = "event_auction_finished";
+
+    fn push_parameters<'a>(query: &mut QueryBuilder<'a, sqlx::Postgres>) {
+        query.push("id, location, start_time, buyer, at, price");
+    }
+
+    fn push_tuple<'args>(
+        mut args: sqlx::query_builder::Separated<'_, 'args, sqlx::Postgres, &'static str>,
+        model: &Self,
+    ) {
+        args.push_bind(model.id)
+            .push_bind(model.location)
+            .push_bind(model.start_time)
+            .push_bind(model.buyer.clone())
+            .push_bind(model.at)
+            .push_bind(model.price);
     }
 }

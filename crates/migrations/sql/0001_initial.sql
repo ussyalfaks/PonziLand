@@ -1,3 +1,7 @@
+CREATE DOMAIN uint_256 AS NUMERIC NOT NULL
+CHECK (VALUE >= 0 AND VALUE < 2::numeric ^ 256)
+CHECK (SCALE(VALUE) = 0);
+
 CREATE TYPE event_type AS ENUM (
     'ponzi_land-AuctionFinishedEvent',
     'ponzi_land-LandBoughtEvent',
@@ -21,7 +25,7 @@ CREATE TABLE event_auction_finished (
     start_time timestamp without time zone NOT NULL,
     buyer text NOT NULL,
     at timestamp without time zone NOT NULL,
-    sold_at timestamp without time zone NOT NULL
+    price uint_256 NOT NULL
 );
 
 CREATE TABLE event_address_authorized (
@@ -40,8 +44,7 @@ CREATE TABLE event_land_bought (
     id uuid NOT NULL PRIMARY KEY,
     location smallint NOT NULL,
     buyer text NOT NULL,
-    at timestamp without time zone NOT NULL,
-    price bigint NOT NULL,
+    price uint_256 NOT NULL,
     token_used text NOT NULL
 );
 
@@ -49,8 +52,8 @@ CREATE TABLE event_new_auction (
     id uuid NOT NULL PRIMARY KEY,
     location smallint NOT NULL,
     at timestamp without time zone NOT NULL,
-    starting_price bigint NOT NULL,
-    floor_price bigint NOT NULL
+    starting_price uint_256 NOT NULL,
+    floor_price uint_256 NOT NULL
 );
 
 CREATE TABLE event_nuked (
@@ -62,9 +65,8 @@ CREATE TABLE event_nuked (
 
 CREATE TABLE event_remaining_stake (
     id uuid NOT NULL PRIMARY KEY,
-    at timestamp without time zone NOT NULL,
     location smallint NOT NULL,
-    remaining_stake bigint NOT NULL
+    remaining_stake uint_256 NOT NULL
 );
 
 CREATE TABLE historical_land (
@@ -73,7 +75,7 @@ CREATE TABLE historical_land (
     location smallint NOT NULL,
     bought_at timestamp without time zone NOT NULL,
     owner text NOT NULL,
-    sell_price bigint NOT NULL,
+    sell_price uint_256 NOT NULL,
     token text NOT NULL,
     level smallint NOT NULL
 );
@@ -83,5 +85,5 @@ CREATE TABLE historical_land_stake (
     at timestamp without time zone NOT NULL,
     location smallint NOT NULL,
     last_pay_time timestamp without time zone NOT NULL,
-    amount bigint NOT NULL
+    amount uint_256 NOT NULL
 );

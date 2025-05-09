@@ -1,8 +1,18 @@
+use chrono::NaiveDateTime;
+use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
 use torii_ingester::{error::ToriiConversionError, prelude::*};
 
-use serde::{Deserialize, Serialize};
-
+use crate::models::event::EventId;
 use crate::models::shared::{EventPrint, Location};
+
+#[derive(Debug, Clone, FromRow)]
+pub struct LandNukedEventModel {
+    pub id: EventId,
+    pub location: i16,
+    pub owner: String,
+    pub at: NaiveDateTime,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LandNukedEvent {
@@ -27,5 +37,16 @@ impl TryFrom<Struct> for LandNukedEvent {
             owner_nuked: get!(entity, "owner_nuked", ContractAddress)?,
             land_location: get!(entity, "land_location", Location)?,
         })
+    }
+}
+
+impl From<LandNukedEvent> for LandNukedEventModel {
+    fn from(event: LandNukedEvent) -> Self {
+        Self {
+            id: EventId(sqlx::types::Uuid::new_v4()),
+            location: event.land_location.into(),
+            owner: format!("{:#x}", event.owner_nuked),
+            at: chrono::Utc::now().naive_utc(),
+        }
     }
 }

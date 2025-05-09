@@ -4,3 +4,7 @@ pub mod auth;
 pub mod shared;
 
 pub mod event;
+
+pub mod model_repository;
+
+pub mod types;

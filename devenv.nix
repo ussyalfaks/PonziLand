@@ -41,6 +41,9 @@ in {
 
     # Postgres language server
     postgres-lsp
+
+    # Faster test pattern
+    cargo-nextest
   ];
   env = {
     LD_LIBRARY_PATH = lib.makeLibraryPath config.packages;

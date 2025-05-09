@@ -17,9 +17,10 @@ sqlx = { workspace = true, features = [
     "postgres",
     "uuid",
     "chrono",
+    "bigdecimal",
 ] }
 chrono.workspace = true
 uuid = { workspace = true, features = ["serde"] }
-
-[profile.dev.package.sqlx-macros]
-opt-level = 3
+async-trait = "0.1.88"
+num-bigint = "0.4.6"
+num-traits = "0.2.19"

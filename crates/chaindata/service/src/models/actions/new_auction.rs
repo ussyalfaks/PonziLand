@@ -1,8 +1,19 @@
+use chrono::{DateTime, NaiveDateTime};
+use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
 use torii_ingester::{error::ToriiConversionError, prelude::*};
 
-use serde::{Deserialize, Serialize};
-
+use crate::models::event::EventId;
 use crate::models::shared::{EventPrint, Location};
+
+#[derive(Debug, Clone, FromRow)]
+pub struct NewAuctionEventModel {
+    pub id: EventId,
+    pub location: i16,
+    pub at: NaiveDateTime,
+    pub starting_price: U256,
+    pub floor_price: U256,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NewAuctionEvent {
@@ -31,5 +42,19 @@ impl TryFrom<Struct> for NewAuctionEvent {
             start_price: get!(entity, "start_price", U256)?,
             floor_price: get!(entity, "floor_price", U256)?,
         })
+    }
+}
+
+impl From<NewAuctionEvent> for NewAuctionEventModel {
+    fn from(event: NewAuctionEvent) -> Self {
+        Self {
+            id: EventId(sqlx::types::Uuid::new_v4()),
+            location: event.land_location.into(),
+            at: DateTime::from_timestamp(event.start_time as i64, 0)
+                .unwrap()
+                .naive_utc(),
+            starting_price: event.start_price,
+            floor_price: event.floor_price,
+        }
     }
 }

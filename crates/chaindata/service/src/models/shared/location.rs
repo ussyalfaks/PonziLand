@@ -163,6 +163,12 @@ impl From<u64> for Location {
     }
 }
 
+impl From<Location> for i16 {
+    fn from(location: Location) -> Self {
+        location.0 as i16
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::Location;

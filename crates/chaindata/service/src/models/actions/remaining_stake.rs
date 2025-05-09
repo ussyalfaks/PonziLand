@@ -1,7 +1,16 @@
 use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
 use torii_ingester::{error::ToriiConversionError, prelude::*};
 
+use crate::models::event::EventId;
 use crate::models::shared::{EventPrint, Location};
+
+#[derive(Debug, Clone, FromRow)]
+pub struct RemainingStakeEventModel {
+    pub id: EventId,
+    pub location: i16,
+    pub remaining_stake: U256,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RemainingStakeEvent {
@@ -26,5 +35,15 @@ impl TryFrom<Struct> for RemainingStakeEvent {
             land_location: get!(entity, "land_location", Location)?,
             remaining_stake: get!(entity, "remaining_stake", U256)?,
         })
+    }
+}
+
+impl From<RemainingStakeEvent> for RemainingStakeEventModel {
+    fn from(event: RemainingStakeEvent) -> Self {
+        Self {
+            id: EventId(sqlx::types::Uuid::new_v4()),
+            location: event.land_location.into(),
+            remaining_stake: event.remaining_stake,
+        }
     }
 }

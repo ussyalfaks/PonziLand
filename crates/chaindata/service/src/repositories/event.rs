@@ -57,8 +57,6 @@ impl EventRepository {
         .id
         .into();
 
-        // Also insert the event data.
-
         // Commit the TX
         tx.commit().await?;
 

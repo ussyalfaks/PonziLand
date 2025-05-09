@@ -1,5 +1,6 @@
 use super::actions::*;
 use super::auth::*;
+use chrono::NaiveDateTime;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
@@ -70,6 +71,18 @@ pub enum EventData {
     VerifierUpdated(VerifierUpdatedEvent),
 }
 
+#[derive(Clone, Debug)]
+pub enum EventModelData {
+    AuctionFinished(AuctionFinishedEventModel),
+    LandBought(LandBoughtEventModel),
+    LandNuked(LandNukedEventModel),
+    NewAuction(NewAuctionEventModel),
+    RemainingStake(RemainingStakeEventModel),
+    AddressAuthorized(AddressAuthorizedEventModel),
+    AddressRemoved(AddressRemovedEventModel),
+    VerifierUpdated(VerifierUpdatedEventModel),
+}
+
 impl From<EventData> for EventType {
     fn from(value: EventData) -> Self {
         match value {
@@ -81,6 +94,21 @@ impl From<EventData> for EventType {
             EventData::AddressAuthorized(_) => EventType::AddressAuthorized,
             EventData::AddressRemoved(_) => EventType::AddressRemoved,
             EventData::VerifierUpdated(_) => EventType::VerifierUpdated,
+        }
+    }
+}
+
+impl From<EventModelData> for EventType {
+    fn from(value: EventModelData) -> Self {
+        match value {
+            EventModelData::AuctionFinished(_) => EventType::AuctionFinished,
+            EventModelData::LandBought(_) => EventType::LandBought,
+            EventModelData::LandNuked(_) => EventType::LandNuked,
+            EventModelData::NewAuction(_) => EventType::NewAuction,
+            EventModelData::RemainingStake(_) => EventType::RemainingStake,
+            EventModelData::AddressAuthorized(_) => EventType::AddressAuthorized,
+            EventModelData::AddressRemoved(_) => EventType::AddressRemoved,
+            EventModelData::VerifierUpdated(_) => EventType::VerifierUpdated,
         }
     }
 }
@@ -121,4 +149,36 @@ pub struct FilledEvent {
     pub id: EventId,
     pub at: chrono::NaiveDateTime,
     pub data: EventData,
+}
+
+#[derive(Clone, Debug)]
+pub struct FilledEventModel {
+    pub id: EventId,
+    pub at: NaiveDateTime,
+    pub data: EventModelData,
+}
+
+impl From<EventData> for EventModelData {
+    fn from(value: EventData) -> Self {
+        match value {
+            EventData::AuctionFinished(e) => EventModelData::AuctionFinished(e.into()),
+            EventData::LandBought(e) => EventModelData::LandBought(e.into()),
+            EventData::LandNuked(e) => EventModelData::LandNuked(e.into()),
+            EventData::NewAuction(e) => EventModelData::NewAuction(e.into()),
+            EventData::RemainingStake(e) => EventModelData::RemainingStake(e.into()),
+            EventData::AddressAuthorized(e) => EventModelData::AddressAuthorized(e.into()),
+            EventData::AddressRemoved(e) => EventModelData::AddressRemoved(e.into()),
+            EventData::VerifierUpdated(e) => EventModelData::VerifierUpdated(e.into()),
+        }
+    }
+}
+
+impl From<FilledEvent> for FilledEventModel {
+    fn from(event: FilledEvent) -> Self {
+        Self {
+            id: event.id,
+            at: event.at,
+            data: event.data.into(),
+        }
+    }
 }
