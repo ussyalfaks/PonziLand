@@ -1,6 +1,6 @@
 use crate::conversions::Error;
 
-#[derive(thiserror::Error, Debug, Clone)]
+#[derive(thiserror::Error, Debug)]
 pub enum ToriiConversionError {
     #[error("{0}: No such field")]
     NoSuchField(String),
@@ -8,4 +8,6 @@ pub enum ToriiConversionError {
     NotAPrimitive(String),
     #[error("{0}: Wrong type: {1:#?}")]
     WrongType(String, Error),
+    #[error("JSON parsing error: {0}")]
+    JsonParsingError(#[from] serde_json::Error),
 }

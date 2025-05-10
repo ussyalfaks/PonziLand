@@ -1,6 +1,6 @@
 use crate::torii_sql::SqlClient;
 use async_stream::stream;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use dojo_types::schema::Struct;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -11,6 +11,7 @@ use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_stream::Stream;
 use torii_client::client::Client as GrpcClient;
+use tracing::warn;
 
 // TODO(Red): Make sure we loose no messages between the catchup and the listen
 // (Maybe add the listen at the same time we do the catchup, and if we keep the event IDs somewhere, we can work with this system)
@@ -54,7 +55,7 @@ struct QueryResponse {
     #[serde(deserialize_with = "deserialize_nested_json")]
     data: Value,
     event_id: String,
-    created_at: chrono::DateTime<Utc>,
+    created_at: String,
 }
 
 impl ToriiClient {
@@ -76,7 +77,7 @@ impl ToriiClient {
         &self,
         instant: chrono::DateTime<Utc>,
     ) -> Result<impl Stream<Item = RawToriiData>, Error> {
-        self.do_events_sql_request(format!("em.created_at > {}", instant.to_rfc3339()))
+        self.do_events_sql_request(format!("em.created_at > \"{}\"", instant.format("%F %T")))
             .await
     }
 
@@ -92,7 +93,7 @@ impl ToriiClient {
         &self,
         instant: chrono::DateTime<Utc>,
     ) -> Result<impl Stream<Item = RawToriiData>, Error> {
-        self.do_entities_sql_request(format!("em.created_at > {}", instant.to_rfc3339()))
+        self.do_entities_sql_request(format!("e.created_at > \"{}\"", instant.format("%F %T")))
             .await
     }
 
@@ -112,7 +113,6 @@ impl ToriiClient {
             for await value in grpc_stream {
                 if let Ok((_subscription_id, entity)) = value {
                     for model in entity.models {
-
                         yield RawToriiData::Grpc(model)
                     }
                 }
@@ -192,7 +192,10 @@ impl ToriiClient {
                     let event = RawToriiData::Json {
                         name: elem.selector,
                         data: elem.data,
-                        at: elem.created_at,
+                        // TODO: Migrate this to something else than panics
+                        at: NaiveDateTime::parse_from_str(&elem.created_at, "%F %T")
+                            .unwrap()
+                            .and_utc(),
                     };
                     // TODO: Migrate this to something else than panics
                     tx.send(event).await.expect("Error");
@@ -209,6 +212,6 @@ where
     T: DeserializeOwned,
     D: serde::Deserializer<'de>,
 {
-    let json_string: String = String::deserialize(deserializer)?;
+    let json_string: String = String::deserialize(deserializer)?.replace("\\\"", "\"");
     serde_json::from_str::<T>(&json_string).map_err(serde::de::Error::custom)
 }

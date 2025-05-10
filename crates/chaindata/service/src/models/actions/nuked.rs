@@ -1,9 +1,11 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
+use sqlx::QueryBuilder;
 use torii_ingester::{error::ToriiConversionError, prelude::*};
 
 use crate::models::event::EventId;
+use crate::models::model_repository::EventModelRepository;
 use crate::models::shared::{EventPrint, Location};
 
 #[derive(Debug, Clone, FromRow)]
@@ -11,7 +13,6 @@ pub struct LandNukedEventModel {
     pub id: EventId,
     pub location: i16,
     pub owner: String,
-    pub at: NaiveDateTime,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,6 +27,23 @@ impl EventPrint for LandNukedEvent {
             "💥 {} owned by {:x} was nuked!",
             self.land_location, self.owner_nuked
         )
+    }
+}
+
+impl EventModelRepository for LandNukedEventModel {
+    const TABLE_NAME: &'static str = "event_land_nuked";
+
+    fn push_parameters(query: &mut QueryBuilder<'_, sqlx::Postgres>) {
+        query.push("id, location, owner");
+    }
+
+    fn push_tuple(
+        mut args: sqlx::query_builder::Separated<'_, '_, sqlx::Postgres, &'static str>,
+        model: &Self,
+    ) {
+        args.push_bind(model.id)
+            .push_bind(model.location)
+            .push_bind(model.owner.clone());
     }
 }
 
@@ -46,7 +64,6 @@ impl From<LandNukedEvent> for LandNukedEventModel {
             id: EventId(sqlx::types::Uuid::new_v4()),
             location: event.land_location.into(),
             owner: format!("{:#x}", event.owner_nuked),
-            at: chrono::Utc::now().naive_utc(),
         }
     }
 }

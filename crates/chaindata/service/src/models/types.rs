@@ -1,10 +1,12 @@
 use std::{fmt::Display, ops::Deref};
 
 use num_bigint::{BigInt, Sign};
+use serde::{Deserialize, Serialize};
 use sqlx::{types::BigDecimal, Postgres, Type};
 use torii_ingester::{conversions::FromPrimitive, prelude::U256 as RawU256};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(transparent)]
 #[repr(transparent)]
 pub struct U256(RawU256);
 
@@ -150,7 +152,8 @@ mod tests {
         setup_test_db(&pool).await;
 
         // Test values
-        let test_values = [U256(RawU256::from_u64_words([1, 0, 0, 0])),
+        let test_values = [
+            U256(RawU256::from_u64_words([1, 0, 0, 0])),
             // Medium value
             U256(RawU256::from_u64_words([0xFFFFFFFF, 0, 0, 0])),
             // Larger value
@@ -161,7 +164,8 @@ mod tests {
                 0xFFFFFFFFFFFFFFFF,
                 0xFFFFFFFFFFFFFFFF,
                 0xFFFFFFFFFFFFFFFF,
-            ]))];
+            ])),
+        ];
 
         for (idx, value) in test_values.iter().enumerate() {
             // Insert value

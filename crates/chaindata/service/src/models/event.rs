@@ -1,11 +1,15 @@
 use super::actions::*;
 use super::auth::*;
+use super::model_repository::EventModelRepository;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use sqlx::prelude::FromRow;
 use sqlx::types::Uuid;
+use sqlx::PgConnection;
 use torii_ingester::error::ToriiConversionError;
 use torii_ingester::prelude::Struct;
+use torii_ingester::RawToriiData;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, sqlx::Type, Hash, Serialize, Deserialize)]
 #[sqlx(transparent, type_name = "uuid")]
@@ -39,8 +43,6 @@ pub enum EventType {
     LandNuked,
     #[sqlx(rename = "ponzi_land-NewAuctionEvent")]
     NewAuction,
-    #[sqlx(rename = "ponzi_land-RemainingStakeEvent")]
-    RemainingStake,
     #[sqlx(rename = "ponzi_land-AddressAuthorizedEvent")]
     AddressAuthorized,
     #[sqlx(rename = "ponzi_land-AddressRemovedEvent")]
@@ -62,32 +64,18 @@ pub enum EventData {
     LandBought(LandBoughtEvent),
     LandNuked(LandNukedEvent),
     NewAuction(NewAuctionEvent),
-    RemainingStake(RemainingStakeEvent),
     AddressAuthorized(AddressAuthorizedEvent),
     AddressRemoved(AddressRemovedEvent),
     VerifierUpdated(VerifierUpdatedEvent),
 }
 
-#[derive(Clone, Debug)]
-pub enum EventModelData {
-    AuctionFinished(AuctionFinishedEventModel),
-    LandBought(LandBoughtEventModel),
-    LandNuked(LandNukedEventModel),
-    NewAuction(NewAuctionEventModel),
-    RemainingStake(RemainingStakeEventModel),
-    AddressAuthorized(AddressAuthorizedEventModel),
-    AddressRemoved(AddressRemovedEventModel),
-    VerifierUpdated(VerifierUpdatedEventModel),
-}
-
-impl From<EventData> for EventType {
-    fn from(value: EventData) -> Self {
+impl From<&EventData> for EventType {
+    fn from(value: &EventData) -> Self {
         match value {
             EventData::AuctionFinished(_) => EventType::AuctionFinished,
             EventData::LandBought(_) => EventType::LandBought,
             EventData::LandNuked(_) => EventType::LandNuked,
             EventData::NewAuction(_) => EventType::NewAuction,
-            EventData::RemainingStake(_) => EventType::RemainingStake,
             EventData::AddressAuthorized(_) => EventType::AddressAuthorized,
             EventData::AddressRemoved(_) => EventType::AddressRemoved,
             EventData::VerifierUpdated(_) => EventType::VerifierUpdated,
@@ -95,18 +83,46 @@ impl From<EventData> for EventType {
     }
 }
 
-impl From<EventModelData> for EventType {
-    fn from(value: EventModelData) -> Self {
-        match value {
-            EventModelData::AuctionFinished(_) => EventType::AuctionFinished,
-            EventModelData::LandBought(_) => EventType::LandBought,
-            EventModelData::LandNuked(_) => EventType::LandNuked,
-            EventModelData::NewAuction(_) => EventType::NewAuction,
-            EventModelData::RemainingStake(_) => EventType::RemainingStake,
-            EventModelData::AddressAuthorized(_) => EventType::AddressAuthorized,
-            EventModelData::AddressRemoved(_) => EventType::AddressRemoved,
-            EventModelData::VerifierUpdated(_) => EventType::VerifierUpdated,
+impl EventData {
+    pub async fn save<'e, Conn>(&self, db: Conn) -> Result<(), sqlx::Error>
+    where
+        Conn: 'e + sqlx::Executor<'e, Database = sqlx::Postgres>,
+    {
+        match self.clone() {
+            EventData::AuctionFinished(event) => AuctionFinishedEventModel::save(db, event.into()),
+            EventData::LandBought(event) => LandBoughtEventModel::save(db, event.into()),
+            EventData::LandNuked(event) => LandNukedEventModel::save(db, event.into()),
+            EventData::NewAuction(event) => NewAuctionEventModel::save(db, event.into()),
+            EventData::AddressAuthorized(event) => {
+                AddressAuthorizedEventModel::save(db, event.into())
+            }
+            EventData::AddressRemoved(event) => AddressRemovedEventModel::save(db, event.into()),
+            EventData::VerifierUpdated(event) => VerifierUpdatedEventModel::save(db, event.into()),
         }
+        .await
+    }
+}
+
+impl EventData {
+    pub fn from_json(name: &str, json: Value) -> Result<Self, ToriiConversionError> {
+        Ok(match name {
+            "ponzi_land-AuctionFinishedEvent" => {
+                EventData::AuctionFinished(serde_json::from_value(json)?)
+            }
+            "ponzi_land-LandBoughtEvent" => EventData::LandBought(serde_json::from_value(json)?),
+            "ponzi_land-LandNukedEvent" => EventData::LandNuked(serde_json::from_value(json)?),
+            "ponzi_land-NewAuctionEvent" => EventData::NewAuction(serde_json::from_value(json)?),
+            "ponzi_land-AddressAuthorizedEvent" => {
+                EventData::AddressAuthorized(serde_json::from_value(json)?)
+            }
+            "ponzi_land-AddressRemovedEvent" => {
+                EventData::AddressRemoved(serde_json::from_value(json)?)
+            }
+            "ponzi_land-VerifierUpdatedEvent" => {
+                EventData::VerifierUpdated(serde_json::from_value(json)?)
+            }
+            name => panic!("Unknown event type: {}", name),
+        })
     }
 }
 
@@ -123,9 +139,6 @@ impl TryFrom<Struct> for EventData {
             "ponzi_land-LandNukedEvent" => EventData::LandNuked(LandNukedEvent::try_from(value)?),
             "ponzi_land-NewAuctionEvent" => {
                 EventData::NewAuction(NewAuctionEvent::try_from(value)?)
-            }
-            "ponzi_land-RemainingStakeEvent" => {
-                EventData::RemainingStake(RemainingStakeEvent::try_from(value)?)
             }
             "ponzi_land-AddressAuthorizedEvent" => {
                 EventData::AddressAuthorized(AddressAuthorizedEvent::try_from(value)?)
@@ -146,36 +159,4 @@ pub struct FilledEvent {
     pub id: EventId,
     pub at: chrono::NaiveDateTime,
     pub data: EventData,
-}
-
-#[derive(Clone, Debug)]
-pub struct FilledEventModel {
-    pub id: EventId,
-    pub at: NaiveDateTime,
-    pub data: EventModelData,
-}
-
-impl From<EventData> for EventModelData {
-    fn from(value: EventData) -> Self {
-        match value {
-            EventData::AuctionFinished(e) => EventModelData::AuctionFinished(e.into()),
-            EventData::LandBought(e) => EventModelData::LandBought(e.into()),
-            EventData::LandNuked(e) => EventModelData::LandNuked(e.into()),
-            EventData::NewAuction(e) => EventModelData::NewAuction(e.into()),
-            EventData::RemainingStake(e) => EventModelData::RemainingStake(e.into()),
-            EventData::AddressAuthorized(e) => EventModelData::AddressAuthorized(e.into()),
-            EventData::AddressRemoved(e) => EventModelData::AddressRemoved(e.into()),
-            EventData::VerifierUpdated(e) => EventModelData::VerifierUpdated(e.into()),
-        }
-    }
-}
-
-impl From<FilledEvent> for FilledEventModel {
-    fn from(event: FilledEvent) -> Self {
-        Self {
-            id: event.id,
-            at: event.at,
-            data: event.data.into(),
-        }
-    }
 }

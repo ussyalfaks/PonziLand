@@ -1,9 +1,12 @@
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
+use sqlx::QueryBuilder;
 use torii_ingester::{error::ToriiConversionError, prelude::*};
 
 use crate::models::event::EventId;
+use crate::models::model_repository::EventModelRepository;
 use crate::models::shared::{EventPrint, Location};
+use crate::models::types::U256;
 
 #[derive(Debug, Clone, FromRow, Serialize, Deserialize)]
 pub struct LandBoughtEventModel {
@@ -11,6 +14,8 @@ pub struct LandBoughtEventModel {
     pub location: i16,
 
     pub buyer: String,
+    pub seller: String,
+
     pub price: U256,
     pub token_used: String,
 }
@@ -55,8 +60,29 @@ impl From<LandBoughtEvent> for LandBoughtEventModel {
             id: EventId(sqlx::types::Uuid::new_v4()),
             location: event.land_location.into(),
             buyer: format!("{:#x}", event.buyer),
+            seller: format!("{:#x}", event.seller),
             price: event.sold_price,
             token_used: format!("{:#x}", event.token_used),
         }
+    }
+}
+
+impl EventModelRepository for LandBoughtEventModel {
+    const TABLE_NAME: &'static str = "event_land_bought";
+
+    fn push_parameters(query: &mut QueryBuilder<'_, sqlx::Postgres>) {
+        query.push("id, location, buyer, seller, price, token_used");
+    }
+
+    fn push_tuple(
+        mut args: sqlx::query_builder::Separated<'_, '_, sqlx::Postgres, &'static str>,
+        model: &Self,
+    ) {
+        args.push_bind(model.id)
+            .push_bind(model.location)
+            .push_bind(model.buyer.clone())
+            .push_bind(model.seller.clone())
+            .push_bind(model.price)
+            .push_bind(model.token_used.clone());
     }
 }

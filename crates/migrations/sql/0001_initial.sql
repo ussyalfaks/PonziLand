@@ -7,7 +7,6 @@ CREATE TYPE event_type AS ENUM (
     'ponzi_land-LandBoughtEvent',
     'ponzi_land-LandNukedEvent',
     'ponzi_land-NewAuctionEvent',
-    'ponzi_land-RemainingStakeEvent',
     'ponzi_land-AddressAuthorizedEvent',
     'ponzi_land-AddressRemovedEvent',
     'ponzi_land-VerifierUpdatedEvent'
@@ -22,9 +21,7 @@ CREATE TABLE event (
 CREATE TABLE event_auction_finished (
     id uuid NOT NULL PRIMARY KEY,
     location smallint NOT NULL,
-    start_time timestamp without time zone NOT NULL,
     buyer text NOT NULL,
-    at timestamp without time zone NOT NULL,
     price uint_256 NOT NULL
 );
 
@@ -44,6 +41,7 @@ CREATE TABLE event_land_bought (
     id uuid NOT NULL PRIMARY KEY,
     location smallint NOT NULL,
     buyer text NOT NULL,
+    seller text NOT NULL,
     price uint_256 NOT NULL,
     token_used text NOT NULL
 );
@@ -51,7 +49,6 @@ CREATE TABLE event_land_bought (
 CREATE TABLE event_new_auction (
     id uuid NOT NULL PRIMARY KEY,
     location smallint NOT NULL,
-    at timestamp without time zone NOT NULL,
     starting_price uint_256 NOT NULL,
     floor_price uint_256 NOT NULL
 );
@@ -61,12 +58,6 @@ CREATE TABLE event_nuked (
     location smallint NOT NULL,
     owner text NOT NULL,
     at timestamp without time zone NOT NULL
-);
-
-CREATE TABLE event_remaining_stake (
-    id uuid NOT NULL PRIMARY KEY,
-    location smallint NOT NULL,
-    remaining_stake uint_256 NOT NULL
 );
 
 CREATE TABLE historical_land (

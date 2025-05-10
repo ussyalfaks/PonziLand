@@ -1236,6 +1236,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "chaindata-service"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "futures-util",
+ "num-bigint",
+ "num-traits",
+ "serde",
+ "serde-aux",
+ "serde_json",
+ "sqlx",
+ "starknet 0.14.0",
+ "tokio",
+ "tokio-stream",
+ "torii-ingester",
+ "tracing",
+ "uuid 1.16.0",
+]
+
+[[package]]
 name = "chrono"
 version = "0.4.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3133,6 +3154,7 @@ dependencies = [
  "apalis-cron",
  "arc-swap",
  "axum 0.8.3",
+ "chaindata-service",
  "chrono",
  "confique",
  "ekubo",
@@ -3141,6 +3163,7 @@ dependencies = [
  "metrics-exporter-prometheus",
  "pin-project-lite",
  "serde",
+ "sqlx",
  "starknet 0.14.0",
  "tokio",
  "tokio-util",
@@ -4552,6 +4575,15 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "ordered-float"
+version = "2.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68f19d67e5a2795c94e73e0bb1cc1a7edeb2e28efd39e2e1c9b7a40c1108b11c"
+dependencies = [
+ "num-traits",
 ]
 
 [[package]]
@@ -6043,6 +6075,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde-aux"
+version = "4.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "207f67b28fe90fb596503a9bf0bf1ea5e831e21307658e177c5dfcdfc3ab8a0a"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde-value",
+ "serde_json",
+]
+
+[[package]]
+name = "serde-value"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f3a1a3341211875ef120e117ea7fd5228530ae7e7036a779fdc9117be6b3282c"
+dependencies = [
+ "ordered-float",
+ "serde",
+]
+
+[[package]]
 name = "serde_derive"
 version = "1.0.219"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6156,23 +6210,6 @@ checksum = "a84f14a19e9a014bb9f4512488d9829a68e04ecabffb0f9904cd1ace94598177"
 dependencies = [
  "base16ct",
  "serde",
-]
-
-[[package]]
-name = "service"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "chrono",
- "num-bigint",
- "num-traits",
- "serde",
- "serde_json",
- "sqlx",
- "starknet 0.14.0",
- "tokio",
- "torii-ingester",
- "uuid 1.16.0",
 ]
 
 [[package]]

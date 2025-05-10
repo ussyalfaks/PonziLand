@@ -14,6 +14,7 @@ apalis = { version = "0.7.0", features = [
 ] }
 chrono.workspace = true
 apalis-cron = "0.7.0"
+chaindata-service = { path = "../chaindata/service" }
 axum = { workspace = true, features = [
     "ws",
     "macros",
@@ -36,3 +37,11 @@ metrics = "0.24.1"
 pin-project-lite = "0.2.16"
 tower-http = { workspace = true, features = ["cors"] }
 http = { workspace = true }
+sqlx = { workspace = true, features = [
+    "derive",
+    "runtime-tokio",
+    "postgres",
+    "uuid",
+    "chrono",
+    "bigdecimal",
+] }

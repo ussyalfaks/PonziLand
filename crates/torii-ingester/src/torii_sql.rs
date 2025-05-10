@@ -4,6 +4,7 @@ use reqwest::{Client, ClientBuilder, IntoUrl, Url};
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
 use thiserror::Error;
+use tokio::{fs::File, io::AsyncWriteExt};
 use tracing::{info, instrument};
 
 #[derive(Error, Debug)]
@@ -83,10 +84,16 @@ impl SqlClient {
 
         if response.status() == 200 {
             // Return the parsed response
-            response
-                .json::<Vec<T>>()
+            let text = response.text().await.map_err(Error::ResponseError)?;
+            File::create("./response.json")
                 .await
-                .map_err(Error::ResponseError)
+                .unwrap()
+                .write_all(text.as_bytes())
+                .await
+                .unwrap();
+            let json = serde_json::from_str(&text).unwrap();
+
+            Ok(json)
         } else {
             Err(Error::BadResponse(response.text().await.ok()))
         }

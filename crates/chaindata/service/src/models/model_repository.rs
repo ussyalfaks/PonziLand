@@ -27,7 +27,7 @@ pub trait EventModelRepository: Sized + for<'r> FromRow<'r, PgRow> + Unpin + Sen
     fn push_parameters(query: &mut QueryBuilder<'_, sqlx::Postgres>);
     fn push_tuple(args: Separated<'_, '_, sqlx::Postgres, &'static str>, model: &Self);
 
-    async fn save<'e, Conn>(db: Conn, model: &Self) -> Result<(), Error>
+    async fn save<'e, Conn>(db: Conn, model: Self) -> Result<(), Error>
     where
         Conn: 'e + sqlx::Executor<'e, Database = sqlx::Postgres>,
     {
@@ -37,7 +37,7 @@ pub trait EventModelRepository: Sized + for<'r> FromRow<'r, PgRow> + Unpin + Sen
         Self::push_parameters(&mut query);
         query.push(") ");
 
-        query.push_values(std::iter::once(model), Self::push_tuple);
+        query.push_values(std::iter::once(&model), Self::push_tuple);
 
         query.build().execute(db).await?;
         Ok(())

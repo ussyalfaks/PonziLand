@@ -1,11 +1,12 @@
+use crate::models::event::EventId;
+use crate::models::model_repository::EventModelRepository;
+use crate::models::shared::EventPrint;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
+use sqlx::QueryBuilder;
 use starknet::core::types::Felt;
 use torii_ingester::{error::ToriiConversionError, prelude::*};
-
-use crate::models::event::EventId;
-use crate::models::shared::EventPrint;
 
 // Note: There's no corresponding table in the SQL schema for this event yet
 #[derive(Debug, Clone, FromRow)]
@@ -47,5 +48,23 @@ impl From<VerifierUpdatedEvent> for VerifierUpdatedEventModel {
             new_verifier: format!("{:#x}", event.new_verifier),
             old_verifier: format!("{:#x}", event.old_verifier),
         }
+    }
+}
+
+impl EventModelRepository for VerifierUpdatedEventModel {
+    const TABLE_NAME: &'static str = "event_verifier_updated";
+
+    fn push_parameters(query: &mut QueryBuilder<'_, sqlx::Postgres>) {
+        query.push("id, at, new_verifier, old_verifier");
+    }
+
+    fn push_tuple(
+        mut args: sqlx::query_builder::Separated<'_, '_, sqlx::Postgres, &'static str>,
+        model: &Self,
+    ) {
+        args.push_bind(model.id)
+            .push_bind(model.at)
+            .push_bind(model.new_verifier.clone())
+            .push_bind(model.old_verifier.clone());
     }
 }

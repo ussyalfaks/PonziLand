@@ -7,12 +7,14 @@ use axum::{
     routing::get,
     Json, Router,
 };
+use chaindata_service::{ChainDataService, ChainDataServiceConfiguration};
 use config::Conf;
 use confique::Config;
 use monitoring::listen_monitoring;
 use routes::{price::PriceRoute, tokens::TokenRoute};
 use serde::{Deserialize, Serialize};
 use service::{ekubo::EkuboService, token::TokenService};
+use sqlx::{postgres::PgConnectOptions, ConnectOptions, PgPool};
 use state::AppState;
 use tokio::{
     select,
@@ -35,7 +37,9 @@ pub mod monitoring;
 #[tokio::main]
 async fn main() -> Result<()> {
     // initialize tracing
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
 
     let config_path = env::var("CONFIG_PATH").unwrap_or("./config.toml".to_string());
 
@@ -54,6 +58,23 @@ async fn main() -> Result<()> {
 
     let token_service = Arc::new(TokenService::new(&config));
     let ekubo = EkuboService::new(&config, token_service.clone(), &monitor).await;
+
+    let options = PgConnectOptions::new().application_name("sql-migrator");
+    let pool = PgPool::connect_with(options)
+        .await
+        .with_context(|| "Impossible to connect to database")?;
+
+    let chaindata_service = ChainDataService::new(
+        pool.clone(),
+        ChainDataServiceConfiguration {
+            torii_url: config.torii.torii_url.clone().into(),
+            world_address: config.torii.world_address.to_fixed_hex_string(),
+        },
+    )
+    .await;
+
+    // Start it for the test
+    chaindata_service.start().await;
 
     let app_state = AppState {
         token_service: token_service.clone(),
@@ -121,6 +142,8 @@ async fn main() -> Result<()> {
         _ = monitoring => {},
         _ = &mut stop_rx => {
             info!("Cancellation requested.");
+            // Stop the chaindata service
+            chaindata_service.stop().await;
         }
     }
 

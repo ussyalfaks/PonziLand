@@ -29,6 +29,9 @@ pub struct Conf {
     #[config(nested)]
     pub starknet: RpcConfig,
 
+    #[config(nested)]
+    pub torii: ToriiConfig,
+
     pub default_token: String,
 }
 
@@ -36,6 +39,14 @@ pub struct Conf {
 pub struct Token {
     pub symbol: String,
     pub address: Felt,
+}
+
+#[derive(Config, Debug, Clone)]
+pub struct ToriiConfig {
+    #[config(env = "WORLD_ADDRESS")]
+    pub world_address: Felt,
+    #[config(env = "TORII_URL")]
+    pub torii_url: Url,
 }
 
 #[derive(Config, Debug, Clone)]

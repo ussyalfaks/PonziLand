@@ -1,5 +1,5 @@
-
-use sqlx::{query, query_as};
+use chrono::{DateTime, Utc};
+use sqlx::{query, query_as, query_scalar};
 use uuid::Uuid;
 
 use crate::{
@@ -29,8 +29,25 @@ impl EventRepository {
         "#,
             id as EventId
         )
-        .fetch_one(&*self.db)
+        .fetch_one(&mut *(self.db.acquire().await?))
         .await
+    }
+
+    pub async fn get_last_event_date(&self) -> Result<DateTime<Utc>, sqlx::Error> {
+        query!(
+            r#"
+            SELECT
+                MAX(at)
+            FROM event
+        "#
+        )
+        .fetch_one(&mut *(self.db.acquire().await?))
+        .await
+        .map(|opt| {
+            opt.max
+                .map(|date| date.and_utc())
+                .unwrap_or(DateTime::UNIX_EPOCH)
+        })
     }
 
     pub async fn save_event(&self, event: FilledEvent) -> Result<EventId, sqlx::Error> {
@@ -49,12 +66,15 @@ impl EventRepository {
         "#,
             id as EventId,
             event.at,
-            EventType::from(event.data) as EventType
+            EventType::from(&event.data) as EventType
         )
         .fetch_one(&mut *tx)
         .await?
         .id
         .into();
+
+        // Insert the event data
+        let _ = event.data.save(&mut *tx);
 
         // Commit the TX
         tx.commit().await?;
