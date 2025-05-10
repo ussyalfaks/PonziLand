@@ -84,16 +84,7 @@ impl SqlClient {
 
         if response.status() == 200 {
             // Return the parsed response
-            let text = response.text().await.map_err(Error::ResponseError)?;
-            File::create("./response.json")
-                .await
-                .unwrap()
-                .write_all(text.as_bytes())
-                .await
-                .unwrap();
-            let json = serde_json::from_str(&text).unwrap();
-
-            Ok(json)
+            response.json().await.map_err(Error::ResponseError)
         } else {
             Err(Error::BadResponse(response.text().await.ok()))
         }
