@@ -2,6 +2,7 @@ use crate::models::{shared::Location, types::U256};
 use chrono::{DateTime, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::deserialize_number_from_string;
+use sqlx::FromRow;
 use torii_ingester::{error::ToriiConversionError, get, prelude::Struct};
 
 /// Rust representation of the on-chain land stake model.
@@ -17,6 +18,7 @@ pub struct LandStake {
 
 crate::define_id!(LandStakeId, Uuid);
 
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct LandStakeModel {
     pub id: LandStakeId,
     pub at: NaiveDateTime,
@@ -26,7 +28,7 @@ pub struct LandStakeModel {
 }
 
 impl LandStakeModel {
-    pub fn from_land_at(land: &LandStake, at: NaiveDateTime) -> Self {
+    pub fn from_at(land: &LandStake, at: NaiveDateTime) -> Self {
         Self {
             id: LandStakeId::new(),
             at,

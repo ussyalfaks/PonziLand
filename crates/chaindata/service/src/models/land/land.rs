@@ -64,7 +64,7 @@ pub struct LandModel {
 }
 
 impl LandModel {
-    pub fn from_land_at(land: &Land, at: NaiveDateTime) -> Self {
+    pub fn from_at(land: &Land, at: NaiveDateTime) -> Self {
         Self {
             id: LandModelId::new(),
             at,
