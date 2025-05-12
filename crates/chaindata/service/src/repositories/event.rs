@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use sqlx::{query, query_as, query_scalar};
+use sqlx::{query, query_as};
 use uuid::Uuid;
 
 use crate::{
@@ -74,7 +74,7 @@ impl EventRepository {
         .into();
 
         // Insert the event data
-        let _ = event.data.save(&mut *tx);
+        let _ = event.data.save(&mut *tx).await;
 
         // Commit the TX
         tx.commit().await?;

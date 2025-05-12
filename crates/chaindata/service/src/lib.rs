@@ -153,10 +153,12 @@ impl ChainDataService {
             RawToriiData::Json { name, data, at } => FilledEvent {
                 id: EventId(Uuid::new_v4()),
                 at: at.naive_utc(),
-                data: EventData::from_json(&*name, data.clone()).expect(&*format!(
-                    "An error occurred while deserializing model for event {}: {:#?}",
-                    name, data
-                )),
+                data: EventData::from_json(&name, data.clone()).unwrap_or_else(|_| {
+                    panic!(
+                        "An error occurred while deserializing model for event {}: {:#?}",
+                        name, data
+                    )
+                }),
             },
         };
 

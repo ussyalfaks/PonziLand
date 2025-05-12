@@ -28,4 +28,20 @@ macro_rules! get {
             .expect(&*format!("Wrong conversion for {}! {:#?}", $name, $entity))
             .into()
     }};
+    ($entity: expr, $name: literal, enum $typ: ty) => {{
+        use torii_ingester::conversions::FromEnum;
+        use torii_ingester::error::ToriiConversionError;
+
+        $entity
+            .get($name)
+            .ok_or_else(|| ToriiConversionError::NoSuchField($name.into()))
+            .and_then(|val| {
+                val.as_enum()
+                    .ok_or_else(|| ToriiConversionError::NotAnEnum($name.into()))
+            })
+            .and_then(|e| {
+                <$typ>::from_enum(e).map_err(|e| ToriiConversionError::WrongType($name.into(), e))
+            })
+            .map(|e| e.into())
+    }};
 }

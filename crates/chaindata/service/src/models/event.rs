@@ -1,36 +1,14 @@
 use super::actions::*;
 use super::auth::*;
 use super::model_repository::EventModelRepository;
-use chrono::NaiveDateTime;
+use crate::define_id;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::prelude::FromRow;
-use sqlx::types::Uuid;
-use sqlx::PgConnection;
 use torii_ingester::error::ToriiConversionError;
 use torii_ingester::prelude::Struct;
-use torii_ingester::RawToriiData;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, sqlx::Type, Hash, Serialize, Deserialize)]
-#[sqlx(transparent, type_name = "uuid")]
-pub struct EventId(pub Uuid);
-
-impl From<Uuid> for EventId {
-    fn from(uuid: Uuid) -> Self {
-        EventId(uuid)
-    }
-}
-
-impl From<EventId> for Uuid {
-    fn from(id: EventId) -> Self {
-        id.0
-    }
-}
-impl AsRef<Uuid> for EventId {
-    fn as_ref(&self) -> &Uuid {
-        &self.0
-    }
-}
+define_id!(EventId, Uuid);
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, sqlx::Type, Deserialize, Serialize)]
 #[sqlx(type_name = "event_type")]

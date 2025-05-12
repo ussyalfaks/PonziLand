@@ -14,7 +14,7 @@ use monitoring::listen_monitoring;
 use routes::{price::PriceRoute, tokens::TokenRoute};
 use serde::{Deserialize, Serialize};
 use service::{ekubo::EkuboService, token::TokenService};
-use sqlx::{postgres::PgConnectOptions, ConnectOptions, PgPool};
+use sqlx::{postgres::PgConnectOptions, PgPool};
 use state::AppState;
 use tokio::{
     select,
@@ -38,7 +38,7 @@ pub mod monitoring;
 async fn main() -> Result<()> {
     // initialize tracing
     tracing_subscriber::fmt::fmt()
-        .with_max_level(tracing::Level::INFO)
+        .with_max_level(tracing::Level::DEBUG)
         .init();
 
     let config_path = env::var("CONFIG_PATH").unwrap_or("./config.toml".to_string());

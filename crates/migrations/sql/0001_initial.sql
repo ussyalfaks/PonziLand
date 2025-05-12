@@ -1,4 +1,4 @@
-CREATE DOMAIN uint_256 AS NUMERIC NOT NULL
+CREATE DOMAIN uint_256 AS NUMERIC
 CHECK (VALUE >= 0 AND VALUE < 2::numeric ^ 256)
 CHECK (SCALE(VALUE) = 0);
 
@@ -20,7 +20,7 @@ CREATE TABLE event (
 
 CREATE TABLE event_auction_finished (
     id uuid NOT NULL PRIMARY KEY,
-    location smallint NOT NULL,
+    location INT4 NOT NULL,
     buyer text NOT NULL,
     price uint_256 NOT NULL
 );
@@ -39,7 +39,7 @@ CREATE TABLE event_address_removed (
 
 CREATE TABLE event_land_bought (
     id uuid NOT NULL PRIMARY KEY,
-    location smallint NOT NULL,
+    location INT4 NOT NULL,
     buyer text NOT NULL,
     seller text NOT NULL,
     price uint_256 NOT NULL,
@@ -48,14 +48,14 @@ CREATE TABLE event_land_bought (
 
 CREATE TABLE event_new_auction (
     id uuid NOT NULL PRIMARY KEY,
-    location smallint NOT NULL,
+    location INT4 NOT NULL,
     starting_price uint_256 NOT NULL,
     floor_price uint_256 NOT NULL
 );
 
 CREATE TABLE event_nuked (
     id uuid NOT NULL PRIMARY KEY,
-    location smallint NOT NULL,
+    location INT4 NOT NULL,
     owner text NOT NULL,
     at timestamp without time zone NOT NULL
 );
@@ -63,7 +63,7 @@ CREATE TABLE event_nuked (
 CREATE TABLE historical_land (
     id uuid NOT NULL PRIMARY KEY,
     at timestamp without time zone NOT NULL,
-    location smallint NOT NULL,
+    location INT4 NOT NULL,
     bought_at timestamp without time zone NOT NULL,
     owner text NOT NULL,
     sell_price uint_256 NOT NULL,
@@ -74,7 +74,7 @@ CREATE TABLE historical_land (
 CREATE TABLE historical_land_stake (
     id uuid NOT NULL PRIMARY KEY,
     at timestamp without time zone NOT NULL,
-    location smallint NOT NULL,
+    location INT4 NOT NULL,
     last_pay_time timestamp without time zone NOT NULL,
     amount uint_256 NOT NULL
 );

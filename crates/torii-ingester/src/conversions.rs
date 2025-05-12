@@ -1,17 +1,34 @@
+use std::{
+    fmt::{self},
+    marker::PhantomData,
+};
+
 pub use dojo_types::primitive::Primitive;
+use dojo_types::schema::{Enum, EnumError};
+use serde::{de, Deserialize, Deserializer};
 use starknet::core::types::Felt;
 
-#[derive(thiserror::Error, Debug, Clone)]
+#[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("Invalid value: Expected {expected}, got {actual}")]
     InvalidValue {
         expected: &'static str,
         actual: Primitive,
     },
+    #[error("Field {0}, expected an enum")]
+    NotAnEnum(String),
+    #[error("Invalid enum")]
+    InvalidEnum(#[from] EnumError),
+    #[error("Invalid enum variant: {0}")]
+    InvalidEnumVariant(String),
 }
 
 pub trait FromPrimitive: Sized {
     fn from_primitive(primitive: &Primitive) -> Result<Self, Error>;
+}
+
+pub trait FromEnum: Sized {
+    fn from_enum(variant: &Enum) -> Result<Self, Error>;
 }
 
 pub trait PrimitiveInto<T: Sized> {
@@ -67,4 +84,42 @@ impl FromPrimitive for Felt {
             }),
         }
     }
+}
+
+// Red: This only works for unit enums, but this is all the time I have to do for now.
+pub fn torii_enum_deserializer<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    // Visitor for handling the Torii enum format: {"Zero":[]}
+    struct EnumVisitor<T>(PhantomData<T>);
+
+    impl<'de, T> de::Visitor<'de> for EnumVisitor<T>
+    where
+        T: Deserialize<'de>,
+    {
+        type Value = T;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("an enum represented as a map with a single key")
+        }
+
+        fn visit_map<M>(self, mut map: M) -> Result<Self::Value, M::Error>
+        where
+            M: de::MapAccess<'de>,
+        {
+            // Extract the variant name and empty array
+            let (variant, _): (String, Vec<()>) = map
+                .next_entry()?
+                .ok_or_else(|| de::Error::invalid_length(0, &self))?;
+
+            // Create a string that represents what serde expects for deserializing into an enum
+            // For example, if the variant is "Zero", we create a token stream that looks like
+            // what would come from the JSON: "Zero"
+            T::deserialize(de::value::StringDeserializer::new(variant))
+        }
+    }
+
+    deserializer.deserialize_map(EnumVisitor(PhantomData))
 }

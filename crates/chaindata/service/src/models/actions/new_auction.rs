@@ -1,4 +1,3 @@
-use chrono::{DateTime, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use sqlx::QueryBuilder;
@@ -12,7 +11,7 @@ use crate::models::types::U256;
 #[derive(Debug, Clone, FromRow)]
 pub struct NewAuctionEventModel {
     pub id: EventId,
-    pub location: i16,
+    pub location: Location,
     pub starting_price: U256,
     pub floor_price: U256,
 }
@@ -49,7 +48,7 @@ impl From<NewAuctionEvent> for NewAuctionEventModel {
     fn from(event: NewAuctionEvent) -> Self {
         Self {
             id: EventId(sqlx::types::Uuid::new_v4()),
-            location: event.land_location.into(),
+            location: event.land_location,
             starting_price: event.start_price,
             floor_price: event.floor_price,
         }

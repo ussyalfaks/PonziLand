@@ -4,7 +4,6 @@ use reqwest::{Client, ClientBuilder, IntoUrl, Url};
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
 use thiserror::Error;
-use tokio::{fs::File, io::AsyncWriteExt};
 use tracing::{info, instrument};
 
 #[derive(Error, Debug)]

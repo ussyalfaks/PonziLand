@@ -10,11 +10,35 @@ use serde::{
     ser::SerializeMap,
     Deserialize, Deserializer, Serialize,
 };
+use sqlx::{prelude::Type, Decode, Encode, Postgres};
 use torii_ingester::conversions::{Error, FromPrimitive, Primitive};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct Location(u64);
+
+impl Type<Postgres> for Location {
+    fn type_info() -> <Postgres as sqlx::Database>::TypeInfo {
+        <i32 as Type<Postgres>>::type_info()
+    }
+}
+
+impl<'a> Decode<'a, Postgres> for Location {
+    fn decode(
+        value: <Postgres as sqlx::Database>::ValueRef<'a>,
+    ) -> Result<Self, sqlx::error::BoxDynError> {
+        <i32 as Decode<'a, Postgres>>::decode(value).map(|val| Location(val as u64))
+    }
+}
+
+impl<'a> Encode<'a, Postgres> for Location {
+    fn encode_by_ref(
+        &self,
+        buf: &mut <Postgres as sqlx::Database>::ArgumentBuffer<'a>,
+    ) -> Result<sqlx::encode::IsNull, sqlx::error::BoxDynError> {
+        <i32 as Encode<'a, Postgres>>::encode_by_ref(&(self.0 as i32), buf)
+    }
+}
 
 impl Location {
     fn coordinates(&self) -> (u64, u64) {

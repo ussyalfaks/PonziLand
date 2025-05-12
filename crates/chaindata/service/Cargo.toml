@@ -28,3 +28,5 @@ futures-util = "0.3.31"
 tokio-stream = "0.1.17"
 tracing.workspace = true
 serde-aux = "4.7.0"
+thiserror.workspace = true
+migrations = { path = "../../migrations" }

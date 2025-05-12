@@ -2,10 +2,7 @@ use std::{env, fs};
 
 use clap::{Parser, Subcommand};
 use migrations::MIGRATOR;
-use sqlx::{
-    postgres::PgConnectOptions,
-    query, ConnectOptions, Connection,
-};
+use sqlx::{postgres::PgConnectOptions, query, ConnectOptions, Connection};
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 use tracing::info;

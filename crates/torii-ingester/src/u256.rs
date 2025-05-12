@@ -220,7 +220,7 @@ mod test {
             U256::from(123456789u32)
         );
     }
-    
+
     #[test]
     fn test_from_u64_words() {
         // Test zero values
@@ -228,52 +228,52 @@ mod test {
         let zero_val = U256::from_u64_words(zero_words);
         assert_eq!(zero_val, U256::from_words(0, 0));
         assert_eq!(zero_val.to_u64_words(), zero_words);
-        
+
         // Test values in each word position
-        
+
         // First word (lowest 64 bits)
         let words1 = [123u64, 0u64, 0u64, 0u64];
         let val1 = U256::from_u64_words(words1);
         assert_eq!(val1, U256::from_words(123, 0));
         assert_eq!(val1.to_u64_words(), words1);
-        
+
         // Second word (bits 64-127)
         let words2 = [0u64, 456u64, 0u64, 0u64];
         let val2 = U256::from_u64_words(words2);
         assert_eq!(val2, U256::from_words(456u128 << 64, 0));
         assert_eq!(val2.to_u64_words(), words2);
-        
+
         // Third word (bits 128-191)
         let words3 = [0u64, 0u64, 789u64, 0u64];
         let val3 = U256::from_u64_words(words3);
         assert_eq!(val3, U256::from_words(0, 789));
         assert_eq!(val3.to_u64_words(), words3);
-        
+
         // Fourth word (bits 192-255, highest)
         let words4 = [0u64, 0u64, 0u64, 101112u64];
         let val4 = U256::from_u64_words(words4);
         assert_eq!(val4, U256::from_words(0, 101112u128 << 64));
         assert_eq!(val4.to_u64_words(), words4);
-        
+
         // Test with a value in all positions
         let mixed_words = [123u64, 456u64, 789u64, 101112u64];
         let mixed_val = U256::from_u64_words(mixed_words);
         assert_eq!(mixed_val.to_u64_words(), mixed_words);
     }
-    
+
     #[test]
     fn test_to_u64_words() {
         // Test conversion of different values to u64 words
-        
+
         // Zero
         assert_eq!(
-            U256::from_words(0, 0).to_u64_words(), 
+            U256::from_words(0, 0).to_u64_words(),
             [0u64, 0u64, 0u64, 0u64]
         );
 
         // Simple value in low part
         assert_eq!(
-            U256::from_words(42, 0).to_u64_words(), 
+            U256::from_words(42, 0).to_u64_words(),
             [42u64, 0u64, 0u64, 0u64]
         );
 
@@ -282,24 +282,24 @@ mod test {
             U256::from_words(u64::MAX as u128, 0).to_u64_words(),
             [u64::MAX, 0u64, 0u64, 0u64]
         );
-        
+
         // Value in high part
         assert_eq!(
             U256::from_words(0, 42).to_u64_words(),
             [0u64, 0u64, 42u64, 0u64]
         );
-        
+
         // Non-zero values in all words
         let low = 0x1234_u128 | (0x5678_u128 << 64);
         let high = 0x9ABC_u128 | (0xDEF0_u128 << 64);
         let val = U256::from_words(low, high);
         assert_eq!(val.to_u64_words(), [0x1234, 0x5678, 0x9ABC, 0xDEF0]);
-        
+
         // Round-trip test - create from words and convert back
         let test_words = [0x1111, 0x2222, 0x3333, 0x4444];
         let val = U256::from_u64_words(test_words);
         assert_eq!(val.to_u64_words(), test_words);
-        
+
         // Test maximum values
         let max_words = [u64::MAX, u64::MAX, u64::MAX, u64::MAX];
         let max_val = U256::from_u64_words(max_words);

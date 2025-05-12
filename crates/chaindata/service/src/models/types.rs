@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Deref};
+use std::{fmt::Display, ops::Deref, str::FromStr};
 
 use num_bigint::{BigInt, Sign};
 use serde::{Deserialize, Serialize};
@@ -21,6 +21,14 @@ impl FromPrimitive for U256 {
 impl Display for U256 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         RawU256::fmt(&self.0, f)
+    }
+}
+
+impl FromStr for U256 {
+    type Err = <RawU256 as FromStr>::Err;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        RawU256::from_str(s).map(U256)
     }
 }
 

@@ -6,6 +6,8 @@ pub enum ToriiConversionError {
     NoSuchField(String),
     #[error("{0}: Not a primitive")]
     NotAPrimitive(String),
+    #[error("{0}: Not an enum")]
+    NotAnEnum(String),
     #[error("{0}: Wrong type: {1:#?}")]
     WrongType(String, Error),
     #[error("JSON parsing error: {0}")]

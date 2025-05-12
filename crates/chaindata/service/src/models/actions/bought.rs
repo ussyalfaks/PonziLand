@@ -11,7 +11,7 @@ use crate::models::types::U256;
 #[derive(Debug, Clone, FromRow, Serialize, Deserialize)]
 pub struct LandBoughtEventModel {
     pub id: EventId,
-    pub location: i16,
+    pub location: Location,
 
     pub buyer: String,
     pub seller: String,
@@ -58,7 +58,7 @@ impl From<LandBoughtEvent> for LandBoughtEventModel {
     fn from(event: LandBoughtEvent) -> Self {
         Self {
             id: EventId(sqlx::types::Uuid::new_v4()),
-            location: event.land_location.into(),
+            location: event.land_location,
             buyer: format!("{:#x}", event.buyer),
             seller: format!("{:#x}", event.seller),
             price: event.sold_price,

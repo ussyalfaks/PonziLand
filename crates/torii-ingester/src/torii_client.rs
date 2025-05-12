@@ -11,7 +11,6 @@ use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_stream::Stream;
 use torii_client::client::Client as GrpcClient;
-use tracing::warn;
 
 // TODO(Red): Make sure we loose no messages between the catchup and the listen
 // (Maybe add the listen at the same time we do the catchup, and if we keep the event IDs somewhere, we can work with this system)

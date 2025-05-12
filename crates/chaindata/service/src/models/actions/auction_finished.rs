@@ -2,7 +2,6 @@ use crate::models::event::EventId;
 use crate::models::model_repository::EventModelRepository;
 use crate::models::shared::{EventPrint, Location};
 use crate::models::types::U256;
-use chrono::{DateTime, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use sqlx::QueryBuilder;
@@ -11,7 +10,7 @@ use torii_ingester::{error::ToriiConversionError, prelude::*};
 #[derive(Debug, Clone, FromRow)]
 pub struct AuctionFinishedEventModel {
     pub id: EventId,
-    pub location: i16,
+    pub location: Location,
     pub buyer: String,
     pub price: U256,
 }
@@ -48,7 +47,7 @@ impl From<AuctionFinishedEvent> for AuctionFinishedEventModel {
     fn from(event: AuctionFinishedEvent) -> Self {
         Self {
             id: EventId(sqlx::types::Uuid::new_v4()),
-            location: event.land_location.into(),
+            location: event.land_location,
             buyer: format!("{:#x}", event.buyer),
             price: event.final_price,
         }

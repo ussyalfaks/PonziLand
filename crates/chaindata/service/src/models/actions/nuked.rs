@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use sqlx::QueryBuilder;
@@ -11,7 +10,7 @@ use crate::models::shared::{EventPrint, Location};
 #[derive(Debug, Clone, FromRow)]
 pub struct LandNukedEventModel {
     pub id: EventId,
-    pub location: i16,
+    pub location: Location,
     pub owner: String,
 }
 
@@ -62,7 +61,7 @@ impl From<LandNukedEvent> for LandNukedEventModel {
     fn from(event: LandNukedEvent) -> Self {
         Self {
             id: EventId(sqlx::types::Uuid::new_v4()),
-            location: event.land_location.into(),
+            location: event.land_location,
             owner: format!("{:#x}", event.owner_nuked),
         }
     }
