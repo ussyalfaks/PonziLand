@@ -3,7 +3,7 @@ use sqlx::{query, query_as};
 
 use crate::{
     models::{
-        land::land::{LandModel, LandModelId},
+        entities::land::{LandModel, LandModelId},
         shared::Location,
     },
     Database,
@@ -142,7 +142,7 @@ impl LandRepository {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{land::land::Level, types::U256};
+    use crate::models::{entities::land::Level, types::U256};
     use chrono::Utc;
     use migrations::MIGRATOR;
     use std::str::FromStr;

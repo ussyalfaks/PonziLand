@@ -10,7 +10,7 @@ pub mod model_repository;
 
 pub mod types;
 
-pub mod land;
+pub mod entities;
 
 pub mod auction;
 

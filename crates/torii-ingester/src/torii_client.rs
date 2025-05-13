@@ -52,7 +52,7 @@ impl RawToriiData {
     pub fn name(&self) -> &str {
         match self {
             RawToriiData::Json { name, .. } => name,
-            RawToriiData::Grpc(structure) => &*structure.name,
+            RawToriiData::Grpc(structure) => &structure.name,
         }
     }
 }
@@ -162,10 +162,7 @@ impl ToriiClient {
         }).await
     }
 
-    async fn do_request<'a, F, T>(
-        &'a self,
-        request: F,
-    ) -> Result<impl Stream<Item = RawToriiData>, Error>
+    async fn do_request<F, T>(&self, request: F) -> Result<impl Stream<Item = RawToriiData>, Error>
     where
         T: Into<String>,
         // We need a function that:

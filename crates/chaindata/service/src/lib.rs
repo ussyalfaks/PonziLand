@@ -1,14 +1,12 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-mod models;
-mod repositories;
+pub mod models;
+pub mod repositories;
 
 pub mod tasks;
 
 pub type Database = PgPool;
 
-use chrono::Utc;
-use models::event::{EventData, EventId, FilledEvent};
 use repositories::{event::EventRepository, land::LandRepository, land_stake::LandStakeRepository};
 use serde::*;
 use sqlx::PgPool;
@@ -16,11 +14,8 @@ use starknet::core::types::Felt;
 use tasks::{
     event_listener::EventListenerTask, model_listener::ModelListenerTask, Task, TaskWrapper,
 };
-use tokio::{join, select, sync::oneshot};
-use tokio_stream::StreamExt;
-use torii_ingester::{RawToriiData, ToriiClient, ToriiConfiguration};
-use tracing::{debug, info};
-use uuid::Uuid;
+use tokio::join;
+use torii_ingester::{ToriiClient, ToriiConfiguration};
 
 /// ChainDataService is a service that handles the importation and syncing of new events and data
 /// to the database for further processing.

@@ -3,7 +3,7 @@ use sqlx::{query, query_as};
 
 use crate::{
     models::{
-        land::land_stake::{LandStakeId, LandStakeModel},
+        entities::land_stake::{LandStakeId, LandStakeModel},
         shared::Location,
     },
     Database,

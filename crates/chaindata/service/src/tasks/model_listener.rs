@@ -1,14 +1,14 @@
 use std::{cmp::max, sync::Arc};
 
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use tokio::select;
 use tokio_stream::StreamExt;
 use torii_ingester::{RawToriiData, ToriiClient};
-use tracing::{debug, info, warn};
+use tracing::info;
 
 use crate::{
     models::{
-        land::{land::LandModel, land_stake::LandStakeModel},
+        entities::{land::LandModel, land_stake::LandStakeModel},
         model::Model,
     },
     repositories::{land::LandRepository, land_stake::LandStakeRepository},

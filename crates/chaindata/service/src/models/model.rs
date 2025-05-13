@@ -2,13 +2,7 @@ use chrono::{DateTime, Utc};
 use serde_json::Value;
 use torii_ingester::{error::ToriiConversionError, prelude::Struct, RawToriiData};
 
-use super::{
-    event::EventData,
-    land::{
-        land::{Land, LandModel},
-        land_stake::{LandStake, LandStakeModel},
-    },
-};
+use super::entities::{land::Land, land_stake::LandStake};
 
 pub enum Model {
     Land(Land),
