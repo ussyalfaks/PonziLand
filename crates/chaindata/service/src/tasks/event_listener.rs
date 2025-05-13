@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use chrono::Utc;
 use tokio::select;
 use tokio_stream::StreamExt;
@@ -15,11 +17,18 @@ use super::Task;
 /// `EventListenerTask` is a task that subscribes to the events of the on-chain indexer (torii),
 /// and pushes them to the local database.
 pub struct EventListenerTask {
-    client: ToriiClient,
-    event_repository: EventRepository,
+    client: Arc<ToriiClient>,
+    event_repository: Arc<EventRepository>,
 }
 
 impl EventListenerTask {
+    pub fn new(client: Arc<ToriiClient>, event_repository: Arc<EventRepository>) -> Self {
+        Self {
+            client,
+            event_repository,
+        }
+    }
+
     async fn process_event(&self, event: RawToriiData) {
         // Parse and save the event
         let event = match event {

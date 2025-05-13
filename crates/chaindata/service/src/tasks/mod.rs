@@ -12,10 +12,14 @@ pub mod model_listener;
 /// A task is an utility trait that is used to factorize some of the work required for
 /// each indexer subsystem, as they are a task that is handled by tokio, and must be kept alive.
 #[async_trait::async_trait]
-pub trait Task: Sized + Send + Sync {
+pub trait Task: Sized + Send + Sync + 'static {
     const NAME: &'static str;
 
     async fn do_task(self: Arc<Self>, stop_channel: oneshot::Receiver<()>);
+
+    fn wrap(self) -> TaskWrapper<Self> {
+        TaskWrapper::new(self)
+    }
 }
 
 pub struct TaskWrapper<T: Task> {
@@ -31,7 +35,7 @@ impl<T: Task + 'static> TaskWrapper<T> {
         }
     }
 
-    pub async fn start(self: Self) {
+    pub async fn start(&self) {
         let (tx, rx) = oneshot::channel();
 
         // Store the sender in the mutex

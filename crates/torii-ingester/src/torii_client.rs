@@ -48,6 +48,15 @@ pub enum RawToriiData {
     Grpc(Struct),
 }
 
+impl RawToriiData {
+    pub fn name(&self) -> &str {
+        match self {
+            RawToriiData::Json { name, .. } => name,
+            RawToriiData::Grpc(structure) => &*structure.name,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 struct QueryResponse {
     selector: String,

@@ -3,7 +3,7 @@ use sqlx::{query, query_as};
 
 use crate::{
     models::{
-        land::land_stake::{LandStakeModel, LandStakeId},
+        land::land_stake::{LandStakeId, LandStakeModel},
         shared::Location,
     },
     Database,
@@ -67,7 +67,10 @@ impl LandStakeRepository {
     }
 
     /// Gets all land stakes that exist at a specific point in time
-    pub async fn get_all_at_time(&self, at: NaiveDateTime) -> Result<Vec<LandStakeModel>, sqlx::Error> {
+    pub async fn get_all_at_time(
+        &self,
+        at: NaiveDateTime,
+    ) -> Result<Vec<LandStakeModel>, sqlx::Error> {
         // This query gets the most recent version of each land stake at or before the specified time
         query_as!(
             LandStakeModel,
@@ -111,6 +114,19 @@ impl LandStakeRepository {
         )
         .fetch_optional(&mut *(self.db.acquire().await?))
         .await
+    }
+
+    /// Gets the latest timestamp from the land_stake table
+    pub async fn get_latest_timestamp(&self) -> Result<Option<NaiveDateTime>, sqlx::Error> {
+        query!(
+            r#"
+            SELECT MAX(at) as latest_time
+            FROM land_stake
+            "#
+        )
+        .fetch_one(&mut *(self.db.acquire().await?))
+        .await
+        .map(|row| row.latest_time)
     }
 }
 
@@ -198,7 +214,7 @@ mod tests {
             id: LandStakeId::new(),
             at: time2,
             location,
-            last_pay_time: time2, // Updated pay time
+            last_pay_time: time2,                   // Updated pay time
             amount: U256::from_str("200").unwrap(), // Updated amount
         };
         repo.save(land_stake2.clone()).await?;
@@ -231,7 +247,9 @@ mod tests {
         assert!(!all_at_time1.iter().any(|l| l.id == land_stake2.id));
 
         let all_at_time2 = repo.get_all_at_time(time2).await?;
-        assert!(all_at_time2.iter().any(|l| l.location == land_stake2.location));
+        assert!(all_at_time2
+            .iter()
+            .any(|l| l.location == land_stake2.location));
         assert!(all_at_time2.iter().any(|l| l.id == land_stake2.id));
 
         Ok(())

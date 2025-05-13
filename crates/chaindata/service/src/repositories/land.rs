@@ -124,6 +124,19 @@ impl LandRepository {
         .fetch_optional(&mut *(self.db.acquire().await?))
         .await
     }
+
+    /// Gets the latest timestamp from the land table
+    pub async fn get_latest_timestamp(&self) -> Result<Option<NaiveDateTime>, sqlx::Error> {
+        query!(
+            r#"
+            SELECT MAX(at) as latest_time
+            FROM land
+            "#
+        )
+        .fetch_one(&mut *(self.db.acquire().await?))
+        .await
+        .map(|row| row.latest_time)
+    }
 }
 
 #[cfg(test)]

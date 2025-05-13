@@ -99,7 +99,7 @@ impl EventData {
             "ponzi_land-VerifierUpdatedEvent" => {
                 EventData::VerifierUpdated(serde_json::from_value(json)?)
             }
-            name => panic!("Unknown event type: {}", name),
+            name => Err(ToriiConversionError::UnknownVariant(name.to_string()))?,
         })
     }
 }
@@ -127,7 +127,7 @@ impl TryFrom<Struct> for EventData {
             "ponzi_land-VerifierUpdatedEvent" => {
                 EventData::VerifierUpdated(VerifierUpdatedEvent::try_from(value)?)
             }
-            _ => panic!("Unknown event type"),
+            name => Err(ToriiConversionError::UnknownVariant(name.to_string()))?,
         })
     }
 }

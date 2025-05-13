@@ -10,6 +10,9 @@ pub enum ToriiConversionError {
     NotAnEnum(String),
     #[error("{0}: Wrong type: {1:#?}")]
     WrongType(String, Error),
+
+    #[error("Unknown variant {0}")]
+    UnknownVariant(String),
     #[error("JSON parsing error: {0}")]
     JsonParsingError(#[from] serde_json::Error),
 }
