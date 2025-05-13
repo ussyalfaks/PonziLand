@@ -7,10 +7,11 @@ RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive \
     apt-get install --no-install-recommends --assume-yes \
     protobuf-compiler libprotobuf-dev
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    cargo build --release --package indexer
 
-RUN ls -la . ./crates/indexer ./target/release
+# Copy the .sqlx files
+COPY ./.sqlx ./.sqlx
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    SQLX_OFFLINE=true cargo build --release --package indexer
 
 FROM gcr.io/distroless/cc-debian12
 COPY --from=builder /app/target/release/indexer /
