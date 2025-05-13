@@ -6,7 +6,7 @@ COPY ./crates ./crates
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive \
     apt-get install --no-install-recommends --assume-yes \
-    protobuf-compiler
+    protobuf-compiler libprotobuf-dev
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     cargo build --release --package indexer
 
