@@ -45,3 +45,7 @@ sqlx = { workspace = true, features = [
     "chrono",
     "bigdecimal",
 ] }
+flume = "0.11.1"
+
+[[example]]
+name = "test"
