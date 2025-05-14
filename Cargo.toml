@@ -5,8 +5,14 @@ members = [
     "crates/indexer",
     "crates/torii-ingester",
     "crates/migrations",
+    "crates/ponziland-models",
 ]
 resolver = "2"
+edition = "2024"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
 
 [workspace.dependencies]
 ekubo_sdk = "0.1.20"
@@ -32,6 +38,7 @@ sqlx = "0.8.5"
 clap = "4.5.37"
 chrono = "0.4.40"
 uuid = "1"
+async-trait = "0.1.88"
 
 # Improve performance of sqlx macros
 [profile.dev.package.sqlx-macros]

@@ -1,23 +1,16 @@
-use std::sync::Arc;
-
-pub mod models;
-pub mod repositories;
-
+pub mod error;
 pub mod tasks;
 
-pub type Database = PgPool;
-
-use repositories::{event::EventRepository, land::LandRepository, land_stake::LandStakeRepository};
-use serde::*;
-use sqlx::PgPool;
+use chaindata_repository::{Database, EventRepository, LandRepository, LandStakeRepository};
+use serde::{Deserialize, Serialize};
 use starknet::core::types::Felt;
+use std::sync::Arc;
 use tasks::{
     event_listener::EventListenerTask, model_listener::ModelListenerTask, Task, TaskWrapper,
 };
-use tokio::join;
 use torii_ingester::{ToriiClient, ToriiConfiguration};
 
-/// ChainDataService is a service that handles the importation and syncing of new events and data
+/// `ChainDataService` is a service that handles the importation and syncing of new events and data
 /// to the database for further processing.
 pub struct ChainDataService {
     event_listener_task: TaskWrapper<EventListenerTask>,
@@ -27,28 +20,30 @@ pub struct ChainDataService {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ChainDataServiceConfiguration {
     pub torii_url: String,
-    pub world_address: String,
+    pub world_address: Felt,
 }
 
 impl ChainDataService {
-    pub async fn new(database: Database, config: ChainDataServiceConfiguration) -> Arc<Self> {
+    /// Creates a new instance of `ChainDataService`
+    ///
+    /// # Errors
+    /// Returns an error if the client cannot connect to the database.
+    pub async fn new(
+        database: Database,
+        config: ChainDataServiceConfiguration,
+    ) -> Result<Arc<Self>, error::Error> {
         let config = ToriiConfiguration {
             base_url: config.torii_url.clone(),
-            world_address: Felt::from_hex(&config.world_address)
-                .expect("Unexpected world address."),
+            world_address: config.world_address,
         };
 
-        let client = Arc::new(
-            ToriiClient::new(&config)
-                .await
-                .expect("Error while setting up torii client"),
-        );
+        let client = Arc::new(ToriiClient::new(&config).await?);
 
         let event_repository = Arc::new(EventRepository::new(database.clone()));
         let land_repository = Arc::new(LandRepository::new(database.clone()));
         let land_stake_repository = Arc::new(LandStakeRepository::new(database.clone()));
 
-        Arc::new(Self {
+        Ok(Arc::new(Self {
             event_listener_task: EventListenerTask::new(client.clone(), event_repository).wrap(),
             model_listener_task: ModelListenerTask::new(
                 client.clone(),
@@ -56,19 +51,17 @@ impl ChainDataService {
                 land_stake_repository,
             )
             .wrap(),
-        })
+        }))
     }
 
-    pub async fn stop(self: &Arc<Self>) {
+    pub fn stop(self: &Arc<Self>) {
         self.event_listener_task.stop();
         self.model_listener_task.stop();
     }
 
-    pub async fn start(self: &Arc<Self>) {
+    pub fn start(self: &Arc<Self>) {
         // Start all in parallel
-        join!(
-            self.event_listener_task.start(),
-            self.model_listener_task.start()
-        );
+        self.event_listener_task.start();
+        self.model_listener_task.start();
     }
 }

@@ -1,5 +1,12 @@
 // Required, as the uint macro overrides that function.
-#![allow(clippy::manual_div_ceil)]
+// Also, we have a whole lot of functions that do truncation, and are wanted.
+#![allow(
+    unknown_lints,
+    clippy::manual_div_ceil,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss
+)]
 
 use ekubo_sdk::math::uint::U256;
 use std::fmt::Binary;
@@ -10,7 +17,7 @@ use std::{
 };
 
 /// Price is a u256 with a fixed point decimal representation of 128 bits for the decimal portion.
-/// This means the value is interpreted as: whole_number * 2^128
+/// This means the value is interpreted as: `whole_number` * 2^128
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct U256FD128(U256);
 
@@ -84,12 +91,12 @@ impl From<U256FD128> for f64 {
 
         // Extract fractional part (bits 0-127)
         let frac_bits = abs_val.0 & ((U256::one() << 128) - U256::one());
-        let frac = if !frac_bits.is_zero() {
+        let frac = if frac_bits.is_zero() {
+            0.0
+        } else {
             // Convert fraction bits to f64, maintaining precision
             let frac_f64 = frac_bits.as_u128() as f64;
             frac_f64 / 2.0f64.powi(128)
-        } else {
-            0.0
         };
 
         sign * (whole + frac)
@@ -100,28 +107,34 @@ impl U256FD128 {
     const DECIMAL_BITS: u32 = 128;
 
     /// Creates a new U256FD128 from a raw U256 value
+    #[must_use]
     pub fn new(value: U256) -> Self {
         Self(value)
     }
 
     /// Creates a U256FD128 from a whole number
+    #[must_use]
     pub fn from_whole(value: u128) -> Self {
         Self(U256::from(value) << Self::DECIMAL_BITS)
     }
 
     /// Get the raw underlying U256 value
+    #[must_use]
     pub fn raw(&self) -> U256 {
         self.0
     }
 
+    #[must_use]
     pub fn neg(&self) -> Self {
         Self(!self.0 + U256::one())
     }
 
+    #[must_use]
     pub fn is_negative(&self) -> bool {
         (self.0 >> (256 - 1)) == U256::one()
     }
 
+    #[must_use]
     pub fn sign(&self) -> i8 {
         if self.0 == U256::zero() {
             0
@@ -132,6 +145,7 @@ impl U256FD128 {
         }
     }
 
+    #[must_use]
     pub fn abs(&self) -> Self {
         if self.is_negative() {
             // Two's complement: invert all bits and add 1
@@ -144,11 +158,14 @@ impl U256FD128 {
     pub const ZERO: Self = Self(U256::zero());
 
     /// Calculates the square root of the number using Newton-Raphson method
+    /// # Panics
     /// Panics if the number is negative
+    #[must_use]
     pub fn sqrt(&self) -> Self {
-        if self.is_negative() {
-            panic!("Cannot calculate square root of negative number");
-        }
+        assert!(
+            !self.is_negative(),
+            "Cannot calculate square root of negative number"
+        );
 
         if self.0 == U256::zero() {
             return Self::ZERO;
@@ -176,6 +193,7 @@ impl U256FD128 {
     }
 
     /// Calculates the square of the number
+    #[must_use]
     pub fn squared(&self) -> Self {
         *self * *self
     }
@@ -184,9 +202,7 @@ impl Div for U256FD128 {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
-        if rhs.0 == U256::zero() {
-            panic!("Division by zero");
-        }
+        assert!(rhs.0 != U256::zero(), "Division by zero");
 
         // Determine sign of result
         let result_is_negative = self.is_negative() != rhs.is_negative();
@@ -223,10 +239,10 @@ impl Mul for U256FD128 {
 
         let result = (lhs * rhs) >> Self::DECIMAL_BITS;
 
-        let result = if self.sign() != other.sign() {
-            result.overflowing_neg().0
-        } else {
+        let result = if self.sign() == other.sign() {
             result
+        } else {
+            result.overflowing_neg().0
         };
 
         let result = U256FD128(U256::from(result));
@@ -249,12 +265,14 @@ impl Add for U256FD128 {
         let result = Self(result);
 
         // Check for overflow based on operand signs
-        if !self.is_negative() && !rhs.is_negative() && result.is_negative() {
-            panic!("Addition overflow: positive + positive = negative");
-        }
-        if self.is_negative() && rhs.is_negative() && !result.is_negative() {
-            panic!("Addition overflow: negative + negative = positive");
-        }
+        assert!(
+            !(!self.is_negative() && !rhs.is_negative() && result.is_negative()),
+            "Addition overflow: positive + positive = negative"
+        );
+        assert!(
+            !(self.is_negative() && rhs.is_negative() && !result.is_negative()),
+            "Addition overflow: negative + negative = positive"
+        );
 
         result
     }
@@ -268,12 +286,14 @@ impl Sub for U256FD128 {
         let result = Self(result);
 
         // Check for overflow based on operand signs
-        if !self.is_negative() && rhs.is_negative() && result.is_negative() {
-            panic!("Subtraction overflow: positive - negative = negative");
-        }
-        if self.is_negative() && !rhs.is_negative() && !result.is_negative() {
-            panic!("Subtraction overflow: negative - positive = positive");
-        }
+        assert!(
+            !(!self.is_negative() && rhs.is_negative() && result.is_negative()),
+            "Subtraction overflow: positive - negative = negative"
+        );
+        assert!(
+            !(self.is_negative() && !rhs.is_negative() && !result.is_negative()),
+            "Subtraction overflow: negative - positive = positive"
+        );
 
         result
     }
@@ -308,7 +328,7 @@ impl Display for U256FD128 {
             acc &= (U256::one() << 128) - 1; // Clear the fractional part, again
         }
 
-        write!(f, "{}{}", whole, decimals)
+        write!(f, "{whole}{decimals}")
     }
 }
 
@@ -356,14 +376,14 @@ mod tests {
 
     #[test]
     fn test_display() {
-        let price = U256FD128::from_whole(123456789);
+        let price = U256FD128::from_whole(123_456_789);
         assert_eq!(price.to_string(), "123456789");
 
         let price = U256FD128::from_whole(1) / U256FD128::from_whole(4);
         assert_eq!(price.to_string(), "0.25");
 
         // Test negative numbers
-        let neg_price = U256FD128::from_whole(123456789).neg();
+        let neg_price = U256FD128::from_whole(123_456_789).neg();
         assert_eq!(neg_price.to_string(), "-123456789");
 
         let neg_frac = U256FD128::new(!U256FD128::from_whole(1).0 + U256::one());
@@ -385,7 +405,7 @@ mod tests {
         assert_eq!(neg_one.abs(), one);
         assert!(neg_one.is_negative());
 
-        let large = U256FD128::from_whole(123456789);
+        let large = U256FD128::from_whole(123_456_789);
         let neg_large = U256FD128::new(!large.0 + U256::one());
         assert_eq!(neg_large.sign(), -1);
         assert_eq!(neg_large.abs(), large);
@@ -497,8 +517,7 @@ mod tests {
         assert_eq!(
             squared.raw(),
             U256::zero(),
-            "Expected 0² to equal 0, but was {}",
-            squared
+            "Expected 0² to equal 0, but was {squared}"
         );
     }
 

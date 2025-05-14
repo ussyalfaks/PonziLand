@@ -49,6 +49,7 @@ pub enum RawToriiData {
 }
 
 impl RawToriiData {
+    #[must_use]
     pub fn name(&self) -> &str {
         match self {
             RawToriiData::Json { name, .. } => name,
@@ -67,8 +68,12 @@ struct QueryResponse {
 }
 
 impl ToriiClient {
+    /// Create a new instance of `ToriiClient`.
+    ///
+    /// # Errors
+    /// Returns an error if the torii connection cannot be started.
     pub async fn new(config: &ToriiConfiguration) -> Result<Self, Error> {
-        let relay_url = "".into();
+        let relay_url = String::new();
         let grpc_client = GrpcClient::new(config.base_url.clone(), relay_url, config.world_address)
             .await
             .map_err(Error::ToriiInitializationError)?;
@@ -81,30 +86,48 @@ impl ToriiClient {
         })
     }
 
-    pub async fn get_all_events_after(
+    /// Get all events after a given instant.
+    ///
+    /// # Errors
+    /// Returns an error if the SQL query fails.
+    pub fn get_all_events_after(
         &self,
         instant: chrono::DateTime<Utc>,
     ) -> Result<impl Stream<Item = RawToriiData>, Error> {
         self.do_events_sql_request(format!("em.created_at > \"{}\"", instant.format("%F %T")))
-            .await
     }
 
-    pub async fn get_all_events(&self) -> Result<impl Stream<Item = RawToriiData>, Error> {
-        self.do_events_sql_request("1=1").await
+    /// Get all events.
+    ///
+    /// # Errors
+    /// Returns an error if the SQL query fails.
+    pub fn get_all_events(&self) -> Result<impl Stream<Item = RawToriiData>, Error> {
+        self.do_events_sql_request("1=1")
     }
 
-    pub async fn get_all_entities(&self) -> Result<impl Stream<Item = RawToriiData>, Error> {
-        self.do_entities_sql_request("1=1").await
+    /// Get all entities.
+    ///
+    /// # Errors
+    /// Returns an error if the SQL query fails.
+    pub fn get_all_entities(&self) -> Result<impl Stream<Item = RawToriiData>, Error> {
+        self.do_entities_sql_request("1=1")
     }
 
-    pub async fn get_all_entities_after(
+    /// Get all entities after a given instant.
+    ///
+    /// # Errors
+    /// Returns an error if the SQL query fails.
+    pub fn get_all_entities_after(
         &self,
         instant: chrono::DateTime<Utc>,
     ) -> Result<impl Stream<Item = RawToriiData>, Error> {
         self.do_entities_sql_request(format!("e.created_at > \"{}\"", instant.format("%F %T")))
-            .await
     }
 
+    /// Subscribe to events.
+    ///
+    /// # Errors
+    /// Returns an error if the subscription fails.
     pub async fn subscribe_events(&self) -> Result<impl Stream<Item = RawToriiData>, Error> {
         let grpc_stream = self
             .grpc_client
@@ -130,7 +153,7 @@ impl ToriiClient {
         Ok(event_stream)
     }
 
-    async fn do_entities_sql_request(
+    fn do_entities_sql_request(
         &self,
         r#where: impl Into<String>,
     ) -> Result<impl Stream<Item = RawToriiData>, Error> {
@@ -143,10 +166,10 @@ impl ToriiClient {
                 WHERE {where}
                 LIMIT 100 OFFSET {current_offset};
                 "#)
-        }).await
+        })
     }
 
-    async fn do_events_sql_request(
+    fn do_events_sql_request(
         &self,
         r#where: impl Into<String>,
     ) -> Result<impl Stream<Item = RawToriiData>, Error> {
@@ -159,10 +182,11 @@ impl ToriiClient {
                 WHERE {where}
                 LIMIT 100 OFFSET {current_offset};
                 "#)
-        }).await
+        })
     }
 
-    async fn do_request<F, T>(&self, request: F) -> Result<impl Stream<Item = RawToriiData>, Error>
+    #[allow(clippy::unnecessary_wraps)] // This actually makes sense
+    fn do_request<F, T>(&self, request: F) -> Result<impl Stream<Item = RawToriiData>, Error>
     where
         T: Into<String>,
         // We need a function that:
@@ -188,9 +212,9 @@ impl ToriiClient {
 
                 if request.is_empty() {
                     break;
-                } else {
-                    current_offset += 100;
                 }
+
+                current_offset += 100;
 
                 // We can send data through the wire.
                 for elem in request {

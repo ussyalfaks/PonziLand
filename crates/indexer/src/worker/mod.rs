@@ -13,6 +13,7 @@ impl Default for MonitorManager {
 }
 
 impl MonitorManager {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             monitor: Cell::new(Monitor::new()),

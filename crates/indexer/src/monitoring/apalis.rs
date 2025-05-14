@@ -17,6 +17,7 @@ pub struct MonitoringLayer {
 }
 
 impl MonitoringLayer {
+    #[must_use]
     pub fn new(namespace: &'static str) -> Self {
         Self { namespace }
     }

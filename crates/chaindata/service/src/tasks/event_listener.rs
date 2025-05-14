@@ -1,16 +1,13 @@
 use std::sync::Arc;
 
+use chaindata_models::events::{EventId, FetchedEvent};
+use chaindata_repository::event::Repository as EventRepository;
 use chrono::Utc;
+use ponziland_models::events::EventData;
 use tokio::select;
 use tokio_stream::StreamExt;
 use torii_ingester::{RawToriiData, ToriiClient};
 use tracing::{debug, info};
-use uuid::Uuid;
-
-use crate::{
-    models::event::{EventData, EventId, FilledEvent},
-    repositories::event::EventRepository,
-};
 
 use super::Task;
 
@@ -35,23 +32,29 @@ impl EventListenerTask {
             RawToriiData::Grpc(data) => {
                 debug!("Processing GRPC event");
 
-                FilledEvent {
+                FetchedEvent {
                     id: EventId::new(),
                     at: Utc::now().naive_utc(),
                     data: EventData::try_from(data)
-                        .expect("An error occurred while deserializing model"),
+                        .expect("An error occurred while deserializing model")
+                        .into(),
                 }
             }
-            RawToriiData::Json { name, data, at } => FilledEvent {
-                id: EventId(Uuid::new_v4()),
-                at: at.naive_utc(),
-                data: EventData::from_json(&name, data.clone()).unwrap_or_else(|_| {
-                    panic!(
-                        "An error occurred while deserializing model for event {}: {:#?}",
-                        name, data
-                    )
-                }),
-            },
+            RawToriiData::Json { name, data, at } => {
+                debug!("Processing JSON event");
+
+                FetchedEvent {
+                    id: EventId::new(),
+                    at: at.naive_utc(),
+                    data: EventData::from_json(&name, data.clone())
+                        .unwrap_or_else(|_| {
+                            panic!(
+                                "An error occurred while deserializing model for event {name}: {data:#?}"
+                            )
+                        })
+                        .into(),
+                }
+            }
         };
 
         self.event_repository
@@ -76,7 +79,6 @@ impl Task for EventListenerTask {
         let events_catchup = self
             .client
             .get_all_events_after(last_check)
-            .await
             .expect("Error while fetching entities");
 
         let events_listener = self
@@ -92,20 +94,17 @@ impl Task for EventListenerTask {
         loop {
             select! {
                 maybe_event = events.next() => {
-                    match maybe_event {
-                        Some(event) => {
-                            info!("Processing new event");
-                            self.process_event(event).await;
-                        }
-                        None => {
-                            info!("Event stream completed, exiting event processing loop");
-                            break;
-                        }
+                    if let Some(event) = maybe_event {
+                        info!("Processing new event");
+                        self.process_event(event).await;
+                    } else {
+                        info!("Event stream completed, exiting event processing loop");
+                        break;
                     }
                 },
                 stop_result = &mut rx => {
                     match stop_result {
-                        Ok(_) => info!("Received stop signal, shutting down event processing"),
+                        Ok(()) => info!("Received stop signal, shutting down event processing"),
                         Err(e) => info!("Stop channel closed unexpectedly: {}", e),
                     }
                     break;

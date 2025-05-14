@@ -1,3 +1,5 @@
+#![allow(clippy::missing_errors_doc)]
+
 use std::{env, sync::Arc};
 
 use anyhow::{Context, Result};
@@ -56,8 +58,13 @@ async fn main() -> Result<()> {
 
     let monitor = MonitorManager::new();
 
-    let token_service = Arc::new(TokenService::new(&config));
-    let ekubo = EkuboService::new(&config, token_service.clone(), &monitor).await;
+    let token_service = Arc::new(
+        TokenService::new(&config).with_context(|| "Error while setting up token service")?,
+    );
+
+    let ekubo = EkuboService::new(&config, token_service.clone(), &monitor)
+        .await
+        .with_context(|| "Error while setting up ekubo config")?;
 
     let options = PgConnectOptions::new().application_name("sql-migrator");
     let pool = PgPool::connect_with(options)
@@ -68,13 +75,14 @@ async fn main() -> Result<()> {
         pool.clone(),
         ChainDataServiceConfiguration {
             torii_url: config.torii.torii_url.clone().into(),
-            world_address: config.torii.world_address.to_fixed_hex_string(),
+            world_address: config.torii.world_address,
         },
     )
-    .await;
+    .await
+    .with_context(|| "Impossible to setup the chain data service!")?;
 
     // Start it for the test
-    chaindata_service.start().await;
+    chaindata_service.start();
 
     let app_state = AppState {
         token_service: token_service.clone(),
@@ -134,7 +142,7 @@ async fn main() -> Result<()> {
 
     let http = axum::serve(listener, app);
     let monitor = monitor.build().run();
-    let monitoring = listen_monitoring(&config).await;
+    let monitoring = listen_monitoring(&config).await?;
 
     select! {
         _ = http => {},
@@ -143,7 +151,7 @@ async fn main() -> Result<()> {
         _ = &mut stop_rx => {
             info!("Cancellation requested.");
             // Stop the chaindata service
-            chaindata_service.stop().await;
+            chaindata_service.stop();
         }
     }
 

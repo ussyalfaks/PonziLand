@@ -49,11 +49,7 @@ jobs:
 
       - run: cargo nextest run --all-features
         env:
-<<<<<<< HEAD
           DATABASE_URL: postgres://postgres:admin@localhost:5432/postgres
-=======
-          DATABASE_URL: postgres://postgres:admin@localhost:5432/
->>>>>>> 2573359 (ci: Another attempt at fixing the DATABASE_URL format)
           CARGO_TERM_COLOR: always
 
   rust-format:

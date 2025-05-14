@@ -24,14 +24,29 @@ pub enum Error {
 }
 
 pub trait FromPrimitive: Sized {
+    /// Converts a `Primitive` into the implementing type.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the `Primitive` cannot be converted into the implementing type.
     fn from_primitive(primitive: &Primitive) -> Result<Self, Error>;
 }
 
 pub trait FromEnum: Sized {
+    /// Converts an `Enum` into the implementing type.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the `Enum` cannot be converted into the implementing type.
     fn from_enum(variant: &Enum) -> Result<Self, Error>;
 }
 
 pub trait PrimitiveInto<T: Sized> {
+    /// Converts the primitive into the implementing type.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the `Primitive` cannot be converted into the implementing type.
     fn to_value(&self) -> Result<T, Error>;
 }
 
@@ -73,10 +88,10 @@ impl_from_primitive!(as_bool, bool);
 impl FromPrimitive for Felt {
     fn from_primitive(primitive: &Primitive) -> Result<Self, Error> {
         match *primitive {
-            Primitive::Felt252(Some(e)) => Ok(e),
-            Primitive::ContractAddress(Some(e)) => Ok(e),
-            Primitive::ClassHash(Some(e)) => Ok(e),
-            Primitive::EthAddress(Some(e)) => Ok(e),
+            Primitive::ContractAddress(Some(e))
+            | Primitive::ClassHash(Some(e))
+            | Primitive::EthAddress(Some(e))
+            | Primitive::Felt252(Some(e)) => Ok(e),
 
             actual => Err(Error::InvalidValue {
                 expected: "Felt-like",
@@ -87,6 +102,10 @@ impl FromPrimitive for Felt {
 }
 
 // Red: This only works for unit enums, but this is all the time I have to do for now.
+/// Deserialize an enum from a map with a single key.
+///
+/// # Errors
+/// Returns an error if the input is not a map with a single key.
 pub fn torii_enum_deserializer<'de, T, D>(deserializer: D) -> Result<T, D::Error>
 where
     D: Deserializer<'de>,

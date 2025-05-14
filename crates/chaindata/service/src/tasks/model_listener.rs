@@ -1,18 +1,13 @@
 use std::{cmp::max, sync::Arc};
 
+use chaindata_models::models::{LandModel, LandStakeModel};
+use chaindata_repository::{LandRepository, LandStakeRepository};
 use chrono::{DateTime, Utc};
+use ponziland_models::models::Model;
 use tokio::select;
 use tokio_stream::StreamExt;
 use torii_ingester::{RawToriiData, ToriiClient};
 use tracing::info;
-
-use crate::{
-    models::{
-        entities::{land::LandModel, land_stake::LandStakeModel},
-        model::Model,
-    },
-    repositories::{land::LandRepository, land_stake::LandStakeRepository},
-};
 
 use super::Task;
 
@@ -21,7 +16,7 @@ use super::Task;
 ///
 /// Supported models:
 /// - Land
-/// - LandStake
+/// - `LandStake`
 /// - Auctions (soon, TODO)
 pub struct ModelListenerTask {
     client: Arc<ToriiClient>,
@@ -103,7 +98,6 @@ impl Task for ModelListenerTask {
         let models_catchup = self
             .client
             .get_all_entities_after(last_check)
-            .await
             .expect("Error while fetching existing entities");
 
         let models_listener = self
@@ -119,19 +113,16 @@ impl Task for ModelListenerTask {
         loop {
             select! {
                 maybe_model = models.next() => {
-                    match maybe_model {
-                        Some(model) => {
-                            self.process_model(model).await;
-                        }
-                        None => {
-                            info!("Model stream completed, exiting model processing loop");
-                            break;
-                        }
+                    if let Some(model) = maybe_model {
+                        self.process_model(model).await;
+                    } else {
+                        info!("Model stream completed, exiting model processing loop");
+                        break;
                     }
                 },
                 stop_result = &mut rx => {
                     match stop_result {
-                        Ok(_) => info!("Received stop signal, shutting down model processing"),
+                        Ok(()) => info!("Received stop signal, shutting down model processing"),
                         Err(e) => info!("Stop channel closed unexpectedly: {}", e),
                     }
                     break;

@@ -1236,17 +1236,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "chaindata-models"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "migrations",
+ "num-bigint",
+ "num-traits",
+ "ponziland-models",
+ "serde",
+ "sqlx",
+ "torii-ingester",
+ "uuid 1.16.0",
+]
+
+[[package]]
+name = "chaindata-repository"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chaindata-models",
+ "chrono",
+ "migrations",
+ "sqlx",
+]
+
+[[package]]
 name = "chaindata-service"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "chaindata-models",
+ "chaindata-repository",
  "chrono",
  "futures-util",
  "migrations",
- "num-bigint",
- "num-traits",
+ "ponziland-models",
  "serde",
- "serde-aux",
  "serde_json",
  "sqlx",
  "starknet 0.14.0",
@@ -2160,7 +2186,6 @@ checksum = "da0e4dd2a88388a1f4ccc7c9ce104604dab68d9f408dc34cd45823d5a9069095"
 dependencies = [
  "futures-core",
  "futures-sink",
- "nanorand",
  "spin 0.9.8",
 ]
 
@@ -3161,7 +3186,6 @@ dependencies = [
  "chrono",
  "confique",
  "ekubo",
- "flume",
  "http 1.3.1",
  "metrics",
  "metrics-exporter-prometheus",
@@ -4269,15 +4293,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "nanorand"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a51313c5820b0b02bd422f4b44776fbf47961755c74ce64afc73bfad10226c3"
-dependencies = [
- "getrandom 0.2.15",
-]
-
-[[package]]
 name = "native-tls"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4883,6 +4898,18 @@ dependencies = [
  "cpufeatures",
  "opaque-debug",
  "universal-hash",
+]
+
+[[package]]
+name = "ponziland-models"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde-aux",
+ "serde_json",
+ "starknet 0.14.0",
+ "torii-ingester",
 ]
 
 [[package]]

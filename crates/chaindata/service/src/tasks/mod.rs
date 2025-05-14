@@ -35,7 +35,7 @@ impl<T: Task + 'static> TaskWrapper<T> {
         }
     }
 
-    pub async fn start(&self) {
+    pub fn start(&self) {
         let (tx, rx) = oneshot::channel();
 
         // Store the sender in the mutex

@@ -1,3 +1,10 @@
+// All the behavior should be tested correctly, so those lints are not relevent in this case.
+#![allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss
+)]
+
 use std::{
     fmt::{self, Display},
     num::ParseIntError,
@@ -27,24 +34,28 @@ where
 }
 
 impl U256 {
+    #[must_use]
     pub fn from_words(low: u128, high: u128) -> Self {
         U256(RawU256::from_words(low, high))
     }
 
+    #[must_use]
     pub fn to_words(&self) -> (u128, u128) {
         (self.0.low(), self.0.high())
     }
 
+    #[must_use]
     pub fn from_u64_words(value: [u64; 4]) -> Self {
         // Convert 4 u64 words into 2 u128 words (low, high)
         // low = word0 + (word1 << 64)
         // high = word2 + (word3 << 64)
         U256(RawU256::from_words(
-            (value[0] as u128) + ((value[1] as u128) << 64),
-            (value[2] as u128) + ((value[3] as u128) << 64),
+            u128::from(value[0]) + (u128::from(value[1]) << 64),
+            u128::from(value[2]) + (u128::from(value[3]) << 64),
         ))
     }
 
+    #[must_use]
     pub fn to_u64_words(&self) -> [u64; 4] {
         let high = self.0.high();
         let low = self.0.low();
@@ -148,7 +159,7 @@ impl<'de> Deserialize<'de> for U256 {
                 E: de::Error,
             {
                 U256::from_str(v)
-                    .map_err(|e| de::Error::custom(format!("Failed to parse U256: {}", e)))
+                    .map_err(|e| de::Error::custom(format!("Failed to parse U256: {e}")))
             }
 
             fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
@@ -217,7 +228,7 @@ mod test {
         let json = "\"123456789\"";
         assert_eq!(
             serde_json::from_str::<U256>(json).expect("Deserialization error"),
-            U256::from(123456789u32)
+            U256::from(123_456_789u32)
         );
     }
 
@@ -250,13 +261,13 @@ mod test {
         assert_eq!(val3.to_u64_words(), words3);
 
         // Fourth word (bits 192-255, highest)
-        let words4 = [0u64, 0u64, 0u64, 101112u64];
+        let words4 = [0u64, 0u64, 0u64, 101_112u64];
         let val4 = U256::from_u64_words(words4);
-        assert_eq!(val4, U256::from_words(0, 101112u128 << 64));
+        assert_eq!(val4, U256::from_words(0, 101_112u128 << 64));
         assert_eq!(val4.to_u64_words(), words4);
 
         // Test with a value in all positions
-        let mixed_words = [123u64, 456u64, 789u64, 101112u64];
+        let mixed_words = [123u64, 456u64, 789u64, 101_112u64];
         let mixed_val = U256::from_u64_words(mixed_words);
         assert_eq!(mixed_val.to_u64_words(), mixed_words);
     }
@@ -279,7 +290,7 @@ mod test {
 
         // Max u64 in first word
         assert_eq!(
-            U256::from_words(u64::MAX as u128, 0).to_u64_words(),
+            U256::from_words(u128::from(u64::MAX), 0).to_u64_words(),
             [u64::MAX, 0u64, 0u64, 0u64]
         );
 

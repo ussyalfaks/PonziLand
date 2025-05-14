@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use std::{env, fs};
 
 use clap::{Parser, Subcommand};
@@ -28,7 +29,13 @@ enum Commands {
 
 async fn migrate() {
     // Connect to the database
-    let mut connection = PgConnectOptions::new()
+    let connection = if let Ok(url) = std::env::var("DATABASE_URL") {
+        PgConnectOptions::from_str(&url).expect("Invalid database url!")
+    } else {
+        PgConnectOptions::new()
+    };
+
+    let mut connection = connection
         .application_name("sql-migrator")
         .connect()
         .await
@@ -39,13 +46,13 @@ async fn migrate() {
         .await
         .expect("Exception raised while migrating");
 
-    info!("Migrated database successfully!")
+    info!("Migrated database successfully!");
 }
 
 async fn create_new_migration(name: String) {
     let current_count = MIGRATOR.iter().len();
 
-    let name = name.replace(" ", "-").replace("_", "-").to_lowercase();
+    let name = name.replace([' ', '_'], "-").to_lowercase();
 
     // Create a new file in the sql directory
     let file_name = format!("sql/{:0>4}_{}.sql", current_count + 1, name);
@@ -60,17 +67,19 @@ async fn create_new_migration(name: String) {
         .expect("Error while creating migration file");
 
     file.write_all(
-        r#"-- Write your migration here!
-            "#
-        .trim_end_matches(" ")
+        r"-- Write your migration here!
+            "
+        .trim_end_matches(' ')
         .as_bytes(),
     )
     .await
     .expect("Failed to write...");
 
-    info!("Created new migration at {file_name}!")
+    info!("Created new migration at {file_name}!");
 }
 
+// Come on, this is a binary...
+#[allow(clippy::missing_panics_doc)]
 #[tokio::main]
 pub async fn main() {
     tracing_subscriber::fmt::fmt()
@@ -117,5 +126,5 @@ async fn recreate_database() {
         .await
         .expect("Exception raised while migrating");
 
-    info!("Recreated database successfully!")
+    info!("Recreated database successfully!");
 }

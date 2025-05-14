@@ -21,12 +21,15 @@ sqlx = { workspace = true, features = [
 ] }
 chrono.workspace = true
 uuid = { workspace = true, features = ["serde"] }
-async-trait = "0.1.88"
-num-bigint = "0.4.6"
-num-traits = "0.2.19"
+async-trait.workspace = true
 futures-util = "0.3.31"
 tokio-stream = "0.1.17"
 tracing.workspace = true
-serde-aux = "4.7.0"
 thiserror.workspace = true
 migrations = { path = "../../migrations" }
+ponziland-models = { path = "../../ponziland-models" }
+chaindata-repository = { path = "../repository" }
+chaindata-models = { path = "../models" }
+
+[lints]
+workspace = true

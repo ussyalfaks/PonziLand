@@ -1,6 +1,7 @@
 use std::future::ready;
 
 use ::axum::{routing::get, serve, serve::Serve, Router};
+use anyhow::{Context, Result};
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle};
 use tracing::info;
 
@@ -9,20 +10,27 @@ use crate::config::Conf;
 pub mod apalis;
 pub mod axum;
 
-pub async fn listen_monitoring(config: &Conf) -> Serve<tokio::net::TcpListener, Router, Router> {
-    let recorder = recorder();
+/// Listen for monitoring requests.
+///
+/// # Errors
+///
+/// This function will return an error if the TCP listener fails to bind to the specified address.
+///
+pub async fn listen_monitoring(
+    config: &Conf,
+) -> Result<Serve<tokio::net::TcpListener, Router, Router>> {
+    let recorder = recorder()?;
 
     // run our app with hyper, listening globally on the chosen address and port
-    let listener = tokio::net::TcpListener::bind(format!(
-        "{}:{}",
-        config.monitoring.address, config.monitoring.port
-    ))
-    .await
-    .unwrap();
+    let address = format!("{}:{}", config.monitoring.address, config.monitoring.port);
+
+    let listener = tokio::net::TcpListener::bind(&address)
+        .await
+        .with_context(|| format!("Attempt to listed on {address} failed!"))?;
 
     info!(
         "Monitoring service listening on http://{}{}",
-        listener.local_addr().unwrap(),
+        listener.local_addr()?,
         config.monitoring.path
     );
 
@@ -33,11 +41,16 @@ pub async fn listen_monitoring(config: &Conf) -> Serve<tokio::net::TcpListener, 
             get(move || ready(recorder.render())),
         );
 
-    serve(listener, app)
+    Ok(serve(listener, app))
 }
 
-pub fn recorder() -> PrometheusHandle {
+/// Create a Prometheus recorder.
+///
+/// # Errors
+///
+/// This function will return an error if the Prometheus recorder fails to install.
+pub fn recorder() -> Result<PrometheusHandle> {
     PrometheusBuilder::new()
         .install_recorder()
-        .expect("Could not install Prometheus recorder")
+        .with_context(|| "Could not install Prometheus recorder")
 }

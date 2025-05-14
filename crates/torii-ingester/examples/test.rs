@@ -19,12 +19,9 @@ pub async fn main() {
     .expect("Failed to initialize client");
 
     // try to fetch every event
-    let mut event_stream = client
-        .get_all_events()
-        .await
-        .expect("Failed to fetch events");
+    let mut event_stream = client.get_all_events().expect("Failed to fetch events");
 
     while let Some(event) = event_stream.next().await {
-        println!("{:?}", event);
+        println!("{event:?}");
     }
 }

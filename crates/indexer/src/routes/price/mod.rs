@@ -37,6 +37,7 @@ impl Default for PriceRoute {
 }
 
 impl PriceRoute {
+    #[must_use]
     pub fn new() -> Self {
         Self
     }
@@ -45,6 +46,7 @@ impl PriceRoute {
         Router::new().route("/", get(Self::get_price))
     }
 
+    #[allow(clippy::unused_async)] // required for axum
     async fn get_price(
         State(token_service): State<Arc<TokenService>>,
         State(ekubo_service): State<Arc<EkuboService>>,

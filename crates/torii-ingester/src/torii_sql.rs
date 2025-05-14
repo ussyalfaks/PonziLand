@@ -32,24 +32,23 @@ impl SqlClient {
             .into_url()
             .map_err(|e| Error::InvalidUrlError(Some(e)))?;
         if let Some(segment) = url.path_segments() {
-            if segment.last() != Some("sql") {
-                {
-                    let mut segments = url
-                        .path_segments_mut()
-                        .map_err(|_| Error::InvalidUrlError(None))?;
-                    segments.push("sql");
-                }
-
-                Ok(url)
-            } else {
-                // Do nothing, already present
-                Ok(url)
+            if segment.last() == Some("sql") {
+                let mut segments = url
+                    .path_segments_mut()
+                    .map_err(|()| Error::InvalidUrlError(None))?;
+                segments.push("sql");
             }
+
+            Ok(url)
         } else {
             url.join("/sql").map_err(|_| Error::InvalidUrlError(None))
         }
     }
 
+    /// Create a new `SqlClient` instance.
+    ///
+    /// # Errors
+    /// Returns an error if the provided URL is invalid or if the client cannot be created.
     pub fn new<T: IntoUrl>(torii_url: T) -> Result<Self, Error> {
         let prepared_url = Self::make_sql_url(torii_url)?;
 
