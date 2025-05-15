@@ -23,7 +23,8 @@ use tokio::{
     signal::unix::{signal, SignalKind},
 };
 use tower_http::cors::{Any, CorsLayer};
-use tracing::info;
+use tracing::{error, info, level_filters::LevelFilter};
+use tracing_subscriber::EnvFilter;
 use worker::MonitorManager;
 
 pub mod config;
@@ -39,8 +40,12 @@ pub mod monitoring;
 #[tokio::main]
 async fn main() -> Result<()> {
     // initialize tracing
+    let filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::INFO.into())
+        .from_env_lossy();
+
     tracing_subscriber::fmt::fmt()
-        .with_max_level(tracing::Level::DEBUG)
+        .with_env_filter(filter)
         .init();
 
     let config_path = env::var("CONFIG_PATH").unwrap_or("./config.toml".to_string());
@@ -49,6 +54,10 @@ async fn main() -> Result<()> {
 
     if let Ok(true) = std::fs::exists(&config_path) {
         config = config.file(config_path);
+    }
+
+    if let Err(e) = dotenv::dotenv() {
+        error!("Impossible to load dotenv config: {}", e);
     }
 
     let config = config
@@ -76,6 +85,9 @@ async fn main() -> Result<()> {
         ChainDataServiceConfiguration {
             torii_url: config.torii.torii_url.clone().into(),
             world_address: config.torii.world_address,
+            gg_xyz_enabled: config.gg_xyz.enabled,
+            gg_xyz_api_url: config.gg_xyz.api_url.clone(),
+            gg_xyz_api_key: config.gg_xyz.api_key.clone(),
         },
     )
     .await

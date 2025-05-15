@@ -58,6 +58,7 @@ impl ModelListenerTask {
         Ok(max(land_latest, land_stake_latest).and_utc())
     }
 
+    #[allow(clippy::match_wildcard_for_single_variants)]
     async fn process_model(&self, model_data: RawToriiData) {
         let (model, at) = Model::parse(model_data).expect("Error while parsing model data");
         match model {
@@ -78,6 +79,9 @@ impl ModelListenerTask {
                     ))
                     .await
                     .expect("Failed to save land stake model");
+            }
+            _ => {
+                //TODO: Implement this later
             }
         }
     }
@@ -102,7 +106,7 @@ impl Task for ModelListenerTask {
 
         let models_listener = self
             .client
-            .subscribe_events() // No specific subscribe_models in torii_client yet, so using events
+            .subscribe_entities()
             .await
             .expect("Error while subscribing for model updates");
 

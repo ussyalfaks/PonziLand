@@ -1,18 +1,20 @@
-use crate::conversions::Error;
-
 #[derive(thiserror::Error, Debug)]
 pub enum ToriiConversionError {
-    #[error("{0}: No such field")]
+    #[error("No such field: {0}")]
     NoSuchField(String),
-    #[error("{0}: Not a primitive")]
-    NotAPrimitive(String),
-    #[error("{0}: Not an enum")]
-    NotAnEnum(String),
-    #[error("{0}: Wrong type: {1:#?}")]
-    WrongType(String, Error),
 
-    #[error("Unknown variant {0}")]
-    UnknownVariant(String),
-    #[error("JSON parsing error: {0}")]
-    JsonParsingError(#[from] serde_json::Error),
+    #[error("Wrong type: expected {expected}, got {got}")]
+    WrongType { expected: String, got: String },
+
+    #[error("Unknown variant for enum {enum_name}: {variant_name}")]
+    UnknownVariant {
+        enum_name: String,
+        variant_name: String,
+    },
+
+    #[error("JSON deserialization error: {0}")]
+    JsonError(#[from] serde_json::Error),
+
+    #[error("error while processing {0}: {1}")]
+    NestedError(String, Box<ToriiConversionError>),
 }

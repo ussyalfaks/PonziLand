@@ -19,7 +19,7 @@ use serde::{
 };
 use starknet::core::types::U256 as RawU256;
 
-use crate::conversions::{Error, FromPrimitive};
+use crate::{conversions::FromPrimitive, error::ToriiConversionError};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct U256(RawU256);
@@ -201,12 +201,12 @@ impl<'de> Deserialize<'de> for U256 {
 }
 
 impl FromPrimitive for U256 {
-    fn from_primitive(primitive: &Primitive) -> Result<Self, Error> {
+    fn from_primitive(primitive: Primitive) -> Result<Self, ToriiConversionError> {
         match primitive.as_u256() {
             Some(u) => Ok(U256::from(u)),
-            None => Err(Error::InvalidValue {
-                expected: "U256",
-                actual: *primitive,
+            None => Err(ToriiConversionError::WrongType {
+                expected: "U256".to_string(),
+                got: format!("{primitive:?}"),
             }),
         }
     }

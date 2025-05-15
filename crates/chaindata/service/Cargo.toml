@@ -30,6 +30,7 @@ migrations = { path = "../../migrations" }
 ponziland-models = { path = "../../ponziland-models" }
 chaindata-repository = { path = "../repository" }
 chaindata-models = { path = "../models" }
+reqwest.workspace = true
 
 [lints]
 workspace = true

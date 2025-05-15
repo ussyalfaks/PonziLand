@@ -53,28 +53,8 @@ CREATE TABLE event_new_auction (
     floor_price uint_256 NOT NULL
 );
 
-CREATE TABLE event_nuked (
+CREATE TABLE event_land_nuked (
     id uuid NOT NULL PRIMARY KEY,
     location INT4 NOT NULL,
-    owner text NOT NULL,
-    at timestamp without time zone NOT NULL
-);
-
-CREATE TABLE historical_land (
-    id uuid NOT NULL PRIMARY KEY,
-    at timestamp without time zone NOT NULL,
-    location INT4 NOT NULL,
-    bought_at timestamp without time zone NOT NULL,
-    owner text NOT NULL,
-    sell_price uint_256 NOT NULL,
-    token text NOT NULL,
-    level smallint NOT NULL
-);
-
-CREATE TABLE historical_land_stake (
-    id uuid NOT NULL PRIMARY KEY,
-    at timestamp without time zone NOT NULL,
-    location INT4 NOT NULL,
-    last_pay_time timestamp without time zone NOT NULL,
-    amount uint_256 NOT NULL
+    owner text NOT NULL
 );

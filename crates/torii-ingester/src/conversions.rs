@@ -1,77 +1,84 @@
-use std::{
-    fmt::{self},
-    marker::PhantomData,
-};
-
-pub use dojo_types::primitive::Primitive;
-use dojo_types::schema::{Enum, EnumError};
+use core::fmt;
 use serde::{de, Deserialize, Deserializer};
 use starknet::core::types::Felt;
+use std::marker::PhantomData;
 
-#[derive(thiserror::Error, Debug)]
-pub enum Error {
-    #[error("Invalid value: Expected {expected}, got {actual}")]
-    InvalidValue {
-        expected: &'static str,
-        actual: Primitive,
-    },
-    #[error("Field {0}, expected an enum")]
-    NotAnEnum(String),
-    #[error("Invalid enum")]
-    InvalidEnum(#[from] EnumError),
-    #[error("Invalid enum variant: {0}")]
-    InvalidEnumVariant(String),
+use crate::error::ToriiConversionError;
+
+// Re-export the building blocks to dependant crates
+pub use dojo_types::{primitive::Primitive, schema::Ty};
+
+pub trait FromTy: Sized {
+    /// Converts a `Ty` to `Self`.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `ToriiConversionError` if the conversion fails.
+    fn from_ty(value: Ty) -> Result<Self, ToriiConversionError>;
 }
 
 pub trait FromPrimitive: Sized {
-    /// Converts a `Primitive` into the implementing type.
+    /// Converts a `Primitive` to `Self`.
     ///
     /// # Errors
     ///
-    /// Returns an error if the `Primitive` cannot be converted into the implementing type.
-    fn from_primitive(primitive: &Primitive) -> Result<Self, Error>;
+    /// Returns a `ToriiConversionError` if the conversion fails.
+    fn from_primitive(value: Primitive) -> Result<Self, ToriiConversionError>;
 }
 
-pub trait FromEnum: Sized {
-    /// Converts an `Enum` into the implementing type.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the `Enum` cannot be converted into the implementing type.
-    fn from_enum(variant: &Enum) -> Result<Self, Error>;
+impl<T: FromPrimitive> FromTy for T {
+    fn from_ty(value: Ty) -> Result<Self, ToriiConversionError> {
+        match value {
+            Ty::Primitive(prim) => T::from_primitive(prim),
+            other => Err(ToriiConversionError::WrongType {
+                expected: "primitive".to_owned(),
+                got: other.name(),
+            }),
+        }
+    }
 }
 
-pub trait PrimitiveInto<T: Sized> {
-    /// Converts the primitive into the implementing type.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the `Primitive` cannot be converted into the implementing type.
-    fn to_value(&self) -> Result<T, Error>;
-}
+impl<T: FromTy> FromTy for Option<T> {
+    fn from_ty(value: Ty) -> Result<Self, ToriiConversionError> {
+        let enum_data = value
+            .as_enum()
+            .ok_or_else(|| ToriiConversionError::WrongType {
+                expected: "enum".to_string(),
+                got: value.name(),
+            })?;
 
-impl<T: FromPrimitive> PrimitiveInto<T> for Primitive {
-    fn to_value(&self) -> Result<T, Error> {
-        T::from_primitive(self)
+        let variant = enum_data
+            .option()
+            .map_err(|_| ToriiConversionError::UnknownVariant {
+                enum_name: value.name(),
+                variant_name: "#unknown#".to_string(),
+            })?;
+
+        match &*variant.name {
+            "Some" => Ok(Some(T::from_ty(variant.ty.clone()).map_err(|e| {
+                ToriiConversionError::NestedError("Processing Option".to_string(), Box::new(e))
+            })?)),
+            "None" => Ok(None),
+            _ => Err(ToriiConversionError::UnknownVariant {
+                enum_name: value.name(),
+                variant_name: variant.name.clone(),
+            }),
+        }
     }
 }
 
 macro_rules! impl_from_primitive {
-    ($as: ident, $typ: ty) => {
-        impl FromPrimitive for $typ {
-            fn from_primitive(primitive: &Primitive) -> Result<Self, Error> {
-                match primitive.$as() {
-                    Some(u) => Ok(u),
-                    None => Err(Error::InvalidValue {
-                        expected: stringify!($typ),
-                        actual: primitive.clone(),
-                    }),
-                }
+    ($as: ident, $ty: ty) => {
+        impl FromPrimitive for $ty {
+            fn from_primitive(value: Primitive) -> Result<Self, ToriiConversionError> {
+                value.$as().ok_or_else(|| ToriiConversionError::WrongType {
+                    expected: stringify!($ty).to_string(),
+                    got: format!("{:#?}", value),
+                })
             }
         }
     };
 }
-
 impl_from_primitive!(as_i8, i8);
 impl_from_primitive!(as_i16, i16);
 impl_from_primitive!(as_i32, i32);
@@ -86,16 +93,16 @@ impl_from_primitive!(as_bool, bool);
 
 // Handle the special felt case
 impl FromPrimitive for Felt {
-    fn from_primitive(primitive: &Primitive) -> Result<Self, Error> {
-        match *primitive {
+    fn from_primitive(primitive: Primitive) -> Result<Self, ToriiConversionError> {
+        match primitive {
             Primitive::ContractAddress(Some(e))
             | Primitive::ClassHash(Some(e))
             | Primitive::EthAddress(Some(e))
             | Primitive::Felt252(Some(e)) => Ok(e),
 
-            actual => Err(Error::InvalidValue {
-                expected: "Felt-like",
-                actual,
+            actual => Err(ToriiConversionError::WrongType {
+                expected: "Felt-like".to_string(),
+                got: format!("{actual:#?}"),
             }),
         }
     }

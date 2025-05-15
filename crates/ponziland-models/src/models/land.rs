@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
 use serde_aux::prelude::deserialize_number_from_string;
 use torii_ingester::{
-    conversions::{torii_enum_deserializer, Error, FromEnum},
+    conversions::torii_enum_deserializer,
+    conversions::FromTy,
     error::ToriiConversionError,
     get,
-    prelude::{ContractAddress, Enum, Struct},
+    prelude::{ContractAddress, Struct, Ty},
     u256::U256,
 };
 
@@ -18,16 +19,32 @@ pub enum Level {
     Second = 2,
 }
 
-impl FromEnum for Level {
-    fn from_enum(variant: &Enum) -> Result<Level, Error> {
-        match variant.option() {
-            Ok(variant) => match &*variant.name {
-                "Zero" => Ok(Level::Zero),
-                "First" => Ok(Level::First),
-                "Second" => Ok(Level::Second),
-                _ => Err(Error::InvalidEnumVariant(variant.name.clone())),
-            },
-            Err(err) => Err(err.into()),
+impl FromTy for Level {
+    // TODO(Red): When we bump the minimum rustc version, we can use if let, that could reduce nesting.
+    fn from_ty(value: Ty) -> Result<Self, ToriiConversionError> {
+        match value {
+            Ty::Enum(enum_data) => {
+                if let Ok(variant) = enum_data.option() {
+                    match &*variant.name {
+                        "Zero" => Ok(Level::Zero),
+                        "First" => Ok(Level::First),
+                        "Second" => Ok(Level::Second),
+                        name => Err(ToriiConversionError::UnknownVariant {
+                            enum_name: "Option".to_string(),
+                            variant_name: name.to_string(),
+                        }),
+                    }
+                } else {
+                    Err(ToriiConversionError::WrongType {
+                        expected: "enum".to_string(),
+                        got: enum_data.name,
+                    })
+                }
+            }
+            _ => Err(ToriiConversionError::WrongType {
+                expected: "enum".to_string(),
+                got: value.name(),
+            }),
         }
     }
 }
@@ -50,12 +67,12 @@ impl TryFrom<Struct> for Land {
 
     fn try_from(entity: Struct) -> Result<Self, Self::Error> {
         Ok(Self {
-            location: get!(entity, "land_location", Location)?,
+            location: get!(entity, "location", Location)?,
             block_date_bought: get!(entity, "block_date_bought", u64)?,
             owner: get!(entity, "owner", ContractAddress)?,
             sell_price: get!(entity, "sell_price", U256)?,
             token_used: get!(entity, "token_used", ContractAddress)?,
-            level: get!(entity, "level", enum Level)?,
+            level: get!(entity, "level", Level)?,
         })
     }
 }

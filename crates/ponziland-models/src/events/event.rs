@@ -45,7 +45,10 @@ impl EventData {
             "ponzi_land-VerifierUpdatedEvent" => {
                 EventData::VerifierUpdated(serde_json::from_value(json)?)
             }
-            name => Err(ToriiConversionError::UnknownVariant(name.to_string()))?,
+            name => Err(ToriiConversionError::UnknownVariant {
+                enum_name: "Events".to_string(),
+                variant_name: name.to_string(),
+            })?,
         })
     }
 }
@@ -73,7 +76,10 @@ impl TryFrom<Struct> for EventData {
             "ponzi_land-VerifierUpdatedEvent" => {
                 EventData::VerifierUpdated(VerifierUpdatedEvent::try_from(value)?)
             }
-            name => Err(ToriiConversionError::UnknownVariant(name.to_string()))?,
+            name => Err(ToriiConversionError::UnknownVariant {
+                enum_name: "Events".to_string(),
+                variant_name: name.to_string(),
+            })?,
         })
     }
 }

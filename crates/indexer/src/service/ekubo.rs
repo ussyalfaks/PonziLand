@@ -112,7 +112,7 @@ impl EkuboService {
             let price = match self.client.read_pool_price(&pool.key).await {
                 Ok(price) => price,
                 Err(err) => {
-                    error!("Failed to fetch price for pool {}: {}", pool.key, err);
+                    error!("Failed to fetch price for pool {}: {:#?}", pool.key, err);
                     continue 'token_loop;
                 }
             };

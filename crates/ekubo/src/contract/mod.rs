@@ -7,6 +7,6 @@ pub mod pool_price;
 pub enum Error {
     #[error("Unable to serialize / deserialize response")]
     SerdeError(#[from] CodecError),
-    #[error("An error occurred while interacting with the RPC")]
+    #[error("An error occurred while interacting with the RPC: {0}")]
     RpcError(String),
 }

@@ -10,7 +10,10 @@ use serde::{
     ser::SerializeMap,
     Deserialize, Deserializer, Serialize,
 };
-use torii_ingester::conversions::{Error, FromPrimitive, Primitive};
+use torii_ingester::{
+    conversions::{FromPrimitive, Primitive},
+    error::ToriiConversionError,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(transparent)]
@@ -35,12 +38,12 @@ impl From<(u64, u64)> for Location {
 }
 
 impl FromPrimitive for Location {
-    fn from_primitive(primitive: &Primitive) -> Result<Self, Error> {
+    fn from_primitive(primitive: Primitive) -> Result<Self, ToriiConversionError> {
         match primitive.as_u16() {
             Some(e) => Ok(Location(u64::from(e))),
-            None => Err(Error::InvalidValue {
-                expected: "Location (u16)",
-                actual: *primitive,
+            None => Err(ToriiConversionError::WrongType {
+                expected: "Location (u16)".to_string(),
+                got: format!("{primitive:?}"),
             }),
         }
     }

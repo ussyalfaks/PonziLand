@@ -52,6 +52,7 @@ impl From<EventData> for DataModel {
 }
 
 /// An event where the type has been fetched from the database, and is ready to use.
+#[derive(Clone, Debug)]
 pub struct FetchedEvent {
     pub id: Id,
     pub at: chrono::NaiveDateTime,

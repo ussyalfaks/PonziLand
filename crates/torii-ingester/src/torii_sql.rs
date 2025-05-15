@@ -32,7 +32,7 @@ impl SqlClient {
             .into_url()
             .map_err(|e| Error::InvalidUrlError(Some(e)))?;
         if let Some(segment) = url.path_segments() {
-            if segment.last() == Some("sql") {
+            if segment.last() != Some("sql") {
                 let mut segments = url
                     .path_segments_mut()
                     .map_err(|()| Error::InvalidUrlError(None))?;
@@ -82,7 +82,8 @@ impl SqlClient {
 
         if response.status() == 200 {
             // Return the parsed response
-            response.json().await.map_err(Error::ResponseError)
+            let body = response.text().await.map_err(Error::ResponseError)?;
+            serde_json::from_str(&body).map_err(|_| Error::BadResponse(Some(body)))
         } else {
             Err(Error::BadResponse(response.text().await.ok()))
         }

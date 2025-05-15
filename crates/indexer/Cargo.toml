@@ -45,6 +45,8 @@ sqlx = { workspace = true, features = [
     "chrono",
     "bigdecimal",
 ] }
+dotenv = "0.15.0"
 
 [lints]
 workspace = true
+

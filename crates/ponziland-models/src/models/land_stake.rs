@@ -17,7 +17,7 @@ impl TryFrom<Struct> for LandStake {
 
     fn try_from(entity: Struct) -> Result<Self, Self::Error> {
         Ok(Self {
-            location: get!(entity, "land_location", Location)?,
+            location: get!(entity, "location", Location)?,
             last_pay_time: get!(entity, "last_pay_time", u64)?,
             amount: get!(entity, "amount", U256)?,
         })

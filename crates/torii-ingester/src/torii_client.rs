@@ -153,6 +153,35 @@ impl ToriiClient {
         Ok(event_stream)
     }
 
+    /// Subscribe to events.
+    ///
+    /// # Errors
+    /// Returns an error if the subscription fails.
+    pub async fn subscribe_entities(&self) -> Result<impl Stream<Item = RawToriiData>, Error> {
+        let grpc_stream = self
+            .grpc_client
+            .on_entity_updated(vec![]) // Get everything
+            .await
+            .map_err(Error::GrpcSubscriptionError)?;
+
+        // Red: Ok, this might look a bit difficult, but let's take some time to go into
+        // more detail into what this does:
+        // - It takes a new event from the grpc stream when one it available (see the await)
+        // - Validate that we get values with if let (convert back from a result)
+        // - For each updated event in the model, "yield" (forward) the event to the stream
+        let event_stream = stream! {
+            for await value in grpc_stream {
+                if let Ok((_subscription_id, entity)) = value {
+                    for model in entity.models {
+                        yield RawToriiData::Grpc(model)
+                    }
+                }
+            }
+        };
+
+        Ok(event_stream)
+    }
+
     fn do_entities_sql_request(
         &self,
         r#where: impl Into<String>,

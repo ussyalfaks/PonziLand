@@ -3,7 +3,11 @@ use std::{fmt::Display, ops::Deref, str::FromStr};
 use num_bigint::{BigInt, Sign};
 use serde::{Deserialize, Serialize};
 use sqlx::{types::BigDecimal, Postgres, Type};
-use torii_ingester::{conversions::FromPrimitive, prelude::U256 as RawU256};
+use torii_ingester::{
+    conversions::{FromPrimitive, Primitive},
+    error::ToriiConversionError,
+    prelude::U256 as RawU256,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -17,9 +21,7 @@ impl From<RawU256> for U256 {
 }
 
 impl FromPrimitive for U256 {
-    fn from_primitive(
-        primitive: &torii_ingester::conversions::Primitive,
-    ) -> Result<Self, torii_ingester::conversions::Error> {
+    fn from_primitive(primitive: Primitive) -> Result<Self, ToriiConversionError> {
         Ok(U256(RawU256::from_primitive(primitive)?))
     }
 }

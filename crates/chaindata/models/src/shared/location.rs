@@ -3,7 +3,10 @@ use std::ops::Deref;
 use ponziland_models::shared::Location as RawLocation;
 use serde::{Deserialize, Serialize};
 use sqlx::{prelude::Type, Decode, Encode, Postgres};
-use torii_ingester::conversions::{Error, FromPrimitive, Primitive};
+use torii_ingester::{
+    conversions::{FromPrimitive, Primitive},
+    error::ToriiConversionError,
+};
 
 // Database-aware wrapper for the on-chain Location.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -18,7 +21,7 @@ impl Type<Postgres> for Location {
 }
 
 impl FromPrimitive for Location {
-    fn from_primitive(value: &Primitive) -> Result<Location, Error> {
+    fn from_primitive(value: Primitive) -> Result<Location, ToriiConversionError> {
         RawLocation::from_primitive(value).map(Location)
     }
 }
