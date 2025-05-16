@@ -6507,6 +6507,7 @@ dependencies = [
  "memchr",
  "once_cell",
  "percent-encoding",
+ "rustls 0.23.26",
  "serde",
  "serde_json",
  "sha2",
@@ -6517,6 +6518,7 @@ dependencies = [
  "tracing",
  "url",
  "uuid 1.16.0",
+ "webpki-roots 0.26.8",
 ]
 
 [[package]]
