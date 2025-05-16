@@ -44,6 +44,7 @@ in {
 
     # Faster test pattern
     cargo-nextest
+    sqlx-cli
   ];
   env = {
     LD_LIBRARY_PATH = lib.makeLibraryPath config.packages;
