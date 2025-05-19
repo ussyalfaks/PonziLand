@@ -1,17 +1,19 @@
 <script lang="ts">
-  import type { LandWithActions } from '$lib/api/land.svelte';
-  import { useDojo } from '$lib/contexts/dojo';
-  import { claimAllOfToken } from '$lib/stores/claim.store.svelte';
-  import { groupLands, padAddress } from '$lib/utils';
-  // import LandHudInfo from '$lib/components/land/hud/land-hud-info.svelte';
-  import { ScrollArea } from '$lib/components/ui/scroll-area';
-  import LandNukeTime from '$lib/components/+game-map/land/land-nuke-time.svelte';
-  import { moveCameraTo } from '$lib/stores/camera.store';
-  import { parseLocation } from '$lib/utils';
-  import { createLandWithActions, selectedLand } from '$lib/stores/store.svelte';
+  import type { LandWithActions } from '$lib/api/land';
   import { BuildingLand } from '$lib/api/land/building_land';
-  import { onMount, onDestroy } from 'svelte';
   import { LandTileStore } from '$lib/api/land_tiles.svelte';
+  import LandHudInfo from '$lib/components/+game-map/land/hud/land-hud-info.svelte';
+  import LandNukeTime from '$lib/components/+game-map/land/land-nuke-time.svelte';
+  import { ScrollArea } from '$lib/components/ui/scroll-area';
+  import { useDojo } from '$lib/contexts/dojo';
+  import { moveCameraTo } from '$lib/stores/camera.store';
+  import { claimAllOfToken } from '$lib/stores/claim.store.svelte';
+  import {
+    createLandWithActions,
+    selectedLand,
+  } from '$lib/stores/store.svelte';
+  import { groupLands, padAddress, parseLocation } from '$lib/utils';
+  import { onDestroy, onMount } from 'svelte';
 
   const dojo = useDojo();
   const account = () => {
@@ -39,29 +41,34 @@
 
   onMount(async () => {
     console.log('Mounting my-lands-widget');
-    
+
     // Setup the store with the client
     await landTileStore.setup(dojo.client);
     console.log('Store setup complete');
 
     const allLands = landTileStore.getAllLands();
     console.log('Got allLands store', allLands);
-    
+
     unsubscribe = allLands.subscribe((landsData) => {
       console.log('Received lands update', landsData);
       if (!landsData) return;
-      
+
       const filteredLands = landsData
         .filter((land): land is BuildingLand => {
           if (BuildingLand.is(land)) {
-            const owner = padAddress(account()?.getWalletAccount()?.address ?? '');
-            console.log('Comparing owners:', { landOwner: land.owner, userOwner: owner });
+            const owner = padAddress(
+              account()?.getWalletAccount()?.address ?? '',
+            );
+            console.log('Comparing owners:', {
+              landOwner: land.owner,
+              userOwner: owner,
+            });
             return land.owner === owner;
           }
           return false;
         })
         .map((land) => createLandWithActions(land));
-      
+
       console.log('Filtered lands:', filteredLands);
       lands = filteredLands;
     });
@@ -98,7 +105,7 @@
                   selectedLand.value = land;
                 }}
               >
-                <!-- <LandHudInfo {land} isOwner={true} showLand={true} /> -->
+                <LandHudInfo {land} isOwner={true} showLand={true} />
                 <div class="translate-y-4 p-4">
                   <LandNukeTime {land} />
                 </div>
