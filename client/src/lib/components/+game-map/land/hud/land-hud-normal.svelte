@@ -1,11 +1,10 @@
 <script lang="ts">
-  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
-  import type { SelectedLand } from '$lib/stores/stores.svelte';
-  import type { LandYieldInfo, YieldInfo } from '$lib/interfaces';
-  import type { Token } from '$lib/interfaces/token';
-  import data from '$profileData';
-  import { toHexWithPadding } from '$lib/utils';
+  import type { LandWithActions } from '$lib/api/land.svelte';
   import * as Avatar from '$lib/components/ui/avatar/index.js';
+  import type { LandYieldInfo, Token } from '$lib/interfaces';
+  import { toHexWithPadding } from '$lib/utils';
+  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
+  import data from '$profileData';
 
   let {
     yieldInfo,
@@ -14,7 +13,7 @@
   }: {
     yieldInfo: LandYieldInfo | undefined;
     burnRate: CurrencyAmount;
-    land: SelectedLand;
+    land: LandWithActions;
   } = $props();
 
   interface Yield {

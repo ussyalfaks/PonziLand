@@ -4,7 +4,7 @@
   import { createLandWithActions, landStore } from '$lib/stores/store.svelte';
   import BuyInsights from './buy/buy-insights.svelte';
   import BuySellForm from './buy/buy-sell-form.svelte';
-  // import LandHudInfo from '$lib/components/land/hud/land-hud-info.svelte';
+  import LandHudInfo from '$lib/components/+game-map/land/hud/land-hud-info.svelte';
   import LandOverview from '$lib/components/+game-map/land/land-overview.svelte';
   import ThreeDots from '$lib/components/loading-screen/three-dots.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
@@ -244,7 +244,7 @@
             {:else}
               <Card>
                 <div class="flex items-center justify-center">
-                  <!-- <LandHudInfo {land} isOwner={false} showLand={false} /> -->
+                  <LandHudInfo {land} isOwner={false} showLand={false} />
                 </div>
               </Card>
 

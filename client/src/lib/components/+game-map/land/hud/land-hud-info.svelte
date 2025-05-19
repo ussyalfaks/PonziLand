@@ -1,18 +1,15 @@
 <script lang="ts">
-  import type { LandYieldInfo, YieldInfo } from '$lib/interfaces';
-  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
   import { getTokenPrices } from '$lib/api/defi/ekubo/requests';
-  import { toHexWithPadding } from '$lib/utils';
-  import data from '$profileData';
-  import type { SelectedLand } from '$lib/stores/stores.svelte';
-  import { calculateBurnRate } from '$lib/utils/taxes';
   import type { LandWithActions } from '$lib/api/land.svelte';
-  import { settingsStore } from '$lib/stores/ui.store.svelte';
-  import LandHudPro from './land-hud-pro.svelte';
-  import LandHudNormal from './land-hud-normal.svelte';
+  import type { LandYieldInfo } from '$lib/interfaces';
+  import { settingsStore } from '$lib/stores/settings.store.svelte';
+  import { toHexWithPadding } from '$lib/utils';
+  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
+  import { calculateBurnRate } from '$lib/utils/taxes';
+  import data from '$profileData';
   import LandOverview from '../land-overview.svelte';
-  import { uiStore } from '$lib/stores/ui.store.svelte';
-  import Button from '$lib/components/ui/button/button.svelte';
+  import LandHudNormal from './land-hud-normal.svelte';
+  import LandHudPro from './land-hud-pro.svelte';
 
   const BASE_TOKEN = data.mainCurrencyAddress;
 
@@ -21,7 +18,7 @@
     isOwner,
     showLand,
   }: {
-    land: SelectedLand;
+    land: LandWithActions;
     isOwner: boolean;
     showLand: boolean;
   } = $props();
@@ -131,14 +128,6 @@
   <div class="py-4 pl-4">
     {#if showLand}
       <LandOverview {land} {isOwner} />
-      <Button
-        onclick={() => {
-          uiStore.showModal = true;
-          uiStore.modalType = isOwner ? 'land-info' : 'buy';
-        }}
-      >
-        {isOwner ? 'LAND INFO' : 'BUY'}
-      </Button>
     {/if}
   </div>
   {#if settingsStore.isProMode}
