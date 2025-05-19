@@ -1,11 +1,12 @@
 <script lang="ts">
   import { type LandWithActions } from '$lib/api/land';
   import { useDojo } from '$lib/contexts/dojo';
+  import { claimSingleLand, claimStore } from '$lib/stores/claim.store.svelte';
   import {
-    claimSingleLand,
-    claimStore
-  } from '$lib/stores/claim.store.svelte';
-  import { clearPending, nukeStore, setPending } from '$lib/stores/nuke.store.svelte';
+    clearPending,
+    nukeStore,
+    setPending,
+  } from '$lib/stores/nuke.store.svelte';
   import { getAggregatedTaxes, type TaxData } from '$lib/utils/taxes';
   import Particles from '@tsparticles/svelte';
   import { particlesConfig } from './particlesConfig';
@@ -38,7 +39,11 @@
       return false;
     }
   });
-  let timing = $derived(claimStore.value[land.location].claimable);
+  let timing = $derived.by(() => {
+    console.log('land.location', land.location);
+    console.log('claimStore.value[land.location]', claimStore.value[land.location]);
+    return claimStore.value[land.location]?.claimable ?? false;
+  });
 
   async function handleSingleClaim(e: Event) {
     console.log('claiming from single land');

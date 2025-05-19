@@ -10,6 +10,8 @@ import { AuctionLand } from './land/auction_land';
 import { BuildingLand } from './land/building_land';
 import { toLocation, type Location } from './land/location';
 import { setupLandsSubscription } from './land/torii';
+import { claimStore } from '$lib/stores/claim.store.svelte';
+import { createLandWithActions } from '$lib/stores/store.svelte';
 
 // Constants for random updates
 const MIN_RANDOM_UPDATES = 20;
@@ -307,6 +309,15 @@ export class LandTileStore {
         } else {
           this.pendingStake.set(newLand.location, landStakeModel as LandStake);
         }
+      }
+
+      if (BuildingLand.is(newLand)) {
+        claimStore.value[newLand.locationString] = {
+          lastClaimTime: 0,
+          animating: false,
+          land: createLandWithActions(newLand),
+          claimable: true,
+        };
       }
 
       this.currentLands.update((lands) => {
