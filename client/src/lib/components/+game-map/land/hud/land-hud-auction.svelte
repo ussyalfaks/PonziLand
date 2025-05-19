@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { LandWithActions } from '$lib/api/land.svelte';
+  import type { LandWithActions } from '$lib/api/land';
   import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
   import LandOverview from '../land-overview.svelte';
 

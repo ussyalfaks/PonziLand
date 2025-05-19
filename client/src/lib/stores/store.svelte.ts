@@ -174,7 +174,7 @@ let selectedLandWithActionsState = $derived.by(() => {
 
   const land = selectedLand.value;
 
-  if (!BuildingLand.is(land) || AuctionLand.is(land)) {
+  if (!BuildingLand.is(land) && !AuctionLand.is(land)) {
     return null;
   }
 

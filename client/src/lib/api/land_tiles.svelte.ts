@@ -272,10 +272,10 @@ export class LandTileStore {
       const auctionModel = entity.models.ponzi_land?.Auction;
       if (auctionModel !== undefined && auctionModel.is_finished == false) {
         if (AuctionLand.is(land)) {
-          land.update(auctionModel as Auction);
+          land.update(landModel as Land, auctionModel as Auction);
           return { value: land };
         } else {
-          return { value: new AuctionLand(auctionModel as Auction) };
+          return { value: new AuctionLand(landModel as Land, auctionModel as Auction) };
         }
       }
 
