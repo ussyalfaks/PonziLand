@@ -4,6 +4,7 @@ import { BuildingLand } from '$lib/api/land/building_land';
 import { LandTileStore } from '$lib/api/land_tiles.svelte';
 import { toHexWithPadding } from '$lib/utils';
 import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
+import { get } from 'svelte/store';
 
 import { AuctionLand } from '$lib/api/land/auction_land';
 import { Neighbors } from '$lib/api/neighbors';
@@ -141,7 +142,7 @@ export const createLandWithActions = (land: BuildingLand | AuctionLand) => {
     getNeighbors() {
       return new Neighbors({
         location: land.locationString,
-        source: [landWithActions],
+        source: get(landStore.getAllLands())
       });
     },
     getLevelInfo() {
@@ -222,4 +223,14 @@ export async function bidLand(location: string, setup: LandSetup) {
   );
   notificationQueue.addNotification(res?.transaction_hash ?? null, 'buy land');
   return res;
+}
+
+export function getNeighboringLands(location: string): BaseLand[] {
+  const allLands = landStore.getAllLands();
+  const landsArray = Array.isArray(allLands) ? allLands : [];
+  const neighbors = new Neighbors({
+    location,
+    source: landsArray
+  });
+  return neighbors.getNeighbors();
 }

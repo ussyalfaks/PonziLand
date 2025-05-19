@@ -19,6 +19,7 @@
   import { openLandInfoWidget } from '../+game-ui/game-ui.svelte';
   import RatesOverlay from './land/land-rates-overlay.svelte';
   import { AuctionLand } from '$lib/api/land/auction_land';
+  import LandTaxClaimer from './land/land-tax-claimer.svelte';
 
   const SIZE = TILE_SIZE;
 
@@ -219,6 +220,15 @@
       {:else}
         <LandNukeShield {estimatedNukeTime} />
       {/if}
+    </div>
+  {/if}
+
+  {#if BuildingLand.is(land) && isOwner && land.type === 'building' && !isNuking}
+    <div
+      class="absolute z-20 top-1 left-1/2"
+      style="transform: translate(-50%, -100%)"
+    >
+      <LandTaxClaimer land={createLandWithActions(land)} />
     </div>
   {/if}
 </div>

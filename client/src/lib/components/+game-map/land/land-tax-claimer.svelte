@@ -1,15 +1,14 @@
 <script lang="ts">
-  import { type LandWithActions } from '$lib/api/land.svelte';
+  import { type LandWithActions } from '$lib/api/land';
   import { useDojo } from '$lib/contexts/dojo';
   import {
-    claimAllOfToken,
-    claimStore,
     claimSingleLand,
+    claimStore
   } from '$lib/stores/claim.store.svelte';
+  import { clearPending, nukeStore, setPending } from '$lib/stores/nuke.store.svelte';
   import { getAggregatedTaxes, type TaxData } from '$lib/utils/taxes';
   import Particles from '@tsparticles/svelte';
   import { particlesConfig } from './particlesConfig';
-  import { clearPending, nukeStore, setPending } from '$lib/stores/nuke.svelte';
 
   let onParticlesLoaded = (event: any) => {
     const particlesContainer = event.detail.particles;
