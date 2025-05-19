@@ -1,9 +1,8 @@
 <script lang="ts">
+  import account from '$lib/account.svelte';
   import type { LandSetup, LandWithActions } from '$lib/api/land';
+  import { AuctionLand } from '$lib/api/land/auction_land';
   import { BuildingLand } from '$lib/api/land/building_land';
-  import { createLandWithActions, landStore } from '$lib/stores/store.svelte';
-  import BuyInsights from './buy/buy-insights.svelte';
-  import BuySellForm from './buy/buy-sell-form.svelte';
   import LandHudInfo from '$lib/components/+game-map/land/hud/land-hud-info.svelte';
   import LandOverview from '$lib/components/+game-map/land/land-overview.svelte';
   import ThreeDots from '$lib/components/loading-screen/three-dots.svelte';
@@ -14,12 +13,19 @@
   import { ScrollArea } from '$lib/components/ui/scroll-area';
   import { useAccount } from '$lib/contexts/account.svelte';
   import type { Token } from '$lib/interfaces';
-  import { padAddress, parseLocation } from '$lib/utils';
+  import { markAsNuking, nukeStore } from '$lib/stores/nuke.store.svelte';
+  import {
+    bidLand,
+    buyLand,
+    createLandWithActions,
+    landStore,
+  } from '$lib/stores/store.svelte';
+  import { padAddress, parseLocation, toHexWithPadding } from '$lib/utils';
   import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
   import { onDestroy, onMount } from 'svelte';
   import { writable } from 'svelte/store';
-  import account from '$lib/account.svelte';
-  import { AuctionLand } from '$lib/api/land/auction_land';
+  import BuyInsights from './buy/buy-insights.svelte';
+  import BuySellForm from './buy/buy-sell-form.svelte';
 
   let { data } = $props<{ data: { location?: string } }>();
   let land: LandWithActions | null = $state(null);
@@ -172,26 +178,26 @@
     loading = true;
 
     try {
-      // TODO
-      // const result = await landStore?.buyLand(land?.location, landSetup);
-      // if (result?.transaction_hash) {
-      //   // Only wait for the land update, not the total TX confirmation (should be fine)
-      //   const txPromise = accountManager!
-      //     .getProvider()
-      //     ?.getWalletAccount()
-      //     ?.waitForTransaction(result.transaction_hash);
-      //   const landPromise = land.wait();
-      //   await Promise.any([txPromise, landPromise]);
-      //   //nuke the lands
-      //   // const neighborsLocations = land.getNeighbors().locations.array;
-      //   // neighborsLocations.forEach((location) => {
-      //   //   const locationString = toHexWithPadding(location);
-      //   //   if (nukeStore.pending[locationString]) {
-      //   //     // remove from pending>
-      //   //     markAsNuking(locationString);
-      //   //   }
-      //   // });
-      // }
+      const result = await buyLand(land?.location, landSetup);
+
+      if (result?.transaction_hash) {
+        // Only wait for the land update, not the total TX confirmation (should be fine)
+        const txPromise = accountManager!
+          .getProvider()
+          ?.getWalletAccount()
+          ?.waitForTransaction(result.transaction_hash);
+        const landPromise = land.wait();
+        await Promise.any([txPromise, landPromise]);
+        //nuke the lands
+        const neighborsLocations = land.getNeighbors().locations.array;
+        neighborsLocations.forEach((location) => {
+          const locationString = toHexWithPadding(location);
+          if (nukeStore.pending[locationString]) {
+            // remove from pending>
+            markAsNuking(locationString);
+          }
+        });
+      }
     } catch (error) {
       console.error('Error buying land', error);
     } finally {
@@ -223,30 +229,26 @@
     }
 
     try {
-      // TODO
-      // const result = await landStore?.bidLand(
-      //   land?.location,
-      //   landSetup,
-      // );
-      // if (result?.transaction_hash) {
-      //   // Only wait for the land update, not the total TX confirmation (should be fine)
-      //   const txPromise = accountManager!
-      //     .getProvider()
-      //     ?.getWalletAccount()
-      //     ?.waitForTransaction(result.transaction_hash);
-      //   const landPromise = land.wait();
-      //   await Promise.any([txPromise, landPromise]);
-      //   console.log('Bought land with TX: ', result.transaction_hash);
-      //   // Nuke neighboring lands that are nukable
-      //   // land?.getNeighbors().locations.array.forEach((location) => {
-      //   //   const locationString = toHexWithPadding(location);
-      //   //   if (nukeStore.pending[locationString]) {
-      //   //     markAsNuking(locationString);
-      //   //   }
-      //   // });
-      // } else {
-      //   loading = false;
-      // }
+      const result = await bidLand(land?.location, landSetup);
+      if (result?.transaction_hash) {
+        // Only wait for the land update, not the total TX confirmation (should be fine)
+        const txPromise = accountManager!
+          .getProvider()
+          ?.getWalletAccount()
+          ?.waitForTransaction(result.transaction_hash);
+        const landPromise = land.wait();
+        await Promise.any([txPromise, landPromise]);
+        console.log('Bought land with TX: ', result.transaction_hash);
+        // Nuke neighboring lands that are nukable
+        land?.getNeighbors().locations.array.forEach((location) => {
+          const locationString = toHexWithPadding(location);
+          if (nukeStore.pending[locationString]) {
+            markAsNuking(locationString);
+          }
+        });
+      } else {
+        loading = false;
+      }
     } catch (e) {
       console.error('Error buying land:', e);
       loading = false;
@@ -419,6 +421,14 @@
               <div class="text-3xl h-10 w-20">
                 Buying<ThreeDots />
               </div>
+            {:else if land.type === 'auction'}
+              <Button
+                on:click={() => {
+                  handleBiddingClick();
+                }}
+              >
+                Buy land
+              </Button>
             {:else}
               <Button
                 on:click={() => {

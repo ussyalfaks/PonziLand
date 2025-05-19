@@ -41,37 +41,57 @@
 
   onMount(async () => {
     console.log('Mounting my-lands-widget');
+    
+    try {
+      if (!dojo.client) {
+        console.error('Dojo client is not initialized');
+        return;
+      }
 
-    // Setup the store with the client
-    await landTileStore.setup(dojo.client);
-    console.log('Store setup complete');
+      const currentAccount = account()?.getWalletAccount();
+      if (!currentAccount) {
+        console.error('No wallet account available');
+        return;
+      }
 
-    const allLands = landTileStore.getAllLands();
-    console.log('Got allLands store', allLands);
+      const userAddress = padAddress(currentAccount.address);
+      console.log('Current user address:', userAddress);
 
-    unsubscribe = allLands.subscribe((landsData) => {
-      console.log('Received lands update', landsData);
-      if (!landsData) return;
+      // Setup the store with the client
+      await landTileStore.setup(dojo.client);
+      console.log('Store setup complete');
 
-      const filteredLands = landsData
-        .filter((land): land is BuildingLand => {
-          if (BuildingLand.is(land)) {
-            const owner = padAddress(
-              account()?.getWalletAccount()?.address ?? '',
-            );
-            console.log('Comparing owners:', {
-              landOwner: land.owner,
-              userOwner: owner,
-            });
-            return land.owner === owner;
-          }
-          return false;
-        })
-        .map((land) => createLandWithActions(land));
-
-      console.log('Filtered lands:', filteredLands);
-      lands = filteredLands;
-    });
+      const allLands = landTileStore.getAllLands();
+      console.log('Got allLands store', allLands);
+      
+      unsubscribe = allLands.subscribe((landsData) => {
+        console.log('Received lands update', landsData);
+        if (!landsData) {
+          console.log('No lands data received');
+          return;
+        }
+        
+        const filteredLands = landsData
+          .filter((land): land is BuildingLand => {
+            if (BuildingLand.is(land)) {
+              const landOwner = padAddress(land.owner);
+              console.log('Comparing owners:', { 
+                landOwner,
+                userAddress,
+                isMatch: landOwner === userAddress 
+              });
+              return landOwner === userAddress;
+            }
+            return false;
+          })
+          .map((land) => createLandWithActions(land));
+        
+        console.log('Filtered lands:', filteredLands);
+        lands = filteredLands;
+      });
+    } catch (error) {
+      console.error('Error in my-lands-widget setup:', error);
+    }
   });
 
   onDestroy(() => {

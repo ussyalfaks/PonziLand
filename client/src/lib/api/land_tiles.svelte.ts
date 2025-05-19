@@ -5,7 +5,7 @@ import { nukeStore } from '$lib/stores/nuke.store.svelte';
 import type { ParsedEntity } from '@dojoengine/sdk';
 import type { Subscription } from '@dojoengine/torii-client';
 import { derived, writable, type Readable, type Writable } from 'svelte/store';
-import { EmptyLand, type BaseLand, type LandAuction } from './land';
+import { EmptyLand, type BaseLand } from './land';
 import { AuctionLand } from './land/auction_land';
 import { BuildingLand } from './land/building_land';
 import { toLocation, type Location } from './land/location';
@@ -274,8 +274,10 @@ export class LandTileStore {
         if (AuctionLand.is(land)) {
           land.update(landModel as Land, auctionModel as Auction);
           return { value: land };
-        } else {
-          return { value: new AuctionLand(landModel as Land, auctionModel as Auction) };
+        } else if (landModel) {
+          return {
+            value: new AuctionLand(landModel as Land, auctionModel as Auction),
+          };
         }
       }
 

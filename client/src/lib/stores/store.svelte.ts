@@ -1,4 +1,4 @@
-import type { BaseLand } from '$lib/api/land';
+import type { BaseLand, LandSetup } from '$lib/api/land';
 import type { LandWithActions } from '$lib/api/land';
 import { BuildingLand } from '$lib/api/land/building_land';
 import { LandTileStore } from '$lib/api/land_tiles.svelte';
@@ -31,7 +31,7 @@ export const createLandWithActions = (land: BuildingLand | AuctionLand) => {
   const landWithActions = {
     ...land,
     stakeAmount: land.stakeAmount,
-    lastPayTime: land.lastPayTime.getTime() / 1000,
+    lastPayTime: land.lastPayTime?.getTime() ?? 0 / 1000,
     sellPrice: land.sellPrice,
     type: (land.type === 'empty'
       ? 'grass'
@@ -182,3 +182,44 @@ let selectedLandWithActionsState = $derived.by(() => {
 
   return { value: landWithActions };
 });
+
+export async function buyLand(location: string, setup: LandSetup) {
+  const { client: sdk, accountManager } = useDojo();
+  const account = () => {
+    return accountManager!.getProvider();
+  };
+
+  let res = await sdk.client.actions.buy(
+    account()?.getWalletAccount()!,
+    location,
+    setup.tokenForSaleAddress,
+    setup.salePrice.toBignumberish(),
+    setup.amountToStake.toBignumberish(),
+    setup.tokenAddress,
+    setup.currentPrice!.toBignumberish(),
+  );
+  notificationQueue.addNotification(res?.transaction_hash ?? null, 'buy land');
+  return res;
+}
+
+export async function bidLand(location: string, setup: LandSetup) {
+  const { client: sdk, accountManager } = useDojo();
+  const account = () => {
+    return accountManager!.getProvider();
+  };
+
+  console.log('bidLand', location, setup);
+  console.log('account', account()?.getWalletAccount()?.address);
+
+  let res = await sdk.client.actions.bid(
+    account()?.getWalletAccount()!,
+    location,
+    setup.tokenForSaleAddress,
+    setup.salePrice.toBignumberish(),
+    setup.amountToStake.toBignumberish(),
+    setup.tokenAddress,
+    setup.currentPrice!.toBignumberish(),
+  );
+  notificationQueue.addNotification(res?.transaction_hash ?? null, 'buy land');
+  return res;
+}
