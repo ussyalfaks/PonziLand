@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { LandSetup, LandWithActions } from '$lib/api/land.svelte';
+  import type { LandSetup, LandWithActions } from '$lib/api/land';
   import { BuildingLand } from '$lib/api/land/building_land';
   import { createLandWithActions, landStore } from '$lib/stores/store.svelte';
   import BuyInsights from './buy/buy-insights.svelte';
@@ -19,10 +19,31 @@
   import { onDestroy, onMount } from 'svelte';
   import { writable } from 'svelte/store';
   import account from '$lib/account.svelte';
+  import { AuctionLand } from '$lib/api/land/auction_land';
 
   let { data } = $props<{ data: { location?: string } }>();
   let land: LandWithActions | null = $state(null);
   let unsubscribe: (() => void) | null = $state(null);
+
+  let accountManager = useAccount();
+  let disabled = writable(false);
+  let actionType = $state('stake'); // 'stake' or 'price'
+  let stakeIncrease = $state('100');
+  let priceIncrease = $state('0');
+
+  let selectedToken = $state<Token | undefined>();
+  let loading = $state(false);
+
+  let stakeAmount = $state<CurrencyAmount>(CurrencyAmount.fromScaled(1));
+  let sellAmount = $state<CurrencyAmount>(CurrencyAmount.fromScaled(1));
+
+  let currentPrice = $state<CurrencyAmount>();
+  let priceDisplay = $derived(currentPrice?.toString() ?? '');
+
+  const address = $derived(account.address);
+  let isOwner = $derived(land?.owner === padAddress(address ?? ''));
+
+  let fetching = $state(false);
 
   onMount(() => {
     if (!data?.location) return;
@@ -33,8 +54,12 @@
 
       if (landReadable) {
         unsubscribe = landReadable.subscribe((value) => {
-          if (value && value instanceof BuildingLand) {
+          if (
+            value &&
+            (value instanceof BuildingLand || value instanceof AuctionLand)
+          ) {
             land = createLandWithActions(value);
+            currentPrice = land.sellPrice;
           } else {
             land = null;
           }
@@ -50,12 +75,6 @@
       unsubscribe();
     }
   });
-
-  let accountManager = useAccount();
-  let disabled = writable(false);
-  let actionType = $state('stake'); // 'stake' or 'price'
-  let stakeIncrease = $state('100');
-  let priceIncrease = $state('0');
 
   onMount(() => {
     if (land?.sellPrice) {
@@ -180,22 +199,87 @@
     }
   }
 
+  async function handleBiddingClick() {
+    loading = true;
+
+    //fetch auction currentprice
+    if (!currentPrice) {
+      currentPrice = CurrencyAmount.fromScaled('1', land?.token);
+    }
+
+    const landSetup: LandSetup = {
+      tokenForSaleAddress: selectedToken?.address as string,
+      salePrice: sellAmount,
+      amountToStake: stakeAmount,
+      tokenAddress: land?.tokenAddress as string,
+      currentPrice: currentPrice, // Include a 10% margin on the bet amount
+    };
+
+    console.log('Buying from land:', landSetup);
+
+    if (!land?.location) {
+      loading = false;
+      return;
+    }
+
+    try {
+      // TODO
+      // const result = await landStore?.bidLand(
+      //   land?.location,
+      //   landSetup,
+      // );
+      // if (result?.transaction_hash) {
+      //   // Only wait for the land update, not the total TX confirmation (should be fine)
+      //   const txPromise = accountManager!
+      //     .getProvider()
+      //     ?.getWalletAccount()
+      //     ?.waitForTransaction(result.transaction_hash);
+      //   const landPromise = land.wait();
+      //   await Promise.any([txPromise, landPromise]);
+      //   console.log('Bought land with TX: ', result.transaction_hash);
+      //   // Nuke neighboring lands that are nukable
+      //   // land?.getNeighbors().locations.array.forEach((location) => {
+      //   //   const locationString = toHexWithPadding(location);
+      //   //   if (nukeStore.pending[locationString]) {
+      //   //     markAsNuking(locationString);
+      //   //   }
+      //   // });
+      // } else {
+      //   loading = false;
+      // }
+    } catch (e) {
+      console.error('Error buying land:', e);
+      loading = false;
+    }
+  }
+
   $effect(() => {
     // Update the token while preserving the scaled amount
     stakeAmount.setToken(selectedToken ?? undefined);
     sellAmount.setToken(selectedToken ?? undefined);
   });
 
-  let selectedToken = $state<Token | undefined>();
-  let loading = $state(false);
+  $effect(() => {
+    fetchCurrentPrice();
 
-  let stakeAmount = $state<CurrencyAmount>(CurrencyAmount.fromScaled(1));
-  let sellAmount = $state<CurrencyAmount>(CurrencyAmount.fromScaled(1));
+    const interval = setInterval(() => {
+      console.log('Fetching current price');
+      fetchCurrentPrice();
+    }, 2000);
 
-  let priceDisplay = $derived(land?.sellPrice.toString() ?? '');
+    return () => clearInterval(interval);
+  });
 
-  const address = $derived(account.address);
-  let isOwner = $derived(land?.owner === padAddress(address ?? ''));
+  const fetchCurrentPrice = () => {
+    if (!land) {
+      return;
+    }
+
+    land?.getCurrentAuctionPrice().then((res) => {
+      currentPrice = res;
+      fetching = false;
+    });
+  };
 </script>
 
 <div class="land-info-widget relative h-full w-full">
@@ -210,15 +294,41 @@
             <div class="flex items-center gap-1 pt-5">
               {#each priceDisplay as char}
                 {#if char === '.'}
-                  <div class="text-ponzi-number text-3xl">.</div>
+                  <span class="text-ponzi-number text-3xl">.</span>
+                {:else if char == ','}
+                  <span class="text-ponzi-number text-3xl opacity-0"></span>
                 {:else}
-                  <div
-                    class="text-ponzi-number text-3xl bg-[#2B2B3D] p-2 text-[#f2b545]"
+                  <span
+                    class="text-ponzi-number text-stroke-auction text-3xl bg-[#2B2B3D] p-2 text-[#f2b545]"
+                    >{char}</span
                   >
-                    {char}
-                  </div>
                 {/if}
               {/each}
+              {#if land.type === 'auction'}
+                {#if !fetching}
+                  <button
+                    onclick={() => {
+                      fetching = true;
+                      fetchCurrentPrice();
+                    }}
+                    aria-label="Refresh balance"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 32 32"
+                      width="32px"
+                      height="32px"
+                      fill="currentColor"
+                      class="h-5 w-5"
+                      ><path
+                        d="M 6 4 L 6 6 L 4 6 L 4 8 L 2 8 L 2 10 L 6 10 L 6 26 L 17 26 L 17 24 L 8 24 L 8 10 L 12 10 L 12 8 L 10 8 L 10 6 L 8 6 L 8 4 L 6 4 z M 15 6 L 15 8 L 24 8 L 24 22 L 20 22 L 20 24 L 22 24 L 22 26 L 24 26 L 24 28 L 26 28 L 26 26 L 28 26 L 28 24 L 30 24 L 30 22 L 26 22 L 26 6 L 15 6 z"
+                      /></svg
+                    >
+                  </button>
+                {:else}
+                  <ThreeDots />
+                {/if}
+              {/if}
             </div>
             <div class="flex items-center gap-2">
               <div class="text-3xl text-ponzi-number text-white">

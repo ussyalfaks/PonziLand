@@ -18,6 +18,7 @@
   } from '$lib/stores/store.svelte';
   import { openLandInfoWidget } from '../+game-ui/game-ui.svelte';
   import RatesOverlay from './land/land-rates-overlay.svelte';
+  import { AuctionLand } from '$lib/api/land/auction_land';
 
   const SIZE = TILE_SIZE;
 
@@ -115,7 +116,12 @@
     openLandInfoWidget(landWithActions);
   };
 
-  const handleBidClick = () => {};
+  const handleBidClick = () => {
+    if (!AuctionLand.is(land)) return;
+
+    const landWithActions = createLandWithActions(land);
+    openLandInfoWidget(landWithActions);
+  };
 
   let estimatedNukeTime = $derived.by(() => {
     if (!BuildingLand.is(land)) return -1;
