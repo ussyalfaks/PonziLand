@@ -25,7 +25,7 @@
     widgetsStore.addWidget({
       id: `land-info-${land.location}`,
       type: 'land-info',
-      position: { x: 300, y: 100 },
+      position: { x: 100, y: 100 },
       dimensions: { width: 800, height: 600 },
       isMinimized: false,
       isOpen: true,
