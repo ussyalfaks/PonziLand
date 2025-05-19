@@ -1,4 +1,4 @@
-import { type LandWithActions } from '$lib/api/land.svelte';
+import { type LandWithActions } from '$lib/api/land';
 import { useDojo } from '$lib/contexts/dojo';
 import type { Token } from '$lib/interfaces';
 import { getTokenInfo } from '$lib/utils';

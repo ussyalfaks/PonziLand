@@ -4,7 +4,7 @@
   import { availableWidgets } from './widgets.config';
 
   function addWidget(widgetType: string) {
-    const widget = availableWidgets.find(w => w.type === widgetType);
+    const widget = availableWidgets.find((w) => w.type === widgetType);
     if (!widget) return;
 
     // Check if widget already exists
@@ -22,7 +22,7 @@
       type: widget.type,
       position: { x: 300, y: 100 }, // Default position
       isMinimized: false,
-      isOpen: true
+      isOpen: true,
     });
   }
 </script>

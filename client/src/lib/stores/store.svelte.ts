@@ -1,10 +1,11 @@
 import type { BaseLand } from '$lib/api/land';
-import type { LandWithActions } from '$lib/api/land.svelte';
+import type { LandWithActions } from '$lib/api/land';
 import { BuildingLand } from '$lib/api/land/building_land';
 import { LandTileStore } from '$lib/api/land_tiles.svelte';
 import { toHexWithPadding } from '$lib/utils';
 import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
 
+import { AuctionLand } from '$lib/api/land/auction_land';
 import { Neighbors } from '$lib/api/neighbors';
 import { GAME_SPEED, LEVEL_UP_TIME } from '$lib/const';
 import { useDojo } from '$lib/contexts/dojo';
@@ -21,7 +22,7 @@ export const selectedLandWithActions = () => {
   return selectedLandWithActionsState;
 };
 
-export const createLandWithActions = (land: BuildingLand) => {
+export const createLandWithActions = (land: BuildingLand | AuctionLand) => {
   const { client: sdk, accountManager } = useDojo();
   const account = () => {
     return accountManager!.getProvider();
@@ -173,7 +174,7 @@ let selectedLandWithActionsState = $derived.by(() => {
 
   const land = selectedLand.value;
 
-  if (!BuildingLand.is(land)) {
+  if (!BuildingLand.is(land) || AuctionLand.is(land)) {
     return null;
   }
 

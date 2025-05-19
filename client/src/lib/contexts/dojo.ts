@@ -1,10 +1,7 @@
 import {
-  AccountManager,
-  useAccount,
-  type AccountProvider,
+  useAccount
 } from './account.svelte';
 import { useClient } from './client.svelte';
-import { useStore } from './store.svelte';
 
 export function useDojo() {
   const client = useClient();

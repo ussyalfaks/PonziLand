@@ -5,8 +5,8 @@ import { nukeStore } from '$lib/stores/nuke.store.svelte';
 import type { ParsedEntity } from '@dojoengine/sdk';
 import type { Subscription } from '@dojoengine/torii-client';
 import { derived, writable, type Readable, type Writable } from 'svelte/store';
-import { EmptyLand, type BaseLand } from './land';
-import { AuctionLand } from './land/auction';
+import { EmptyLand, type BaseLand, type LandAuction } from './land';
+import { AuctionLand } from './land/auction_land';
 import { BuildingLand } from './land/building_land';
 import { toLocation, type Location } from './land/location';
 import { setupLandsSubscription } from './land/torii';
@@ -84,7 +84,7 @@ export class LandTileStore {
           Array(GRID_SIZE)
             .fill(null)
             .map((_, y) => new EmptyLand({ x, y })),
-        )
+        ),
     );
 
     this.allLands = derived(this.currentLands, (lands) => {
@@ -118,7 +118,7 @@ export class LandTileStore {
     const numUpdates =
       Math.floor(Math.random() * RANDOM_UPDATE_RANGE) + MIN_RANDOM_UPDATES;
 
-    this.currentLands.update(lands => {
+    this.currentLands.update((lands) => {
       for (let i = 0; i < numUpdates; i++) {
         // Pick a random land
         const x = Math.floor(Math.random() * GRID_SIZE);
@@ -138,6 +138,7 @@ export class LandTileStore {
             Math.floor(Math.random() * DEFAULT_SELL_PRICE) +
             DEFAULT_SELL_PRICE / 2,
           token_used: randomToken,
+          // @ts-ignore
           level: 'Second',
         };
 
@@ -176,7 +177,7 @@ export class LandTileStore {
   }
 
   public fakeSetup() {
-    this.currentLands.update(lands => {
+    this.currentLands.update((lands) => {
       // Create level 3 building lands for the entire grid
       for (let x = 0; x < GRID_SIZE; x++) {
         for (let y = 0; y < GRID_SIZE; y++) {
@@ -192,6 +193,7 @@ export class LandTileStore {
               Math.floor(Math.random() * DEFAULT_SELL_PRICE) +
               DEFAULT_SELL_PRICE / 2,
             token_used: randomToken,
+            // @ts-ignore
             level: 'Second',
           };
 
@@ -305,7 +307,7 @@ export class LandTileStore {
         }
       }
 
-      this.currentLands.update(lands => {
+      this.currentLands.update((lands) => {
         lands[location.x][location.y] = newLand;
         return lands;
       });

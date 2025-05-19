@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { selectedLand, selectedLandMeta } from '$lib/stores/stores.svelte';
-
+  import type { LandWithActions } from '$lib/api/land.svelte';
   import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
   import LandOverview from '../land-overview.svelte';
+
+  let { land }: { land: LandWithActions } = $props();
 
   let currentPrice = $state<CurrencyAmount>();
   let priceDisplay = $derived(currentPrice?.toString());
@@ -19,19 +20,17 @@
   });
 
   const fetchCurrentPrice = () => {
-    if (!$selectedLand) {
+    if (!land) {
       return;
     }
 
-    $selectedLandMeta
-      ?.getCurrentAuctionPrice()
-      .then((res) => (currentPrice = res));
+    land?.getCurrentAuctionPrice().then((res) => (currentPrice = res));
   };
 </script>
 
 <div class="flex gap-4 relative items-center border-ponzi-auction -m-2 p-6">
-  {#if $selectedLandMeta}
-    <LandOverview land={$selectedLandMeta} />
+  {#if land}
+    <LandOverview {land} />
   {/if}
   <div class="w-full flex flex-col leading-none text-sm">
     <div class="flex justify-between text-yellow-500">
@@ -42,7 +41,7 @@
       <p class="opacity-50">Current Price</p>
       <p class="text-right">
         {priceDisplay}
-        {$selectedLandMeta?.token?.symbol}
+        {land.token?.symbol}
       </p>
     </div>
   </div>
