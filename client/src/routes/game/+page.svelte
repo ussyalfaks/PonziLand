@@ -2,13 +2,13 @@
   import { goto } from '$app/navigation';
   import { refresh, setup as setupAccountState } from '$lib/account.svelte';
   import { setupSocialink } from '$lib/accounts/social/index.svelte';
-  import LoadingScreen from '$lib/components/loading/loading-screen.svelte';
-  import SwitchChainModal from '$lib/components/wallet/SwitchChainModal.svelte';
+  import LoadingScreen from '$lib/components/loading-screen/loading-screen.svelte';
+  import SwitchChainModal from '$lib/components/+game-ui/modals/SwitchChainModal.svelte';
   import { setupAccount } from '$lib/contexts/account.svelte';
   import { setupClient } from '$lib/contexts/client.svelte';
   import { dojoConfig } from '$lib/dojoConfig';
-  import GameGrid from '$lib/components/game-grid.svelte';
-  import GameUi from '$lib/components/game-ui.svelte';
+  import GameGrid from '$lib/components/+game-map/game-grid.svelte';
+  import GameUi from '$lib/components/+game-ui/game-ui.svelte';
   import { landStore } from '$lib/stores/store.svelte';
 
   const promise = Promise.all([

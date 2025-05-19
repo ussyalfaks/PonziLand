@@ -4,7 +4,7 @@
   import { toHexWithPadding } from '$lib/utils';
   import dialogData from './dialog.json';
   import { fly } from 'svelte/transition';
-  import Button from '../ui/button/button.svelte';
+  import Button from '$lib/components/ui/button/button.svelte';
   import { goto } from '$app/navigation';
 
   const step = tutorialProgression();

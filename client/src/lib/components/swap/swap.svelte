@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Token } from '$lib/interfaces';
-  import { Input } from '../ui/input';
-  import Label from '../ui/label/label.svelte';
+  import { Input } from '$lib/components/ui/input';
+  import Label from '$lib/components/ui/label/label.svelte';
 
   import { fetchTokenBalance } from '$lib/accounts/balances';
   import { useDojo } from '$lib/contexts/dojo';
@@ -10,9 +10,9 @@
   import { debounce } from '$lib/utils/debounce.svelte';
   import { type Quote } from '@avnu/avnu-sdk';
   import { onMount } from 'svelte';
-  import Button from '../ui/button/button.svelte';
+  import Button from '$lib/components/ui/button/button.svelte';
   import TokenSelect from './token-select.svelte';
-  import { Card } from '../ui/card';
+  import { Card } from '$lib/components/ui/card';
 
   let { client, accountManager } = useDojo();
   let avnu = useAvnu();

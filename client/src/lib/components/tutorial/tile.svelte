@@ -15,9 +15,9 @@
   import LandNukeAnimation from '../land/land-nuke-animation.svelte';
   import LandNukeShield from '../land/land-nuke-shield.svelte';
   import LandTaxClaimer from '../land/land-tax-claimer.svelte';
-  import Button from '../ui/button/button.svelte';
+  import Button from '$lib/components/ui/button/button.svelte';
   import RatesOverlay from './rates-tutorial.svelte';
-  import NukeExplosion from '../animation/nuke-explosion.svelte';
+  import NukeExplosion from '$lib/components/ui/nuke-explosion.svelte';
   import { tileState } from './stores.svelte';
   import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
 

@@ -1,15 +1,13 @@
 <script lang="ts">
-  import { Hash } from 'lucide-svelte';
-  import type { PageData, RouteParams } from './$types';
-  import ExecuteTransfer from './ExecuteTransfer.svelte';
-  import Success from './Success.svelte';
-  import { sessionState } from '@sv-use/core';
-  import Wait from './Wait.svelte';
-  import { Card } from '$lib/components/ui/card';
-  import WalletSetups from '../WalletSetups.svelte';
-  import { currentStep, setCurrentStep } from '$lib/ramp/stores.svelte';
-  import ThreeDots from '$lib/components/loading/three-dots.svelte';
+  import ThreeDots from '$lib/components/loading-screen/three-dots.svelte';
   import { Button } from '$lib/components/ui/button';
+  import { Card } from '$lib/components/ui/card';
+  import { currentStep, setCurrentStep } from '$lib/ramp/stores.svelte';
+  import { sessionState } from '@sv-use/core';
+  import WalletSetups from '../WalletSetups.svelte';
+  import type { PageData } from './$types';
+  import ExecuteTransfer from './ExecuteTransfer.svelte';
+  import Wait from './Wait.svelte';
 
   let { data }: { data: PageData } = $props();
 

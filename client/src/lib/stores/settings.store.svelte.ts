@@ -1,4 +1,3 @@
-import type { TileInfo } from '$lib/interfaces';
 
 class SettingsStore {
   private static STORAGE_KEY = 'ponziland_settings';

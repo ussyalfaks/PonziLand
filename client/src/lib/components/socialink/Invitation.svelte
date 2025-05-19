@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getSocialink } from '$lib/accounts/social/index.svelte';
-  import { Button } from '../ui/button';
+  import { Button } from '$lib/components/ui/button';
   import { refresh, state as accountState } from '$lib/account.svelte';
 
   const socialink = getSocialink();

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fetchAllTimePlayers, fetchBuyEvents } from './requests';
   import { onMount } from 'svelte';
-  import Card from '../ui/card/card.svelte';
+  import Card from '$lib/components/ui/card/card.svelte';
   import TransactionChart from './TransactionChart.svelte';
 
   const WHITE_LIST_COUNT = 53;

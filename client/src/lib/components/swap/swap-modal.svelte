@@ -1,6 +1,6 @@
 <script>
-  import { Card } from '../ui/card';
-  import CloseButton from '../ui/close-button.svelte';
+  import { Card } from '$lib/components/ui/card';
+  import CloseButton from '$lib/components/ui/close-button.svelte';
   import Swap from './swap.svelte';
   let { visible = $bindable(true), ...props } = $props();
 </script>

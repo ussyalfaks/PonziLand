@@ -4,14 +4,14 @@
   import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
   import data from '$profileData';
   import { onMount } from 'svelte';
-  import type { EkuboApiResponse } from '../defi/ekubo/requests';
+  import type { EkuboApiResponse } from '../../api/defi/ekubo/requests';
   import {
     calculatePriceFromPool,
     fetchEkuboPairData,
     getTokenPrices,
     type TokenPrice,
-  } from '../defi/ekubo/requests';
-  import Leaderboard from '../leaderboard/Leaderboard.svelte';
+  } from '../../api/defi/ekubo/requests';
+  import Leaderboard from '../+game-ui/widgets/leaderboard/Leaderboard.svelte';
   import BuyInfo from './buyInfo.svelte';
   import PlayerInfo from './PlayerInfo.svelte';
   import PriceChart from './PriceChart.svelte';

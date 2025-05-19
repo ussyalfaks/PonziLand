@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { fetchBuyEvents } from './requests';
-  import { onMount } from 'svelte';
-  import Card from '../ui/card/card.svelte';
-  import { ScrollArea } from '../ui/scroll-area';
-  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
+  import Card from '$lib/components/ui/card/card.svelte';
   import type { Token } from '$lib/interfaces';
+  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
+  import { onMount } from 'svelte';
+  import { fetchBuyEvents } from './requests';
 
   let {
     tokens,
