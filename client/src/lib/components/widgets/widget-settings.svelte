@@ -1,6 +1,5 @@
 <script lang="ts">
-  import Card from '$lib/components/ui/card/card.svelte';
-  import { settingsStore } from '$lib/stores/ui.store.svelte';
+  import { settingsStore } from '$lib/stores/settings.store.svelte';
 </script>
 
 <div class="flex flex-col gap-2">

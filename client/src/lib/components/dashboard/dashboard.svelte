@@ -1,21 +1,21 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import Card from '$lib/components/ui/card/card.svelte';
   import type { Token } from '$lib/interfaces';
-  import type { TokenTVL, TokenVolume } from './requests';
+  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
+  import data from '$profileData';
+  import { onMount } from 'svelte';
   import type { EkuboApiResponse } from '../defi/ekubo/requests';
   import {
-    fetchEkuboPairData,
     calculatePriceFromPool,
+    fetchEkuboPairData,
     getTokenPrices,
     type TokenPrice,
   } from '../defi/ekubo/requests';
-  import Card from '$lib/components/ui/card/card.svelte';
-  import PriceChart from './PriceChart.svelte';
-  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
+  import Leaderboard from '../leaderboard/Leaderboard.svelte';
   import BuyInfo from './buyInfo.svelte';
   import PlayerInfo from './PlayerInfo.svelte';
-  import Leaderboard from '../ui/leaderboard/Leaderboard.svelte';
-  import data from '$profileData';
+  import PriceChart from './PriceChart.svelte';
+  import type { TokenVolume } from './requests';
 
   const BASE_TOKEN = data.mainCurrencyAddress;
 

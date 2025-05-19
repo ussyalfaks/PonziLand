@@ -6,7 +6,7 @@ import { getAggregatedTaxes } from '$lib/utils/taxes';
 import type { BigNumberish } from 'ethers';
 import type { Account, AccountInterface } from 'starknet';
 import { claimQueue } from './event.store.svelte';
-import { markAsNuking } from './nuke.svelte';
+import { markAsNuking } from './nuke.store.svelte';
 import { notificationQueue } from '$lib/stores/event.store.svelte';
 
 export let claimStore: {

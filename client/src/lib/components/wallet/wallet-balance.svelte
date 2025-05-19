@@ -7,7 +7,7 @@
     setTokenBalances,
     tokenStore,
     updateTokenBalance,
-  } from '$lib/stores/tokens.svelte';
+  } from '$lib/stores/tokens.store.svelte';
   import { padAddress } from '$lib/utils';
   import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
   import data from '$profileData';

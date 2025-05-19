@@ -3,7 +3,7 @@
     getTokenPrices,
     type TokenPrice,
   } from '$lib/components/defi/ekubo/requests';
-  import { usernamesStore } from '$lib/stores/account.svelte';
+  import { usernamesStore } from '$lib/stores/account.store.svelte';
   import { padAddress } from '$lib/utils';
   import { AI_AGENT_ADDRESS } from '$lib/const';
   import { ScrollArea } from '$lib/components/ui/scroll-area';

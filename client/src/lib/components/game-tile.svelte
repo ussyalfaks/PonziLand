@@ -8,14 +8,13 @@
   import LandNukeShield from '$lib/components/land/land-nuke-shield.svelte';
   import { Button } from '$lib/components/ui/button';
   import { GRID_SIZE, TILE_SIZE } from '$lib/const';
-  import { cameraPosition, moveCameraTo } from '$lib/stores/camera';
-  import { nukeStore } from '$lib/stores/nuke.svelte';
-  import { uiStore } from '$lib/stores/ui.store.svelte';
+  import { cameraPosition, moveCameraTo } from '$lib/stores/camera.store';
+  import { nukeStore } from '$lib/stores/nuke.store.svelte';
   import { cn, padAddress } from '$lib/utils';
   import type { Readable } from 'svelte/store';
-  import { createLandWithActions, selectedLand } from './store.svelte';
-  import { openBuyLandWidget, openLandInfoWidget } from './game-ui.svelte';
-  import RatesOverlay from '$lib/components/map/rates-overlay.svelte';
+  import { createLandWithActions, selectedLand } from '$lib/stores/store.svelte';
+  import { openLandInfoWidget } from './game-ui.svelte';
+  import RatesOverlay from '$lib/components/land/land-rates-overlay.svelte';
 
   const SIZE = TILE_SIZE;
 

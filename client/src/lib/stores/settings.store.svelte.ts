@@ -1,19 +1,5 @@
 import type { TileInfo } from '$lib/interfaces';
 
-export let uiStore = $state<{
-  showModal: boolean;
-  modalType: 'bid' | 'buy' | 'land-info' | null;
-  modalData: TileInfo | null;
-  toolbarActive: 'lands' | 'notifications' | 'auctions' | null;
-  modalInfo: boolean;
-}>({
-  showModal: false,
-  modalType: null,
-  modalData: null,
-  toolbarActive: null,
-  modalInfo: false,
-});
-
 class SettingsStore {
   private static STORAGE_KEY = 'ponziland_settings';
   

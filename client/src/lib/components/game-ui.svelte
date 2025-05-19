@@ -2,16 +2,14 @@
   import type { BaseLand } from '$lib/api/land';
   import type { LandWithActions } from '$lib/api/land.svelte';
   import BuyLandWidget from '$lib/components/buy/buy-land-widget.svelte';
-  import LandHud from '$lib/components/land/hud/land-hud.svelte';
-  import WidgetLandInfo from './widgets/widget-land-info.svelte';
-  import InfoModal from '$lib/components/ui/info-modal.svelte';
+  // import LandHud from '$lib/components/land/hud/land-hud.svelte';
+  import WidgetLandInfo from '$lib/components/widgets/widget-land-info.svelte';
   import WidgetLauncher from '$lib/components/widgets/widget-launcher.svelte';
-  import { uiStore } from '$lib/stores/ui.store.svelte';
+  import WidgetMyLands from '$lib/components/widgets/widget-my-lands.svelte';
+  import WidgetSettings from '$lib/components/widgets/widget-settings.svelte';
   import { widgetsStore } from '$lib/stores/widgets.store';
-  import Draggable from './draggable.svelte';
-  import WidgetBalance from './widgets/widget-balance.svelte';
-  import WidgetMyLands from './widgets/widget-my-lands.svelte';
-  import WidgetSettings from './widgets/widget-settings.svelte';
+  import WidgetBalance from '../../lib/components/widgets/widget-balance.svelte';
+  import Draggable from '$lib/components/ui/draggable.svelte';
 
   // Function to open buy land widget
   export function openBuyLandWidget(land: BaseLand) {
@@ -60,7 +58,7 @@
         {#if type === 'wallet'}
           <WidgetBalance />
         {:else if type === 'land-hud'}
-          <LandHud />
+          <!-- <LandHud /> -->
         {:else if type === 'buy-land' && widget.data?.land}
           <BuyLandWidget land={widget.data.land} />
         {:else if type === 'land-info' && widget.data}
@@ -73,6 +71,4 @@
       </Draggable>
     {/if}
   {/each}
-
-  <InfoModal isDisplay={uiStore.modalInfo} />
 </div>

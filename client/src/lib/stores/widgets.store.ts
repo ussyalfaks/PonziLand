@@ -1,10 +1,4 @@
 import { writable } from 'svelte/store';
-import {
-  createLandWithActions,
-  landStore,
-} from '../../routes/next/store.svelte';
-import { GRID_SIZE } from '$lib/const';
-import { ensureNumber, locationIntToString, parseLocation } from '$lib/utils';
 
 const STORAGE_KEY = 'ponziland-widgets-state';
 
@@ -62,8 +56,8 @@ function processWidgetDataForStorage(widget: WidgetState): WidgetState {
     return {
       ...widget,
       data: {
-        location: widget.data.land.location
-      }
+        location: widget.data.land.location,
+      },
     };
   }
   return widget;
@@ -166,7 +160,10 @@ function createWidgetsStore() {
           return state;
         }
         // Set initial z-index to be above existing widgets
-        const maxZIndex = Math.max(...Object.values(state).map(w => w.zIndex || 0), 0);
+        const maxZIndex = Math.max(
+          ...Object.values(state).map((w) => w.zIndex || 0),
+          0,
+        );
         const newState = {
           ...state,
           [widget.id]: { ...widget, zIndex: maxZIndex + 1 },
@@ -230,7 +227,10 @@ function createWidgetsStore() {
           console.error('Widget not found:', id);
           return state;
         }
-        const maxZIndex = Math.max(...Object.values(state).map(w => w.zIndex || 0), 0);
+        const maxZIndex = Math.max(
+          ...Object.values(state).map((w) => w.zIndex || 0),
+          0,
+        );
         const newState = {
           ...state,
           [id]: { ...state[id], zIndex: maxZIndex + 1 },

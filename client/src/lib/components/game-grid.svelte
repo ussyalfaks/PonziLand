@@ -6,11 +6,10 @@
     cameraPosition,
     cameraTransition,
     moveCameraToLocation,
-  } from '$lib/stores/camera';
-  import { mousePosCoords } from '$lib/stores/stores.svelte';
+  } from '$lib/stores/camera.store';
   import { onMount } from 'svelte';
-  import GameTile from './game-tile.svelte';
-  import { landStore } from './store.svelte';
+  import GameTile from '$lib/components/game-tile.svelte';
+  import { landStore } from '$lib/stores/store.svelte';
 
   // Throttle mechanism
   let lastWheelTime = 0;
@@ -67,7 +66,7 @@
 
   function handleWheel(event: WheelEvent) {
     event.preventDefault();
-    
+
     // Throttle wheel events
     const now = Date.now();
     if (now - lastWheelTime < THROTTLE_DELAY) {
@@ -145,23 +144,6 @@
     }
 
     if (!mapWrapper) return;
-
-    const rect = mapWrapper.getBoundingClientRect();
-    const mouseX = event.clientX - rect.left - $cameraPosition.offsetX;
-    const mouseY = event.clientY - rect.top - $cameraPosition.offsetY;
-
-    const tileX = Math.floor(mouseX / (TILE_SIZE * $cameraPosition.scale));
-    const tileY = Math.floor(mouseY / (TILE_SIZE * $cameraPosition.scale));
-
-    if (tileX >= 0 && tileX < GRID_SIZE && tileY >= 0 && tileY < GRID_SIZE) {
-      $mousePosCoords = {
-        x: tileX + 1,
-        y: tileY + 1,
-        location: tileY * GRID_SIZE + tileX,
-      };
-    } else {
-      $mousePosCoords = null;
-    }
   }
 
   function updateOffsets(newX: number, newY: number) {
@@ -236,7 +218,7 @@
       >
         <!-- Road layer -->
         <div class="road-layer"></div>
-        
+
         {#each Array(GRID_SIZE) as _, y}
           <div class="row">
             {#each Array(GRID_SIZE) as _, x}
@@ -247,7 +229,7 @@
               >
                 {#if y >= visibleTiles.startY && y < visibleTiles.endY}
                   {#if x >= visibleTiles.startX && x < visibleTiles.endX}
-                    <GameTile {land} {dragged} scale={$cameraPosition.scale}/>
+                    <GameTile {land} {dragged} scale={$cameraPosition.scale} />
                   {/if}
                 {/if}
               </div>

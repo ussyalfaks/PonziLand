@@ -5,7 +5,7 @@
   import { padAddress, shortenHex } from '$lib/utils';
   import Button from '../ui/button/button.svelte';
   import Card from '../ui/card/card.svelte';
-  import Leaderboard from '../ui/leaderboard/Leaderboard.svelte';
+  import Leaderboard from '../leaderboard/Leaderboard.svelte';
   import ProMode from '../ui/pro-mode.svelte';
   import WalletBalance from './wallet-balance.svelte';
   import WalletHelp from './wallet-help.svelte';

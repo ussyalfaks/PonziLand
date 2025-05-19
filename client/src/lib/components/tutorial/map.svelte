@@ -4,7 +4,7 @@
   import { useLands } from '$lib/api/land.svelte';
   import type { Tile } from '$lib/api/tile-store.svelte';
   import { cameraPosition, cameraTransition } from '$lib/stores/camera';
-  import { claimStore } from '$lib/stores/claim.svelte';
+  import { claimStore } from '$lib/stores/claim.store.svelte';
   import { mousePosCoords } from '$lib/stores/stores.svelte';
   import { padAddress, toHexWithPadding } from '$lib/utils';
   import TileCell from './tile.svelte';

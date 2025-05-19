@@ -7,9 +7,9 @@
   import { setupAccount } from '$lib/contexts/account.svelte';
   import { setupClient } from '$lib/contexts/client.svelte';
   import { dojoConfig } from '$lib/dojoConfig';
-  import GameGrid from './game-grid.svelte';
-  import GameUi from './game-ui.svelte';
-  import { landStore } from './store.svelte';
+  import GameGrid from '$lib/components/game-grid.svelte';
+  import GameUi from '$lib/components/game-ui.svelte';
+  import { landStore } from '$lib/stores/store.svelte';
 
   const promise = Promise.all([
     setupSocialink().then(() => {

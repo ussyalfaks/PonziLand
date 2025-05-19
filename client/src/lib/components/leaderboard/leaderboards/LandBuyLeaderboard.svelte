@@ -1,6 +1,6 @@
 <script lang="ts">
   import { ScrollArea } from '$lib/components/ui/scroll-area';
-  import { usernamesStore } from '$lib/stores/account.svelte';
+  import { usernamesStore } from '$lib/stores/account.store.svelte';
   import { getBuyEvents } from '../request';
   import { onMount } from 'svelte';
   import { formatAddress, formatValue } from '../helpers';

@@ -5,7 +5,7 @@
     claimAllOfToken,
     claimStore,
     claimSingleLand,
-  } from '$lib/stores/claim.svelte';
+  } from '$lib/stores/claim.store.svelte';
   import { getAggregatedTaxes, type TaxData } from '$lib/utils/taxes';
   import Particles from '@tsparticles/svelte';
   import { particlesConfig } from './particlesConfig';

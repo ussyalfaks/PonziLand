@@ -1,6 +1,5 @@
 <script lang="ts">
   import LandDisplay from '$lib/components/land/land-display.svelte';
-  import { selectedLandMeta } from '$lib/stores/stores.svelte';
   import NeighborItem from './neighbor-item.svelte';
 
   let {
@@ -27,7 +26,7 @@
   <!--Own Land-->
   <div class="w-10 h-10 bg-gray-400 border-yellow-500 border">
     {#if selectedToken?.symbol}<LandDisplay token={selectedToken} road />{:else}
-      <LandDisplay basic grass road seed={$selectedLandMeta?.location} />
+      <LandDisplay basic grass road />
     {/if}
   </div>
 

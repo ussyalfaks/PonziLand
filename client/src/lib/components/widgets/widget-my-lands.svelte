@@ -1,16 +1,14 @@
 <script lang="ts">
   import type { LandWithActions } from '$lib/api/land.svelte';
   import { useDojo } from '$lib/contexts/dojo';
-  import { claimAllOfToken } from '$lib/stores/claim.svelte';
-  import { uiStore } from '$lib/stores/ui.store.svelte';
+  import { claimAllOfToken } from '$lib/stores/claim.store.svelte';
   import { groupLands, padAddress } from '$lib/utils';
-  import LandHudInfo from '$lib/components/land/hud/land-hud-info.svelte';
+  // import LandHudInfo from '$lib/components/land/hud/land-hud-info.svelte';
   import { ScrollArea } from '$lib/components/ui/scroll-area';
   import LandNukeTime from '$lib/components/land/land-nuke-time.svelte';
-  import { moveCameraTo } from '$lib/stores/camera';
-  import { selectLand } from '$lib/stores/stores.svelte';
+  import { moveCameraTo } from '$lib/stores/camera.store';
   import { parseLocation } from '$lib/utils';
-  import { createLandWithActions } from '../store.svelte';
+  import { createLandWithActions, selectedLand } from '$lib/stores/store.svelte';
   import { BuildingLand } from '$lib/api/land/building_land';
   import { onMount, onDestroy } from 'svelte';
   import { LandTileStore } from '$lib/api/land_tiles.svelte';
@@ -97,10 +95,10 @@
                     parseLocation(land.location)[0] + 1,
                     parseLocation(land.location)[1] + 1,
                   );
-                  selectLand(land);
+                  selectedLand.value = land;
                 }}
               >
-                <LandHudInfo {land} isOwner={true} showLand={true} />
+                <!-- <LandHudInfo {land} isOwner={true} showLand={true} /> -->
                 <div class="translate-y-4 p-4">
                   <LandNukeTime {land} />
                 </div>
@@ -126,7 +124,7 @@
         <button
           class="text-sm text-yellow-500 hover:opacity-90 hover:cursor-pointer"
           onclick={() => {
-            uiStore.toolbarActive = 'auctions';
+            // uiStore.toolbarActive = 'auctions';
           }}
         >
           See ongoing auctions

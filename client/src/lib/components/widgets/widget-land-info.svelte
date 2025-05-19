@@ -1,13 +1,10 @@
 <script lang="ts">
   import type { LandSetup, LandWithActions } from '$lib/api/land.svelte';
   import { BuildingLand } from '$lib/api/land/building_land';
-  import {
-    createLandWithActions,
-    landStore,
-  } from '$lib/components/../../routes/next/store.svelte';
+  import { createLandWithActions, landStore } from '$lib/stores/store.svelte';
   import BuyInsights from '$lib/components/buy/buy-insights.svelte';
   import BuySellForm from '$lib/components/buy/buy-sell-form.svelte';
-  import LandHudInfo from '$lib/components/land/hud/land-hud-info.svelte';
+  // import LandHudInfo from '$lib/components/land/hud/land-hud-info.svelte';
   import LandOverview from '$lib/components/land/land-overview.svelte';
   import ThreeDots from '$lib/components/loading/three-dots.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
@@ -241,12 +238,13 @@
                   bind:selectedToken
                   bind:stakeAmount
                   bind:sellAmount
+                  land={land}
                 />
               </div>
             {:else}
               <Card>
                 <div class="flex items-center justify-center">
-                  <LandHudInfo {land} isOwner={false} showLand={false} />
+                  <!-- <LandHudInfo {land} isOwner={false} showLand={false} /> -->
                 </div>
               </Card>
 

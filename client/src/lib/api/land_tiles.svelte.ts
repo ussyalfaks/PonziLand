@@ -1,7 +1,7 @@
 import { GRID_SIZE } from '$lib/const';
 import type { Client } from '$lib/contexts/client.svelte';
 import type { Auction, Land, LandStake, SchemaType } from '$lib/models.gen';
-import { nukeStore } from '$lib/stores/nuke.svelte';
+import { nukeStore } from '$lib/stores/nuke.store.svelte';
 import type { ParsedEntity } from '@dojoengine/sdk';
 import type { Subscription } from '@dojoengine/torii-client';
 import { derived, writable, type Readable, type Writable } from 'svelte/store';

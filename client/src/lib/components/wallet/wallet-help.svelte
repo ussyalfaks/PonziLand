@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { uiStore } from '$lib/stores/ui.store.svelte';
+  // import { uiStore } from '$lib/stores/ui.store.svelte';
 </script>
 
 <button
   onclick={() => {
-    uiStore.modalInfo = true;
+    // uiStore.modalInfo = true;
   }}
 >
   <img

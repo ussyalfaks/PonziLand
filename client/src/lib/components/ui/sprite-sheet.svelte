@@ -1,7 +1,7 @@
 <script lang="ts">
   import { cn } from '$lib/utils';
   import { onMount, onDestroy } from 'svelte';
-  import { cameraPosition } from '$lib/stores/camera';
+  import { cameraPosition } from '$lib/stores/camera.store';
 
   const MIN_SCALE_FOR_ANIMATION = 2;
 

@@ -2,8 +2,8 @@
   import { onMount } from 'svelte';
   import accountData from '$lib/account.svelte';
   import { fetchUsernamesBatch, getUserAddresses } from './request';
-  import Card from '../../ui/card/card.svelte';
-  import { usernamesStore } from '$lib/stores/account.svelte';
+  import Card from '../ui/card/card.svelte';
+  import { usernamesStore } from '$lib/stores/account.store.svelte';
   import AssetLeaderboard from './leaderboards/AssetLeaderboard.svelte';
   import LandBuyLeaderboard from './leaderboards/LandBuyLeaderboard.svelte';
 

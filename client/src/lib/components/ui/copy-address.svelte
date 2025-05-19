@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { usernamesStore } from '$lib/stores/account.svelte';
+  import { usernamesStore } from '$lib/stores/account.store.svelte';
   import { padAddress } from '$lib/utils';
 
   let {

@@ -1,25 +1,26 @@
 <script lang="ts">
-  import data from '$profileData';
+  import type { LandWithActions } from '$lib/api/land.svelte';
   import type { Token } from '$lib/interfaces';
-  import { selectedLand } from '$lib/stores/stores.svelte';
+  import { tokenStore } from '$lib/stores/tokens.store.svelte';
   import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
-  import { onMount } from 'svelte';
+  import data from '$profileData';
   import { Input } from '../ui/input';
   import Label from '../ui/label/label.svelte';
   import { Select, SelectContent } from '../ui/select';
   import SelectItem from '../ui/select/select-item.svelte';
   import SelectTrigger from '../ui/select/select-trigger.svelte';
   import BuyInsights from './buy-insights.svelte';
-  import { tokenStore } from '$lib/stores/tokens.svelte';
 
   let {
     selectedToken = $bindable<Token | undefined>(),
     stakeAmount = $bindable<CurrencyAmount>(),
     sellAmount = $bindable<CurrencyAmount>(),
+    land,
   }: {
     selectedToken: Token | undefined;
     stakeAmount: CurrencyAmount;
     sellAmount: CurrencyAmount;
+    land: LandWithActions;
   } = $props();
 
   let stakeAmountVal = $state(stakeAmount.toString());
@@ -134,12 +135,7 @@
       <Input type="number" bind:value={sellAmountVal} />
     </div>
   </div>
-  {#if $selectedLand}
-    <BuyInsights
-      {sellAmountVal}
-      {stakeAmountVal}
-      {selectedToken}
-      land={$selectedLand}
-    />
+  {#if land}
+    <BuyInsights {sellAmountVal} {stakeAmountVal} {selectedToken} {land} />
   {/if}
 </div>
