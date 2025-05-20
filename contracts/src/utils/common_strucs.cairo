@@ -1,6 +1,6 @@
-use ponzi_land::models::auction::Auction;
-use ponzi_land::models::land::Land;
 use starknet::ContractAddress;
+use ponzi_land::models::land::Land;
+use ponzi_land::models::auction::Auction;
 #[derive(Drop, Serde, starknet::Store, Debug, Introspect, Copy)]
 pub struct TokenInfo {
     token_address: ContractAddress,

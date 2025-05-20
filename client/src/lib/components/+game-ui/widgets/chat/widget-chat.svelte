@@ -1,9 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { useDojo } from '$lib/contexts/dojo'
-  import { useAccount } from '$lib/contexts/account.svelte';
-  import { generateMessageTypedData } from './helpers';
-  const { client: sdk, accountManager } = useDojo();
 
   // State for the chat
   let messages: { id: number; text: string; sender: string; timestamp: Date }[] = $state([]);
@@ -11,7 +7,7 @@
   let chatContainer: HTMLElement | undefined;
 
   // Function to handle sending a new message
-  async function sendMessage() {
+  function sendMessage() {
     if (newMessage.trim() === '') return;
     
     messages = [...messages, {
@@ -22,18 +18,6 @@
     }];
     
     newMessage = '';
-
-    const provider = useAccount()?.getProvider();
-    const account = provider?.getWalletAccount();
-
-    if (!account) {
-      return;
-    }
-    const data = generateMessageTypedData(account.address, 'chat', newMessage, Date.now().toString());
-
-    const signature = await account?.signMessage(data);
-
-    sdk.toriiClient.publishMessage(JSON.stringify(data), signature as string[]);
     
     // Scroll to bottom after message is added
     setTimeout(() => {

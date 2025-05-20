@@ -4,24 +4,25 @@ use openzeppelin_token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDis
 mod TaxesComponent {
     //use dojo imports
     use dojo::model::{ModelStorage, ModelValueStorage};
-    use ponzi_land::components::payable::{IPayable, PayableComponent};
-    use ponzi_land::consts::{BASE_TIME, TAX_RATE, TIME_SPEED};
-    // Internal imports
-    use ponzi_land::helpers::coord::max_neighbors;
-    use ponzi_land::helpers::taxes::get_taxes_per_neighbor;
-    use ponzi_land::models::land::{Land, LandStake};
-    use ponzi_land::store::{Store, StoreTrait};
-    use ponzi_land::utils::common_strucs::TokenInfo;
-    use ponzi_land::utils::get_neighbors::neighbors_with_their_neighbors;
-    use starknet::contract_address::ContractAddressZeroable;
-    use starknet::info::{get_block_timestamp, get_contract_address};
-    use starknet::storage::{
-        Map, MutableVecTrait, StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess,
-        Vec, VecTrait,
-    };
 
     // Starknet imports
     use starknet::{ContractAddress};
+    use starknet::info::{get_contract_address, get_block_timestamp};
+
+    use starknet::storage::{
+        Map, StoragePointerReadAccess, StoragePointerWriteAccess, StoragePathEntry, Vec, VecTrait,
+        MutableVecTrait,
+    };
+    use starknet::contract_address::ContractAddressZeroable;
+    // Internal imports
+    use ponzi_land::helpers::coord::max_neighbors;
+    use ponzi_land::models::land::{Land, LandStake};
+    use ponzi_land::consts::{TAX_RATE, BASE_TIME, TIME_SPEED};
+    use ponzi_land::store::{Store, StoreTrait};
+    use ponzi_land::utils::get_neighbors::{neighbors_with_their_neighbors};
+    use ponzi_land::components::payable::{PayableComponent, IPayable};
+    use ponzi_land::utils::common_strucs::{TokenInfo};
+    use ponzi_land::helpers::taxes::{get_taxes_per_neighbor};
 
     // Local imports
     use super::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
@@ -101,7 +102,7 @@ mod TaxesComponent {
                 self._add_taxes(land, *neighbor, tax_per_neighbor + extra_amount, store);
 
                 i += 1;
-            }
+            };
 
             // Distribute taxes for land
 
@@ -130,11 +131,11 @@ mod TaxesComponent {
                     exists = true;
                     break;
                 };
-            }
+            };
 
             if !exists {
                 token_addresses.append().write(tax_payer.token_used);
-            }
+            };
 
             let key = (tax_recipient.owner, tax_recipient.location, tax_payer.token_used);
             let current_tax_amount = self.pending_taxes_for_land.read(key);
@@ -190,7 +191,7 @@ mod TaxesComponent {
                 if amount > 0 {
                     taxes.append(TokenInfo { token_address, amount });
                 }
-            }
+            };
             taxes
         }
     }

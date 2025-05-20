@@ -3,7 +3,7 @@
 // The functions allow for conversion between position-based coordinates and linear indices,
 // as well as directional movement logic (left, right, up, down) within the grid bounds.
 
-use ponzi_land::consts::GRID_WIDTH;
+use ponzi_land::consts::{GRID_WIDTH};
 
 fn position_to_index(row: u16, col: u16) -> u16 {
     assert!(row < GRID_WIDTH, "out of bounds");
@@ -170,8 +170,8 @@ fn max_neighbors(index: u16) -> u8 {
 mod coord_test {
     use ponzi_land::consts::GRID_WIDTH;
     use ponzi_land::helpers::coord::{
-        down, index_to_position, is_valid_position, left, max_neighbors, position_to_index, right,
-        up,
+        position_to_index, index_to_position, left, right, up, down, is_valid_position,
+        max_neighbors,
     };
 
     #[test]

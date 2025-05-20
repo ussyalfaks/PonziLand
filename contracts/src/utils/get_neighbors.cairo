@@ -1,12 +1,12 @@
-use core::dict::{Felt252Dict, Felt252DictEntryTrait, Felt252DictTrait};
-use core::nullable::{FromNullableResult, Nullable, NullableTrait, match_nullable};
-use ponzi_land::consts::{FACTOR_FOR_SELL_PRICE, MIN_AUCTION_PRICE};
-use ponzi_land::helpers::coord::{
-    down, down_left, down_right, left, max_neighbors, right, up, up_left, up_right,
-};
-use ponzi_land::models::auction::Auction;
-use ponzi_land::models::land::Land;
+use ponzi_land::consts::{MIN_AUCTION_PRICE, FACTOR_FOR_SELL_PRICE};
 use ponzi_land::store::{Store, StoreTrait};
+use ponzi_land::models::land::Land;
+use ponzi_land::models::auction::Auction;
+use ponzi_land::helpers::coord::{
+    left, right, up, down, max_neighbors, up_left, up_right, down_left, down_right,
+};
+use core::nullable::{Nullable, NullableTrait, match_nullable, FromNullableResult};
+use core::dict::{Felt252Dict, Felt252DictTrait, Felt252DictEntryTrait};
 
 
 fn process_neighbors_of_neighbors(
@@ -18,7 +18,7 @@ fn process_neighbors_of_neighbors(
         let their_neighbors = get_land_neighbors(store, neighbor.location);
         neighbors_with_their_neighbors
             .insert(neighbor.location.into(), NullableTrait::new(their_neighbors));
-    }
+    };
 
     neighbors_with_their_neighbors
 }
@@ -57,7 +57,7 @@ fn get_land_neighbors(mut store: Store, land_location: u16) -> Array<Land> {
             },
             Option::None => {},
         }
-    }
+    };
 
     lands
 }
@@ -68,7 +68,7 @@ fn get_auction_neighbors(mut store: Store, land_location: u16) -> Array<Auction>
 
     for direction in get_directions(land_location) {
         add_auction_neighbor(store, ref auctions, direction);
-    }
+    };
 
     auctions
 }
@@ -93,7 +93,7 @@ fn get_average_price(mut store: Store, land_location: u16) -> u256 {
 
     if neighbors.len() == 0 {
         return MIN_AUCTION_PRICE;
-    }
+    };
 
     let mut total_price = 0;
     let mut i = 0;
@@ -101,7 +101,7 @@ fn get_average_price(mut store: Store, land_location: u16) -> u256 {
         let neighbor = *neighbors[i];
         total_price += neighbor.sold_at_price.unwrap();
         i += 1;
-    }
+    };
     (total_price / neighbors.len().into()) * FACTOR_FOR_SELL_PRICE.into()
 }
 
@@ -141,7 +141,7 @@ impl LandCacheImpl of LandCacheTrait {
                 index = i;
                 break;
             }
-        }
+        };
 
         if found {
             return Option::Some(*self.lands.at(index));

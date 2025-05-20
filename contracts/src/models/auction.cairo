@@ -1,8 +1,8 @@
-use ponzi_land::consts::{
-    AUCTION_DURATION, DECIMALS_FACTOR, DROP_RATE, LINEAR_DECAY_TIME, PRICE_DECREASE_RATE,
-    RATE_DENOMINATOR, SCALING_FACTOR, TIME_SPEED,
-};
 use starknet::get_block_timestamp;
+use ponzi_land::consts::{
+    PRICE_DECREASE_RATE, TIME_SPEED, DECIMALS_FACTOR, AUCTION_DURATION, SCALING_FACTOR,
+    RATE_DENOMINATOR, LINEAR_DECAY_TIME, DROP_RATE,
+};
 
 #[derive(Copy, Drop, Serde, Debug)]
 #[dojo::model]
@@ -143,9 +143,9 @@ impl AuctionImpl of AuctionTrait {
 
 #[cfg(test)]
 mod tests {
+    use super::{Auction, AuctionTrait, AUCTION_DURATION};
+    use starknet::testing::{set_contract_address, set_block_timestamp, set_caller_address};
     use ponzi_land::consts::TIME_SPEED;
-    use starknet::testing::{set_block_timestamp, set_caller_address, set_contract_address};
-    use super::{AUCTION_DURATION, Auction, AuctionTrait};
 
     // Simulate the price points of an auction over time with a decay rate of 2
     fn simulate_price_points() -> Array<(u64, u256)> {
@@ -183,7 +183,7 @@ mod tests {
 
             price_points.append((time * TIME_SPEED.into(), price));
             i += 1;
-        }
+        };
         price_points
     }
 

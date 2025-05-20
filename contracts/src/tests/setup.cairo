@@ -1,33 +1,34 @@
 mod setup {
     // Starknet imports
 
+    use starknet::{ContractAddress, contract_address_const};
+    use starknet::testing::{set_contract_address, set_account_contract_address};
+    use starknet::info::{get_contract_address, get_caller_address, get_block_timestamp};
     use core::serde::Serde;
     // Dojo imports
 
-    use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait, WorldStorage, WorldStorageTrait};
+    use dojo::world::{WorldStorageTrait, WorldStorage, IWorldDispatcherTrait, IWorldDispatcher};
     use dojo_cairo_test::{
-        ContractDef, ContractDefTrait, NamespaceDef, TestResource, WorldStorageTestTrait,
-        spawn_test_world,
+        spawn_test_world, NamespaceDef, TestResource, ContractDefTrait, ContractDef,
+        WorldStorageTestTrait,
     };
-    use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
 
     // External dependencies
     use openzeppelin_token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-    use ponzi_land::mocks::ekubo_core::{
-        IEkuboCoreTesting, IEkuboCoreTestingDispatcher, MockEkuboCore,
-    };
+    use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
     // Internal imports
     use ponzi_land::mocks::erc20::MyToken;
-    use ponzi_land::models::auction::{Auction, m_Auction};
-    use ponzi_land::models::land::{Land, LandStake, m_Land, m_LandStake};
-    use ponzi_land::systems::actions::{IActionsDispatcher, IActionsDispatcherTrait, actions};
-    use ponzi_land::systems::auth::{IAuthDispatcher, IAuthDispatcherTrait, auth};
-    use ponzi_land::systems::token_registry::{
-        ITokenRegistryDispatcher, ITokenRegistryDispatcherTrait, token_registry,
+    use ponzi_land::mocks::ekubo_core::{
+        MockEkuboCore, IEkuboCoreTesting, IEkuboCoreTestingDispatcher,
     };
-    use starknet::info::{get_block_timestamp, get_caller_address, get_contract_address};
-    use starknet::testing::{set_account_contract_address, set_contract_address};
-    use starknet::{ContractAddress, contract_address_const};
+    use ponzi_land::models::land::{Land, m_Land, LandStake, m_LandStake};
+    use ponzi_land::models::auction::{Auction, m_Auction};
+
+    use ponzi_land::systems::actions::{actions, IActionsDispatcher, IActionsDispatcherTrait};
+    use ponzi_land::systems::auth::{auth, IAuthDispatcher, IAuthDispatcherTrait};
+    use ponzi_land::systems::token_registry::{
+        token_registry, ITokenRegistryDispatcher, ITokenRegistryDispatcherTrait,
+    };
 
     fn RECIPIENT() -> ContractAddress {
         contract_address_const::<'RECIPIENT'>()

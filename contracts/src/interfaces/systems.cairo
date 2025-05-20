@@ -1,5 +1,6 @@
+use starknet::{ContractAddress, ClassHash};
 use dojo::world::{
-    IWorldDispatcher, IWorldDispatcherTrait, Resource, WorldStorage, WorldStorageTrait,
+    WorldStorage, WorldStorageTrait, IWorldDispatcher, IWorldDispatcherTrait, Resource,
 };
 
 pub use ponzi_land::systems::auth::{IAuthDispatcher, IAuthDispatcherTrait};
@@ -7,7 +8,6 @@ pub use ponzi_land::systems::auth::{IAuthDispatcher, IAuthDispatcherTrait};
 pub use ponzi_land::systems::token_registry::{
     ITokenRegistryDispatcher, ITokenRegistryDispatcherTrait,
 };
-use starknet::{ClassHash, ContractAddress};
 
 #[generate_trait]
 pub impl SystemsImpl of SystemsTrait {
