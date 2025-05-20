@@ -65,13 +65,13 @@
   <div class="flex p-3 bg-gray-700 border-t border-gray-600 gap-2">
     <textarea 
       bind:value={newMessage} 
-      on:keydown={handleKeydown}
+      onkeydown={handleKeydown}
       placeholder="Type a message..."
       rows="1"
       class="flex-1 px-3 py-2 rounded-full border-none bg-gray-800 text-white resize-none outline-none font-inherit"
     ></textarea>
     <button 
-      on:click={sendMessage} 
+      onclick={sendMessage} 
       disabled={!newMessage.trim()}
       class="px-4 py-2 bg-blue-500 text-white border-none rounded-full font-bold cursor-pointer transition-colors duration-200 hover:bg-blue-400 disabled:bg-gray-600 disabled:opacity-70 disabled:cursor-not-allowed"
     >
