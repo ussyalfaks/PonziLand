@@ -44,7 +44,7 @@
   let sellAmount = $state<CurrencyAmount>(CurrencyAmount.fromScaled(1));
 
   let currentPrice = $state<CurrencyAmount>();
-  let priceDisplay = $derived(currentPrice?.toString() ?? '');
+  let priceDisplay = $derived(currentPrice?.rawValue().toString() ?? '');
 
   const address = $derived(account.address);
   let isOwner = $derived(land?.owner === padAddress(address ?? ''));
@@ -65,6 +65,7 @@
             (value instanceof BuildingLand || value instanceof AuctionLand)
           ) {
             land = createLandWithActions(value);
+            console.log('land.sellPrice', land.sellPrice);
             currentPrice = land.sellPrice;
           } else {
             land = null;
@@ -170,6 +171,8 @@
       currentPrice: land?.sellPrice ?? null,
     };
 
+    console.log('landSetup', landSetup);
+
     if (!land) {
       console.error('No land selected');
       return;
@@ -188,15 +191,6 @@
           ?.waitForTransaction(result.transaction_hash);
         const landPromise = land.wait();
         await Promise.any([txPromise, landPromise]);
-        //nuke the lands
-        const neighborsLocations = land.getNeighbors().locations.array;
-        neighborsLocations.forEach((location) => {
-          const locationString = toHexWithPadding(location);
-          if (nukeStore.pending[locationString]) {
-            // remove from pending>
-            markAsNuking(locationString);
-          }
-        });
       }
     } catch (error) {
       console.error('Error buying land', error);
@@ -262,14 +256,16 @@
   });
 
   $effect(() => {
-    fetchCurrentPrice();
-
-    const interval = setInterval(() => {
-      console.log('Fetching current price');
+    if (land?.type === 'auction') {
       fetchCurrentPrice();
-    }, 2000);
 
-    return () => clearInterval(interval);
+      const interval = setInterval(() => {
+        console.log('Fetching current price');
+        fetchCurrentPrice();
+      }, 2000);
+
+      return () => clearInterval(interval);
+    }
   });
 
   const fetchCurrentPrice = () => {

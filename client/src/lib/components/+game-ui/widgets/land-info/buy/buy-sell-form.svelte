@@ -24,11 +24,28 @@
   } = $props();
 
   let stakeAmountVal = $state(stakeAmount.toString());
-  let stakeAmountError = $derived.by(() => {
-    let parsedStake = parseFloat(stakeAmountVal);
+  let sellAmountVal = $state(sellAmount.toString());
+  let error = $state<string | null>(null);
 
-    if (isNaN(parsedStake) || parsedStake < 0) {
-      return 'Stake amount must be a number greater than 0';
+  const validateForm = () => {
+    error = null;
+    
+    if (!selectedToken) {
+      error = 'Please select a token';
+      return false;
+    }
+
+    let parsedStake = parseFloat(stakeAmountVal);
+    let parsedSell = parseFloat(sellAmountVal);
+
+    if (isNaN(parsedStake) || parsedStake <= 0) {
+      error = 'Stake amount must be a number greater than 0';
+      return false;
+    }
+
+    if (isNaN(parsedSell) || parsedSell <= 0) {
+      error = 'Sell price must be a number greater than 0';
+      return false;
     }
 
     // get selected token balance from tokenStore balance
@@ -36,8 +53,9 @@
       (balance) => balance.token.address == selectedToken?.address,
     );
 
-    if (selectedTokenBalance == undefined) {
-      return "You don't have any of this token";
+    if (!selectedTokenBalance) {
+      error = "You don't have any of this token";
+      return false;
     }
 
     const selectedTokenAmount = CurrencyAmount.fromUnscaled(
@@ -45,14 +63,26 @@
       selectedToken,
     );
 
-    if (
-      selectedToken &&
-      selectedTokenAmount.rawValue().isLessThanOrEqualTo(parsedStake)
-    ) {
-      return `You don't have enough ${selectedToken.symbol} to stake (max: ${selectedTokenAmount.toString()})`;
+    // Check if the land's current price is affordable
+    if (land.sellPrice && selectedTokenAmount.rawValue().isLessThan(land.sellPrice.rawValue())) {
+      error = `This land is too expensive. Current price: ${land.sellPrice.toString()} ${land.token.symbol}. Your balance: ${selectedTokenAmount.toString()} ${selectedToken.symbol}`;
+      return false;
     }
+
+    // Check if the total amount (stake + sell) is affordable
+    const totalRequired = parsedStake + parsedSell;
+    if (selectedTokenAmount.rawValue().isLessThan(totalRequired)) {
+      error = `Insufficient balance. You need ${totalRequired} ${selectedToken.symbol} (stake: ${parsedStake}, price: ${parsedSell}). Your balance: ${selectedTokenAmount.toString()} ${selectedToken.symbol}`;
+      return false;
+    }
+
+    return true;
+  };
+
+  $effect(() => {
+    // Validate form whenever values change
+    validateForm();
   });
-  let sellAmountVal = $state(sellAmount.toString());
 
   $effect(() => {
     if (selectedToken == undefined) {
@@ -122,20 +152,27 @@
       <Input
         type="number"
         bind:value={stakeAmountVal}
-        class={stakeAmountError ? 'border-red-500 border-2' : ''}
+        class={error ? 'border-red-500 border-2' : ''}
       />
-      {#if stakeAmountError}
-        <Label>
-          <span class="text-red-500">{stakeAmountError}</span>
-        </Label>
-      {/if}
     </div>
     <div>
       <Label class="text-lg font-semibold">Sell Price</Label>
-      <Input type="number" bind:value={sellAmountVal} />
+      <Input 
+        type="number" 
+        bind:value={sellAmountVal}
+        class={error ? 'border-red-500 border-2' : ''}
+      />
     </div>
   </div>
+
+  {#if error}
+    <div class="text-red-500 text-sm mt-2 p-2 bg-red-50 border border-red-200 rounded">
+      {error}
+    </div>
+  {/if}
+
   {#if land}
     <BuyInsights {sellAmountVal} {stakeAmountVal} {selectedToken} {land} />
   {/if}
 </div>
+
