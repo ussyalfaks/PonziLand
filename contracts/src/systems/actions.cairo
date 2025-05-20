@@ -1,9 +1,8 @@
-use starknet::ContractAddress;
-
 use dojo::world::WorldStorage;
-use ponzi_land::models::land::{Land, LandStake};
 use ponzi_land::models::auction::Auction;
-use ponzi_land::utils::common_strucs::{TokenInfo, ClaimInfo, LandYieldInfo, LandOrAuction};
+use ponzi_land::models::land::{Land, LandStake};
+use ponzi_land::utils::common_strucs::{ClaimInfo, LandOrAuction, LandYieldInfo, TokenInfo};
+use starknet::ContractAddress;
 
 // define the interface
 #[starknet::interface]
@@ -59,63 +58,54 @@ trait IActions<T> {
 // dojo decorator
 #[dojo::contract]
 pub mod actions {
-    use super::{IActions, WorldStorage};
-
-    use core::nullable::{Nullable, NullableTrait, match_nullable, FromNullableResult};
-    use core::dict::{Felt252Dict, Felt252DictTrait, Felt252DictEntryTrait};
-
-    use starknet::{ContractAddress, get_caller_address, get_block_timestamp, get_contract_address};
-    use starknet::contract_address::ContractAddressZeroable;
-    use starknet::storage::{
-        Map, StoragePointerReadAccess, StoragePointerWriteAccess, StoragePathEntry, Vec, VecTrait,
-        MutableVecTrait,
-    };
-    use dojo::model::{ModelStorage, ModelValueStorage};
+    use core::dict::{Felt252Dict, Felt252DictEntryTrait, Felt252DictTrait};
+    use core::nullable::{FromNullableResult, Nullable, NullableTrait, match_nullable};
     use dojo::event::EventStorage;
+    use dojo::model::{ModelStorage, ModelValueStorage};
     use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
-
+    use ponzi_land::components::payable::PayableComponent;
+    use ponzi_land::components::stake::StakeComponent;
+    use ponzi_land::components::taxes::TaxesComponent;
+    use ponzi_land::consts::{
+        BASE_TIME, CENTER_LOCATION, DECAY_RATE, FACTOR_FOR_SELL_PRICE, FLOOR_PRICE, GRID_WIDTH,
+        LIQUIDITY_SAFETY_MULTIPLIER, MAX_AUCTIONS, MAX_AUCTIONS_FROM_BID, MIN_AUCTION_PRICE,
+        TAX_RATE, TIME_SPEED,
+    };
+    use ponzi_land::helpers::circle_expansion::{
+        generate_circle, get_circle_land_position, get_random_available_index, get_random_index,
+        is_section_completed, lands_per_section,
+    };
+    use ponzi_land::helpers::coord::{
+        down, down_left, down_right, get_all_neighbors, index_to_position, is_valid_position, left,
+        max_neighbors, position_to_index, right, up, up_left, up_right,
+    };
+    use ponzi_land::helpers::taxes::{
+        get_tax_rate_per_neighbor, get_taxes_per_neighbor, get_time_to_nuke,
+    };
+    use ponzi_land::interfaces::systems::SystemsTrait;
+    use ponzi_land::models::auction::{Auction, AuctionTrait};
+    use ponzi_land::models::land::{Land, LandStake, LandTrait, Level, PoolKey, PoolKeyConversion};
+    use ponzi_land::store::{Store, StoreTrait};
     use ponzi_land::systems::auth::{IAuthDispatcher, IAuthDispatcherTrait};
-
     use ponzi_land::systems::token_registry::{
         ITokenRegistryDispatcher, ITokenRegistryDispatcherTrait,
     };
-
-    use ponzi_land::models::land::{Land, LandStake, LandTrait, Level, PoolKeyConversion, PoolKey};
-    use ponzi_land::models::auction::{Auction, AuctionTrait};
-
-    use ponzi_land::components::stake::StakeComponent;
-    use ponzi_land::components::taxes::TaxesComponent;
-    use ponzi_land::components::payable::PayableComponent;
-
     use ponzi_land::utils::common_strucs::{
-        TokenInfo, ClaimInfo, YieldInfo, LandYieldInfo, LandWithTaxes, LandOrAuction,
+        ClaimInfo, LandOrAuction, LandWithTaxes, LandYieldInfo, TokenInfo, YieldInfo,
     };
     use ponzi_land::utils::get_neighbors::{
-        get_land_neighbors, get_average_price, process_neighbors_of_neighbors,
+        get_average_price, get_land_neighbors, process_neighbors_of_neighbors,
     };
-    use ponzi_land::utils::spiral::{get_next_position, SpiralState};
-    use ponzi_land::utils::level_up::{calculate_new_level};
-    use ponzi_land::utils::stake::{calculate_refund_amount};
-
-    use ponzi_land::helpers::coord::{
-        is_valid_position, up, down, left, right, max_neighbors, index_to_position,
-        position_to_index, up_left, up_right, down_left, down_right, get_all_neighbors,
+    use ponzi_land::utils::level_up::calculate_new_level;
+    use ponzi_land::utils::spiral::{SpiralState, get_next_position};
+    use ponzi_land::utils::stake::calculate_refund_amount;
+    use starknet::contract_address::ContractAddressZeroable;
+    use starknet::storage::{
+        Map, MutableVecTrait, StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess,
+        Vec, VecTrait,
     };
-    use ponzi_land::helpers::taxes::{
-        get_taxes_per_neighbor, get_tax_rate_per_neighbor, get_time_to_nuke,
-    };
-    use ponzi_land::helpers::circle_expansion::{
-        get_circle_land_position, get_random_index, lands_per_section, generate_circle,
-        is_section_completed, get_random_available_index,
-    };
-
-    use ponzi_land::consts::{
-        TAX_RATE, BASE_TIME, TIME_SPEED, MAX_AUCTIONS, MAX_AUCTIONS_FROM_BID, DECAY_RATE,
-        FLOOR_PRICE, LIQUIDITY_SAFETY_MULTIPLIER, MIN_AUCTION_PRICE, GRID_WIDTH,
-        FACTOR_FOR_SELL_PRICE, CENTER_LOCATION,
-    };
-    use ponzi_land::store::{Store, StoreTrait};
-    use ponzi_land::interfaces::systems::{SystemsTrait};
+    use starknet::{ContractAddress, get_block_timestamp, get_caller_address, get_contract_address};
+    use super::{IActions, WorldStorage};
 
     component!(path: PayableComponent, storage: payable, event: PayableEvent);
     impl PayableInternalImpl = PayableComponent::PayableImpl<ContractState>;
@@ -457,7 +447,7 @@ pub mod actions {
                     }
                 }
                 i += 1;
-            };
+            }
 
             self.stake._reimburse(store, active_lands.span());
 
@@ -612,7 +602,7 @@ pub mod actions {
                     token_address: neighbor.token_used, amount: taxes_per_neighbor,
                 };
                 unclaimed_taxes.append(tax_info);
-            };
+            }
 
             (pending_taxes, unclaimed_taxes)
         }
@@ -639,7 +629,7 @@ pub mod actions {
                 } else {
                     neighbors_array.append(LandOrAuction::None);
                 }
-            };
+            }
 
             neighbors_array
         }
@@ -894,7 +884,7 @@ pub mod actions {
                                 token_address: tax.token_address, amount: adjuested_tax_amount,
                             },
                         )
-                };
+                }
 
                 self._claim_and_discount_taxes(adjusted_taxes, land.owner, land.location);
             };
@@ -937,7 +927,7 @@ pub mod actions {
             while i < vec_len {
                 index.append(self.used_lands_in_circle.entry((circle, section)).at(i).read());
                 i += 1;
-            };
+            }
             index
         }
 

@@ -9,20 +9,21 @@ mod interfaces {
 }
 
 mod models {
-    mod land;
     mod auction;
+    mod land;
+    mod message;
 }
 
 mod helpers {
+    mod circle_expansion;
     mod coord;
     mod taxes;
-    mod circle_expansion;
 }
 
 mod components {
     mod payable;
-    mod taxes;
     mod stake;
+    mod taxes;
 }
 
 mod consts;
@@ -34,8 +35,8 @@ mod tokens {
 }
 
 mod mocks {
-    mod erc20;
     mod ekubo_core;
+    mod erc20;
 }
 
 mod utils {
@@ -48,6 +49,6 @@ mod utils {
 
 #[cfg(test)]
 mod tests {
-    mod setup;
     mod actions;
+    mod setup;
 }

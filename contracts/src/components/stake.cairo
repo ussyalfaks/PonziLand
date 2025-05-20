@@ -1,30 +1,27 @@
-use starknet::ContractAddress;
 use openzeppelin_token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+use starknet::ContractAddress;
 
 
 #[starknet::component]
 mod StakeComponent {
     //use dojo imports
     use dojo::model::{ModelStorage, ModelValueStorage};
-
-    // Starknet imports
-    use starknet::{ContractAddress};
-    use starknet::info::{get_contract_address, get_block_timestamp, get_caller_address};
-
-    use starknet::storage::{
-        Map, StoragePointerReadAccess, StoragePointerWriteAccess, Vec, VecTrait, MutableVecTrait,
-    };
-    use starknet::contract_address::ContractAddressZeroable;
+    use ponzi_land::components::payable::{IPayable, PayableComponent};
+    use ponzi_land::consts::{BASE_TIME, GRID_WIDTH, TAX_RATE, TIME_SPEED};
     // Internal imports
     use ponzi_land::helpers::coord::{max_neighbors};
     use ponzi_land::models::land::{Land, LandStake};
-    use ponzi_land::consts::{TAX_RATE, BASE_TIME, TIME_SPEED, GRID_WIDTH};
     use ponzi_land::store::{Store, StoreTrait};
-    use ponzi_land::components::payable::{PayableComponent, IPayable};
-    use ponzi_land::utils::{
-        common_strucs::{TokenInfo, LandWithTaxes},
-        stake::{calculate_refund_ratio, calculate_refund_amount},
+    use ponzi_land::utils::common_strucs::{LandWithTaxes, TokenInfo};
+    use ponzi_land::utils::stake::{calculate_refund_amount, calculate_refund_ratio};
+    use starknet::contract_address::ContractAddressZeroable;
+    use starknet::info::{get_block_timestamp, get_caller_address, get_contract_address};
+    use starknet::storage::{
+        Map, MutableVecTrait, StoragePointerReadAccess, StoragePointerWriteAccess, Vec, VecTrait,
     };
+
+    // Starknet imports
+    use starknet::{ContractAddress};
 
 
     // Local imports
@@ -172,7 +169,7 @@ mod StakeComponent {
                 self.token_stakes.write(land.token_used, new_total);
             } else {
                 panic!("Attempting to refund more than what's staked");
-            };
+            }
 
             land_stake.amount = 0;
             store.set_land_stake(land_stake);

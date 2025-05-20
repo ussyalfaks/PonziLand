@@ -1,8 +1,8 @@
-use ponzi_land::helpers::coord::{position_to_index};
-use starknet::{get_caller_address, get_block_number};
-use ponzi_land::consts::GRID_WIDTH;
-use keccak::keccak_u256s_le_inputs;
 use core::integer::u256_from_felt252;
+use keccak::keccak_u256s_le_inputs;
+use ponzi_land::consts::GRID_WIDTH;
+use ponzi_land::helpers::coord::position_to_index;
+use starknet::{get_block_number, get_caller_address};
 
 
 fn lands_in_circle(circle_number: u16) -> u16 {
@@ -67,9 +67,9 @@ fn generate_circle(circle: u16) -> Array<u16> {
             let land_index = get_circle_land_position(circle, index);
             lands.append(land_index);
             i += 1;
-        };
+        }
         section += 1;
-    };
+    }
     return lands;
 }
 
@@ -100,15 +100,15 @@ fn get_random_available_index(circle: u16, used_lands: Array<u16>) -> u16 {
                 found = true;
                 break;
             };
-        };
+        }
 
         if !found {
             result = index;
             break;
-        };
+        }
 
         index = (index + 1) % section_len;
         tries += 1;
-    };
+    }
     return result;
 }

@@ -1,8 +1,8 @@
-use ponzi_land::utils::level_up::calculate_discount_for_level;
+use ponzi_land::consts::{BASE_TIME, TAX_RATE, TIME_SPEED};
 use ponzi_land::helpers::coord::max_neighbors;
 use ponzi_land::models::land::{Land, LandStake};
-use ponzi_land::consts::{TAX_RATE, BASE_TIME, TIME_SPEED};
-use starknet::{get_block_timestamp};
+use ponzi_land::utils::level_up::calculate_discount_for_level;
+use starknet::get_block_timestamp;
 
 pub fn get_taxes_per_neighbor(land: Land, land_stake: LandStake) -> u256 {
     let current_time = get_block_timestamp();

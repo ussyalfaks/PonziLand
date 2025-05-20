@@ -1,6 +1,5 @@
-use starknet::ContractAddress;
-use starknet::{get_caller_address, get_contract_address};
 use starknet::contract_address::ContractAddressZeroable;
+use starknet::{ContractAddress, get_caller_address, get_contract_address};
 
 
 #[starknet::interface]
@@ -26,17 +25,15 @@ trait IAuth<T> {
 
 #[dojo::contract]
 pub mod auth {
-    use starknet::{ContractAddress, get_caller_address, get_block_timestamp};
-    use starknet::contract_address::ContractAddressZeroable;
-    use starknet::storage::{
-        Map, StoragePointerReadAccess, StoragePointerWriteAccess, Vec, VecTrait, MutableVecTrait,
-    };
     use core::ecdsa::check_ecdsa_signature;
     use core::poseidon::poseidon_hash_span;
-
-    use dojo::world::WorldStorage;
     use dojo::event::EventStorage;
-
+    use dojo::world::WorldStorage;
+    use starknet::contract_address::ContractAddressZeroable;
+    use starknet::storage::{
+        Map, MutableVecTrait, StoragePointerReadAccess, StoragePointerWriteAccess, Vec, VecTrait,
+    };
+    use starknet::{ContractAddress, get_block_timestamp, get_caller_address};
     use super::IAuth;
 
     #[derive(Drop, Serde)]
@@ -66,8 +63,8 @@ pub mod auth {
 
     #[storage]
     struct Storage {
-        authorized_addresses: Map::<ContractAddress, bool>,
-        verifier_accounts: Map::<ContractAddress, bool>,
+        authorized_addresses: Map<ContractAddress, bool>,
+        verifier_accounts: Map<ContractAddress, bool>,
         //has to be the public key
         verifier: felt252,
         owner: ContractAddress,

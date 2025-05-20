@@ -37,9 +37,9 @@ trait IPayable<TContractState> {
 #[starknet::component]
 mod PayableComponent {
     use openzeppelin_token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
+    use ponzi_land::consts::OUR_CONTRACT_SEPOLIA_ADDRESS;
     use starknet::ContractAddress;
     use super::ValidationResult;
-    use ponzi_land::consts::OUR_CONTRACT_SEPOLIA_ADDRESS;
 
     //TODO:move this to a file for errors
     mod errors {

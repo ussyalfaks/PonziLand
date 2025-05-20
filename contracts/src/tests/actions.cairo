@@ -1,47 +1,44 @@
 // Starknet imports
-use starknet::contract_address::ContractAddressZeroable;
-use starknet::testing::{
-    set_contract_address, set_block_timestamp, set_caller_address, set_block_number,
-};
-use starknet::{contract_address_const, ContractAddress, get_block_timestamp};
-use starknet::storage::{Map, StoragePointerReadAccess, StoragePointerWriteAccess, StoragePathEntry};
-use core::ec::{EcPointTrait, EcStateTrait};
 use core::ec::stark_curve::{GEN_X, GEN_Y};
+use core::ec::{EcPointTrait, EcStateTrait};
 use core::poseidon::poseidon_hash_span;
-use starknet::{testing, get_tx_info};
+use dojo::model::{ModelStorage, ModelStorageTest, ModelValueStorage};
+use dojo::utils::hash::{selector_from_names, selector_from_namespace_and_name};
+use dojo::world::world::Event;
 // Dojo imports
 
-use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait, WorldStorageTrait, WorldStorage};
-use dojo::model::{ModelStorage, ModelValueStorage, ModelStorageTest};
-use dojo::world::world::Event;
-use dojo::utils::hash::{selector_from_namespace_and_name, selector_from_names};
-//Internal imports
-
-use ponzi_land::tests::setup::{
-    setup, setup::{create_setup, deploy_erc20, RECIPIENT, deploy_mock_ekubo_core},
-};
-
-use ponzi_land::systems::actions::{actions, IActionsDispatcher, IActionsDispatcherTrait};
-use ponzi_land::systems::actions::actions::{InternalImpl, NewAuctionEvent};
-use ponzi_land::systems::auth::{IAuthDispatcher, IAuthDispatcherTrait};
-use ponzi_land::systems::token_registry::{ITokenRegistryDispatcher, ITokenRegistryDispatcherTrait};
-
-use ponzi_land::models::land::{Land, LandStake, LandTrait, Level, PoolKeyConversion, PoolKey};
-use ponzi_land::models::auction::{Auction};
-use ponzi_land::consts::{
-    BASE_TIME, TIME_SPEED, MAX_AUCTIONS, TWO_DAYS_IN_SECONDS, MIN_AUCTION_PRICE,
-};
-use ponzi_land::helpers::coord::{left, right, up, down, up_left, up_right, down_left, down_right};
-use ponzi_land::helpers::taxes::{
-    get_tax_rate_per_neighbor, get_time_to_nuke, get_taxes_per_neighbor,
-};
-use ponzi_land::helpers::circle_expansion::{generate_circle, get_random_index};
-use ponzi_land::store::{Store, StoreTrait};
-use ponzi_land::mocks::ekubo_core::{IEkuboCoreTestingDispatcher, IEkuboCoreTestingDispatcherTrait};
+use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait, WorldStorage, WorldStorageTrait};
+use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
 
 // External dependencies
 use openzeppelin_token::erc20::interface::{IERC20CamelDispatcher, IERC20CamelDispatcherTrait};
-use ekubo::interfaces::core::{ICoreDispatcher, ICoreDispatcherTrait};
+use ponzi_land::consts::{
+    BASE_TIME, MAX_AUCTIONS, MIN_AUCTION_PRICE, TIME_SPEED, TWO_DAYS_IN_SECONDS,
+};
+use ponzi_land::helpers::circle_expansion::{generate_circle, get_random_index};
+use ponzi_land::helpers::coord::{down, down_left, down_right, left, right, up, up_left, up_right};
+use ponzi_land::helpers::taxes::{
+    get_tax_rate_per_neighbor, get_taxes_per_neighbor, get_time_to_nuke,
+};
+use ponzi_land::mocks::ekubo_core::{IEkuboCoreTestingDispatcher, IEkuboCoreTestingDispatcherTrait};
+use ponzi_land::models::auction::Auction;
+use ponzi_land::models::land::{Land, LandStake, LandTrait, Level, PoolKey, PoolKeyConversion};
+use ponzi_land::store::{Store, StoreTrait};
+use ponzi_land::systems::actions::actions::{InternalImpl, NewAuctionEvent};
+use ponzi_land::systems::actions::{IActionsDispatcher, IActionsDispatcherTrait, actions};
+use ponzi_land::systems::auth::{IAuthDispatcher, IAuthDispatcherTrait};
+use ponzi_land::systems::token_registry::{ITokenRegistryDispatcher, ITokenRegistryDispatcherTrait};
+//Internal imports
+
+use ponzi_land::tests::setup::{
+    setup, setup::{RECIPIENT, create_setup, deploy_erc20, deploy_mock_ekubo_core},
+};
+use starknet::contract_address::ContractAddressZeroable;
+use starknet::storage::{Map, StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess};
+use starknet::testing::{
+    set_block_number, set_block_timestamp, set_caller_address, set_contract_address,
+};
+use starknet::{ContractAddress, contract_address_const, get_block_timestamp, get_tx_info, testing};
 
 const BROTHER_ADDRESS: felt252 = 0x07031b4db035ffe8872034a97c60abd4e212528416f97462b1742e1f6cf82afe;
 const STARK_ADDRESS: felt252 = 0x071de745c1ae996cfd39fb292b4342b7c086622e3ecf3a5692bd623060ff3fa0;
@@ -281,7 +278,7 @@ fn capture_location_of_new_auction(address: ContractAddress) -> Option<u16> {
             },
             Option::None => { break; },
         }
-    };
+    }
 
     location
 }
@@ -413,7 +410,7 @@ fn bid_and_verify_next_auctions(
         let location = *locations.at(i);
         actions_system.bid(location, main_currency.contract_address, 2, 10);
         i += 1;
-    };
+    }
 
     // Verify next auctions were created in the specified direction
     i = 0;
@@ -977,7 +974,7 @@ fn test_organic_auction() {
         let left_loc = left(*heads.at(i)).unwrap();
         left_locations.append(left_loc);
         i += 1;
-    };
+    }
     set_block_timestamp(100000);
 
     // Step 2: Bid on LEFT locations and verify UP auctions
@@ -993,7 +990,7 @@ fn test_organic_auction() {
         let up_loc = up(*left_locations.at(i)).unwrap();
         up_locations.append(up_loc);
         i += 1;
-    };
+    }
     set_block_timestamp(100000);
 
     bid_and_verify_next_auctions(actions_system, store, main_currency, up_locations.clone(), 2);
@@ -1009,7 +1006,7 @@ fn test_organic_auction() {
 
         right_locations.append(right_loc);
         i += 1;
-    };
+    }
 
     // Get second RIGHT locations
     let mut right2_locations: Array<u16> = ArrayTrait::new();
@@ -1022,7 +1019,7 @@ fn test_organic_auction() {
 
         right2_locations.append(right2_loc);
         i += 1;
-    };
+    }
 
     // Step 4: Bid on second RIGHT locations and verify DOWN auctions
     bid_and_verify_next_auctions(actions_system, store, main_currency, right2_locations.clone(), 3);
