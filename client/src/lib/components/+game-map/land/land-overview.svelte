@@ -1,12 +1,10 @@
 <script lang="ts">
-  import type { LandWithActions } from '$lib/api/land.svelte';
-  import { cn, locationIntToString } from '$lib/utils';
-  import LandDisplay from './land-display.svelte';
-  import { GAME_SPEED, LEVEL_UP_TIME } from '$lib/const';
-  import { onMount } from 'svelte';
-  import LandLevelProgress from './land-level-progress.svelte';
-  import { Progress } from '$lib/components/ui/progress';
+  import type { LandWithActions } from '$lib/api/land';
   import Button from '$lib/components/ui/button/button.svelte';
+  import { Progress } from '$lib/components/ui/progress';
+  import { cn, locationIntToString } from '$lib/utils';
+  import { onMount } from 'svelte';
+  import LandDisplay from './land-display.svelte';
 
   const {
     land,

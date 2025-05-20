@@ -8,19 +8,8 @@ import { getTokenInfo } from '$lib/utils';
 import type { BigNumberish } from 'starknet';
 
 export class BuildingLand extends BaseLand {
-  private _owner!: string;
-  private _boughtAt!: Date;
-  private _sellPrice!: CurrencyAmount;
-  private _token!: Token;
-  private _level!: Level;
-  private _stakeAmount!: CurrencyAmount;
-  private _lastPayTime!: Date;
-  private _block_date_bought: BigNumberish;
-  private _sell_price: BigNumberish;
-  private _token_used: string;
-
   constructor(land: Land) {
-    super('building', toLocation(land.location)!);
+    super('building', toLocation(land.location)!, getTokenInfo(land.token_used)!);
     this._block_date_bought = land.block_date_bought;
     this._sell_price = land.sell_price;
     this._token_used = land.token_used;

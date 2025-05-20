@@ -1,12 +1,10 @@
 <script lang="ts">
-  import type { LandWithActions } from '$lib/api/land.svelte';
-  import { GAME_SPEED } from '$lib/const';
-  import type { Token } from '$lib/interfaces';
+  import type { LandWithActions } from '$lib/api/land';
   import { Arrow } from '$lib/components/ui/arrows';
-  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
-  import { getNeighbourYieldArray } from '$lib/utils/taxes';
-  import { calculateBurnRate } from '$lib/utils/taxes';
+  import type { Token } from '$lib/interfaces';
   import { displayCurrency } from '$lib/utils/currency';
+  import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
+  import { calculateBurnRate, getNeighbourYieldArray } from '$lib/utils/taxes';
 
   let {
     land,

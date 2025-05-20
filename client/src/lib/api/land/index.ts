@@ -1,13 +1,15 @@
 import type { LandYieldInfo, Token } from '$lib/interfaces';
 import type { Auction, Land, LandStake } from '$lib/models.gen';
-import { coordinatesToLocation, toHexWithPadding } from '$lib/utils';
-import type { CurrencyAmount } from '$lib/utils/CurrencyAmount';
-import { type Level } from '$lib/utils/level';
+import { coordinatesToLocation, toHexWithPadding, getTokenInfo } from '$lib/utils';
+import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
+import { type Level, fromDojoLevel } from '$lib/utils/level';
+import type { BigNumberish } from 'starknet';
+import type { CairoCustomEnum } from 'starknet';
 
 import type { Neighbors } from '../neighbors';
 import { type Location } from './location';
 
-export type LandType = 'empty' | 'auction' | 'building';
+export type LandType = 'empty' | 'building' | 'auction';
 
 export type TransactionResult = Promise<
   | {
@@ -84,24 +86,97 @@ export type LandWithActions = LandWithMeta & {
 };
 
 export abstract class BaseLand {
-  private _type: LandType;
+  protected readonly _type: LandType;
   public readonly location: Location;
   public readonly locationString: string;
+  protected _owner: string = '';
+  protected _boughtAt: Date = new Date(0);
+  protected _sellPrice: CurrencyAmount;
+  protected _token: Token;
+  protected _level: Level;
+  protected _stakeAmount: CurrencyAmount;
+  protected _lastPayTime: Date = new Date(0);
+  protected _block_date_bought: BigNumberish = 0;
+  protected _sell_price: BigNumberish = 0;
+  protected _token_used: string = '';
 
-  constructor(type: LandType, location: Location) {
+  constructor(type: LandType, location: Location, token: Token) {
     this._type = type;
     this.location = location;
+    console.log('[BASELAND] Creating base land with location', location);
+    
+    // Ensure location coordinates are valid numbers
+    if (typeof location.x !== 'number' || typeof location.y !== 'number' || 
+        isNaN(location.x) || isNaN(location.y)) {
+      console.error('Invalid location coordinates:', location);
+      throw new Error('Invalid location coordinates');
+    }
+    
     this.locationString = toHexWithPadding(coordinatesToLocation(location));
+    this._token = token;
+    this._sellPrice = CurrencyAmount.fromUnscaled(0, token);
+    this._stakeAmount = CurrencyAmount.fromUnscaled(0, token);
+    const defaultLevel = { variant: 'First', unwrap: () => ({}), activeVariant: 'First' } as unknown as CairoCustomEnum;
+    this._level = fromDojoLevel(defaultLevel);
   }
 
   get type() {
     return this._type;
   }
+
+  // Common accessors
+  public get owner(): string {
+    return this._owner;
+  }
+
+  public get level(): Level {
+    return this._level;
+  }
+
+  public get boughtAt(): Date {
+    return this._boughtAt;
+  }
+
+  public get sellPrice(): CurrencyAmount {
+    return this._sellPrice;
+  }
+
+  public get token(): Token {
+    return this._token;
+  }
+
+  public get stakeAmount(): CurrencyAmount {
+    return this._stakeAmount;
+  }
+
+  public get lastPayTime(): Date {
+    return this._lastPayTime;
+  }
+
+  public get block_date_bought(): BigNumberish {
+    return this._block_date_bought;
+  }
+
+  public get sell_price(): BigNumberish {
+    return this._sell_price;
+  }
+
+  public get token_used(): string {
+    return this._token_used;
+  }
+
+  public get tokenUsed(): string {
+    return this._token_used;
+  }
+
+  public get tokenAddress(): string {
+    return this._token.address;
+  }
 }
 
 export class EmptyLand extends BaseLand {
   constructor(location: Location) {
-    super('empty', location);
+    super('empty', location, getTokenInfo('0x0')!);
   }
 
   static is(land: BaseLand): land is EmptyLand {

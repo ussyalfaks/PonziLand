@@ -1,14 +1,14 @@
 <script lang="ts">
   import { Card } from '$lib/components/ui/card';
   import CopyAddress from '$lib/components/ui/copy-address.svelte';
-  import type { SelectedLand } from '$lib/stores/stores.svelte';
+  import type { LandWithActions } from '$lib/api/land';
   import { AI_AGENT_ADDRESS } from '$lib/const';
-
+  
   let {
     land,
     isOwner,
   }: {
-    land?: SelectedLand;
+    land?: LandWithActions;
     isOwner: boolean;
   } = $props();
 

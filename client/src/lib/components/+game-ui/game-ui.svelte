@@ -3,6 +3,7 @@
   import type { LandWithActions } from '$lib/api/land.svelte';
   import WidgetLauncher from '$lib/components/+game-ui/widgets/widget-launcher.svelte';
   import { widgetsStore } from '$lib/stores/widgets.store';
+  import TxNotificationZone from '../ui/tx-notification-zone.svelte';
   import WidgetProvider from './widgets/widget-provider.svelte';
 
   // Function to open buy land widget
@@ -40,4 +41,6 @@
 >
   <WidgetLauncher />
   <WidgetProvider />
+
+  <TxNotificationZone />
 </div>

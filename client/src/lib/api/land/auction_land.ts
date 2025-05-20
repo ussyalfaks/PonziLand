@@ -1,23 +1,13 @@
 import type { Token } from '$lib/interfaces';
 import type { Auction, Land, LandStake } from '$lib/models.gen';
-import { getTokenInfo } from '$lib/utils';
+import { getTokenInfo, toHexWithPadding } from '$lib/utils';
 import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
 import { fromDojoLevel, type Level } from '$lib/utils/level';
 import type { BigNumberish } from 'starknet';
 import { BaseLand } from '.';
-import { locationEquals, toLocation } from './location';
+import { locationEquals, toLocation, type Location as LandLocation } from './location';
 
 export class AuctionLand extends BaseLand {
-  private _owner!: string;
-  private _boughtAt!: Date;
-  private _sellPrice!: CurrencyAmount;
-  private _token!: Token;
-  private _level!: Level;
-  private _stakeAmount!: CurrencyAmount;
-  private _lastPayTime!: Date;
-  private _block_date_bought: BigNumberish;
-  private _sell_price: BigNumberish;
-  private _token_used: string;
   private _startTime!: Date;
   private _startPrice!: CurrencyAmount;
   private _floorPrice!: CurrencyAmount;
@@ -25,18 +15,67 @@ export class AuctionLand extends BaseLand {
   private _decayRate!: BigNumberish;
   private _soldAtPrice?: CurrencyAmount;
 
-  constructor(land: Land, auction: Auction) {
-    super('auction', toLocation(land.location)!);
-    this._block_date_bought = land.block_date_bought;
-    this._sell_price = land.sell_price;
-    this._token_used = land.token_used;
-    this._token = getTokenInfo(land.token_used)!;
-    this._stakeAmount = CurrencyAmount.fromUnscaled(0, this._token);
-    this._lastPayTime = new Date(0);
-    this.update(land, auction);
+  private static isLand(obj: Land | BaseLand): obj is Land {
+    return 'block_date_bought' in obj;
+  }
+
+  constructor(landOrPrevious: Land | BaseLand, auction: Auction) {
+    let location: LandLocation;
+    let token: Token;
+
+    if (AuctionLand.isLand(landOrPrevious)) {
+      console.log('[AUCTIONLAND] Creating auction land from land', landOrPrevious);
+      if (!landOrPrevious.location) {
+        throw new Error('Land location is undefined');
+      }
+      location = toLocation(landOrPrevious.location);
+      token = getTokenInfo(landOrPrevious.token_used)!; // Add non-null assertion since we know token info exists
+    } else {
+      console.log('[AUCTIONLAND] Creating auction land from previous land', landOrPrevious);
+      location = landOrPrevious.location;
+      token = landOrPrevious.token;
+    }
+
+    console.log('[AUCTIONLAND] Location', location);
+
+    console.log('[AUCTIONLAND] Creating auction land from', landOrPrevious, auction, location, token);
+    super('auction', location, token);
+
+    if (AuctionLand.isLand(landOrPrevious)) {
+      // Creating from Land model
+      this._block_date_bought = landOrPrevious.block_date_bought;
+      this._sell_price = landOrPrevious.sell_price;
+      this._token_used = landOrPrevious.token_used;
+      this.update(landOrPrevious, auction);
+    } else {
+      // Creating from previous land
+      this._block_date_bought = landOrPrevious.block_date_bought;
+      this._sell_price = landOrPrevious.sell_price;
+      this._token_used = landOrPrevious.token_used;
+      this._stakeAmount = landOrPrevious.stakeAmount;
+      this._lastPayTime = landOrPrevious.lastPayTime;
+      this._owner = toHexWithPadding(0);
+      this._level = landOrPrevious.level;
+      this._boughtAt = landOrPrevious.boughtAt;
+      this._sellPrice = landOrPrevious.sellPrice;
+      
+      // Update auction specific properties
+      this._startTime = new Date(Number(auction.start_time));
+      this._startPrice = CurrencyAmount.fromUnscaled(auction.start_price, this._token);
+      this._floorPrice = CurrencyAmount.fromUnscaled(auction.floor_price, this._token);
+      this._isFinished = auction.is_finished;
+      this._decayRate = auction.decay_rate;
+      
+      if (auction.sold_at_price && 'value' in auction.sold_at_price) {
+        this._soldAtPrice = CurrencyAmount.fromUnscaled(auction.sold_at_price.value as BigNumberish, this._token);
+      } else {
+        this._soldAtPrice = undefined;
+      }
+    }
   }
 
   public update(land: Land, auction: Auction) {
+    console.log('[AUCTIONLAND] Updating auction land from', land, auction);
     // Assert that the location is the same
     if (!locationEquals(toLocation(land.location)!, this.location)) {
       console.error(
@@ -48,7 +87,7 @@ export class AuctionLand extends BaseLand {
     }
 
     this._boughtAt = new Date(Number(land.block_date_bought));
-    this._owner = land.owner;
+    this._owner = toHexWithPadding(0);
     this._level = fromDojoLevel(land.level);
 
     this._token = getTokenInfo(land.token_used)!;

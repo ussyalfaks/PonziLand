@@ -7,9 +7,12 @@ export type Location = {
 };
 
 export function toLocation(
-  value: BigNumberish | undefined,
-): Location | undefined {
-  if (value === undefined) return undefined;
+  value: BigNumberish,
+): Location {
+  // If value is object, return it
+  if (typeof value === 'object') {
+    return value;
+  }
 
   let parsedLocation = parseLocation(ensureNumber(value));
   return { x: parsedLocation[0], y: parsedLocation[1] };
