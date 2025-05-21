@@ -1,11 +1,8 @@
-use chaindata_models::{
-    models::{LandStakeId, LandStakeModel},
-    shared::Location,
-};
+use chaindata_models::{events::EventId, models::LandStakeModel, shared::Location};
 use chrono::NaiveDateTime;
 use sqlx::{query, query_as};
 
-use crate::Database;
+use crate::{Database, Error};
 
 pub struct Repository {
     db: Database,
@@ -22,8 +19,8 @@ impl Repository {
     /// # Errors
     ///
     /// Returns an error if the database operation fails.
-    pub async fn save(&self, land_stake: LandStakeModel) -> Result<LandStakeId, sqlx::Error> {
-        query!(
+    pub async fn save(&self, land_stake: LandStakeModel) -> Result<EventId, Error> {
+        Ok(query!(
             r#"
             INSERT INTO land_stake (
                 id, at, location, last_pay_time, amount
@@ -31,15 +28,16 @@ impl Repository {
             VALUES ($1, $2, $3, $4, $5)
             RETURNING id
             "#,
-            land_stake.id as LandStakeId,
+            land_stake.id as EventId,
             land_stake.at,
             land_stake.location as Location,
             land_stake.last_pay_time,
             land_stake.amount as _
         )
         .fetch_one(&mut *(self.db.acquire().await?))
-        .await
-        .map(|row| row.id.into())
+        .await?
+        .id
+        .parse()?)
     }
 
     /// Gets the latest land stake model at a specific location at or before the given timestamp
@@ -56,7 +54,7 @@ impl Repository {
             LandStakeModel,
             r#"
             SELECT
-                id as "id: LandStakeId",
+                id as "id: _",
                 at,
                 location as "location: Location",
                 last_pay_time,
@@ -94,7 +92,7 @@ impl Repository {
                 ORDER BY location, at DESC
             )
             SELECT
-                id as "id: LandStakeId",
+                id as "id: _",
                 at,
                 location as "location: Location",
                 last_pay_time,
@@ -111,12 +109,12 @@ impl Repository {
     ///
     /// # Errors
     /// Returns an error if the database operation fails.
-    pub async fn get_by_id(&self, id: LandStakeId) -> Result<Option<LandStakeModel>, sqlx::Error> {
+    pub async fn get_by_id(&self, id: EventId) -> Result<Option<LandStakeModel>, sqlx::Error> {
         query_as!(
             LandStakeModel,
             r#"
             SELECT
-                id as "id: LandStakeId",
+                id as "id: _",
                 at,
                 location as "location: Location",
                 last_pay_time,
@@ -124,7 +122,7 @@ impl Repository {
             FROM land_stake
             WHERE id = $1
             "#,
-            id as LandStakeId
+            id as EventId
         )
         .fetch_optional(&mut *(self.db.acquire().await?))
         .await
@@ -156,7 +154,7 @@ mod tests {
     use std::str::FromStr;
 
     #[sqlx::test(migrator = "MIGRATOR")]
-    async fn test_save_and_get_land_stake(pool: sqlx::PgPool) -> sqlx::Result<()> {
+    async fn test_save_and_get_land_stake(pool: sqlx::PgPool) -> Result<(), Error> {
         let repo = Repository::new(pool);
 
         // Create a test land stake model
@@ -164,7 +162,7 @@ mod tests {
         let now = Utc::now().naive_utc();
         let last_pay_time = now - chrono::Duration::hours(1);
         let land_stake_model = LandStakeModel {
-            id: LandStakeId::new(),
+            id: EventId::new_test(0, 0, 0),
             at: now,
             location,
             last_pay_time,
@@ -208,7 +206,7 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "MIGRATOR")]
-    async fn test_land_stake_versioning(pool: sqlx::PgPool) -> sqlx::Result<()> {
+    async fn test_land_stake_versioning(pool: sqlx::PgPool) -> Result<(), Error> {
         let repo = Repository::new(pool);
 
         // Create a location
@@ -217,7 +215,7 @@ mod tests {
         // Create first version
         let time1 = Utc::now().naive_utc();
         let land_stake1 = LandStakeModel {
-            id: LandStakeId::new(),
+            id: EventId::new_test(0, 0, 1),
             at: time1,
             location,
             last_pay_time: time1 - chrono::Duration::hours(1),
@@ -228,7 +226,7 @@ mod tests {
         // Create second version (one hour later)
         let time2 = time1 + chrono::Duration::hours(1);
         let land_stake2 = LandStakeModel {
-            id: LandStakeId::new(),
+            id: EventId::new_test(0, 0, 2),
             at: time2,
             location,
             last_pay_time: time2,                   // Updated pay time

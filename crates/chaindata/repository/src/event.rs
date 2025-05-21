@@ -1,8 +1,7 @@
+use crate::{events::base::EventDataRepository, Database, Error};
 use chaindata_models::events::{Event, EventId, EventType, FetchedEvent};
 use chrono::{DateTime, Utc};
 use sqlx::{query, query_as};
-
-use crate::{events::base::EventDataRepository, Database};
 
 pub struct Repository {
     db: Database,
@@ -21,8 +20,8 @@ impl Repository {
     /// - No row was found
     /// - Error connecting to the database
     /// - Wrong format of id
-    pub async fn get_event_by_id(&self, id: EventId) -> Result<Event, sqlx::Error> {
-        query_as!(
+    pub async fn get_event_by_id(&self, id: EventId) -> Result<Event, Error> {
+        Ok(query_as!(
             Event,
             r#"
             SELECT
@@ -35,7 +34,7 @@ impl Repository {
             id as EventId
         )
         .fetch_one(&mut *(self.db.acquire().await?))
-        .await
+        .await?)
     }
 
     /// Get the last event date.
@@ -45,8 +44,8 @@ impl Repository {
     /// - No row was found
     /// - Error connecting to the database
     /// - Wrong format of id
-    pub async fn get_last_event_date(&self) -> Result<DateTime<Utc>, sqlx::Error> {
-        query!(
+    pub async fn get_last_event_date(&self) -> Result<DateTime<Utc>, Error> {
+        Ok(query!(
             r#"
             SELECT
                 MAX(at)
@@ -54,15 +53,16 @@ impl Repository {
         "#
         )
         .fetch_one(&mut *(self.db.acquire().await?))
-        .await
-        .map(|opt| opt.max.map_or(DateTime::UNIX_EPOCH, |date| date.and_utc()))
+        .await?
+        .max
+        .map_or(DateTime::UNIX_EPOCH, |date| date.and_utc()))
     }
 
     /// Saves an event into the database.
     ///
     /// # Errors
     /// Returns an error if the event could not be saved.
-    pub async fn save_event(&self, event: FetchedEvent) -> Result<EventId, sqlx::Error> {
+    pub async fn save_event(&self, event: FetchedEvent) -> Result<EventId, Error> {
         // Start a TX
         let mut tx = self.db.begin().await?;
 
@@ -83,10 +83,14 @@ impl Repository {
         .fetch_one(&mut *tx)
         .await?
         .id
-        .into();
+        .parse()?;
+
+        // Force the ID to be the same
+        let mut event_data = event.data;
+        event_data.set_id(id.clone());
 
         // Insert the event data
-        EventDataRepository::save(&mut *tx, &event.data).await?;
+        EventDataRepository::save(&mut *tx, &event_data).await?;
 
         // Commit the TX
         tx.commit().await?;
