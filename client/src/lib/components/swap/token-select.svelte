@@ -4,7 +4,7 @@
     SelectContent,
     SelectItem,
     SelectTrigger,
-  } from '../ui/select';
+  } from '$lib/components/ui/select';
   import data from '$profileData';
   import type { Token } from '$lib/interfaces';
 

@@ -1,6 +1,8 @@
 import { GRID_SIZE } from '$lib/const';
 import { toBigInt, toHexWithPadding } from '$lib/utils';
-import type { LandWithActions } from './land.svelte';
+import type { BaseLand } from './land';
+import { BuildingLand } from './land/building_land';
+import { AuctionLand } from './land/auction_land';
 
 export class Neighbors {
   public MAP_SIZE = GRID_SIZE;
@@ -16,8 +18,8 @@ export class Neighbors {
     downLeft: bigint;
     downRight: bigint;
   };
-  private source: LandWithActions[] = [];
-  private neighbors: LandWithActions[] = [];
+  private source: BaseLand[] = [];
+  private neighbors: BaseLand[] = [];
 
   constructor({
     location,
@@ -25,8 +27,8 @@ export class Neighbors {
     source,
   }: {
     location: string;
-    neighbors?: LandWithActions[];
-    source?: LandWithActions[];
+    neighbors?: BaseLand[];
+    source?: BaseLand[];
   }) {
     this.location = toBigInt(location) ?? -1n;
     this.locations = Neighbors.getLocations(this.location);
@@ -43,55 +45,55 @@ export class Neighbors {
     return this.neighbors;
   }
 
-  public setNeighbors(neighbors: LandWithActions[]) {
+  public setNeighbors(neighbors: BaseLand[]) {
     this.neighbors = neighbors;
   }
 
   public getUpLeft() {
     return this.neighbors.find(
-      (l) => l.location === toHexWithPadding(this.locations.upLeft),
+      (l) => l.locationString === toHexWithPadding(this.locations.upLeft),
     );
   }
 
   public getUp() {
     return this.neighbors.find(
-      (l) => l.location === toHexWithPadding(this.locations.up),
+      (l) => l.locationString === toHexWithPadding(this.locations.up),
     );
   }
 
   public getUpRight() {
     return this.neighbors.find(
-      (l) => l.location === toHexWithPadding(this.locations.upRight),
+      (l) => l.locationString === toHexWithPadding(this.locations.upRight),
     );
   }
 
   public getLeft() {
     return this.neighbors.find(
-      (l) => l.location === toHexWithPadding(this.locations.left),
+      (l) => l.locationString === toHexWithPadding(this.locations.left),
     );
   }
 
   public getRight() {
     return this.neighbors.find(
-      (l) => l.location === toHexWithPadding(this.locations.right),
+      (l) => l.locationString === toHexWithPadding(this.locations.right),
     );
   }
 
   public getDownLeft() {
     return this.neighbors.find(
-      (l) => l.location === toHexWithPadding(this.locations.downLeft),
+      (l) => l.locationString === toHexWithPadding(this.locations.downLeft),
     );
   }
 
   public getDown() {
     return this.neighbors.find(
-      (l) => l.location === toHexWithPadding(this.locations.down),
+      (l) => l.locationString === toHexWithPadding(this.locations.down),
     );
   }
 
   public getDownRight() {
     return this.neighbors.find(
-      (l) => l.location === toHexWithPadding(this.locations.downRight),
+      (l) => l.locationString === toHexWithPadding(this.locations.downRight),
     );
   }
 
@@ -120,16 +122,19 @@ export class Neighbors {
     };
   }
 
-  static getWithLocation(locationString: string, landStore: LandWithActions[]) {
+  static getWithLocation(locationString: string, landStore: BaseLand[]) {
     const location = toBigInt(locationString) ?? 0n;
 
     const locations = this.getLocations(location).array;
-    const filteredStore = landStore.filter(
-      (l) => l.owner !== toHexWithPadding(0),
-    );
+    const filteredStore = landStore.filter((l) => {
+      if (BuildingLand.is(l) || AuctionLand.is(l)) {
+        return l.owner !== toHexWithPadding(0);
+      }
+      return false;
+    });
 
     const neighborsLands = locations.map((l) =>
-      filteredStore.find((ls) => ls.location === toHexWithPadding(l)),
+      filteredStore.find((ls) => ls.locationString === toHexWithPadding(l)),
     );
 
     return new Neighbors({

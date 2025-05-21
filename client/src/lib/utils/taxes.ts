@@ -1,12 +1,9 @@
-import type { LandWithActions } from '$lib/api/land.svelte';
-import type { LandYieldInfo, Token } from '$lib/interfaces';
-import { CurrencyAmount } from './CurrencyAmount';
-import data from '$profileData';
-import { Redo } from 'lucide-svelte';
-import { MAP_SIZE } from '$lib/api/tile-store.svelte';
+import type { LandWithActions } from '$lib/api/land';
+import { GAME_SPEED, GRID_SIZE, TAX_RATE } from '$lib/const';
+import type { Token } from '$lib/interfaces';
 import { toHexWithPadding } from '$lib/utils';
-import { GAME_SPEED, TAX_RATE } from '$lib/const';
-import type { Land } from '$lib/models.gen';
+import data from '$profileData';
+import { CurrencyAmount } from './CurrencyAmount';
 export type TaxData = {
   tokenAddress: string;
   tokenSymbol: string;
@@ -92,15 +89,15 @@ export const getNeighbourYieldArray = async (land: LandWithActions) => {
 
   const location = Number(land.location);
   const neighbors = [
-    location - MAP_SIZE - 1,
-    location - MAP_SIZE,
-    location - MAP_SIZE + 1,
+    location - GRID_SIZE - 1,
+    location - GRID_SIZE,
+    location - GRID_SIZE + 1,
     location - 1,
     location,
     location + 1,
-    location + MAP_SIZE - 1,
-    location + MAP_SIZE,
-    location + MAP_SIZE + 1,
+    location + GRID_SIZE - 1,
+    location + GRID_SIZE,
+    location + GRID_SIZE + 1,
   ];
 
   // assign yield info to neighbour if location matches
@@ -132,7 +129,6 @@ export const getNeighbourYieldArray = async (land: LandWithActions) => {
   const infosFormatted = neighborYieldInfo.sort((a, b) => {
     return Number((a?.location ?? 0n) - (b?.location ?? 0n));
   });
-  console.log('yield info:', infosFormatted);
 
   return infosFormatted;
 };
