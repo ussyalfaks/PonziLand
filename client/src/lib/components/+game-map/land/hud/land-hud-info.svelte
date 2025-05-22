@@ -129,9 +129,9 @@
       <LandOverview {land} {isOwner} />
     {/if}
   </div>
-  {#if settingsStore.isProMode}
-    <LandHudPro {totalYieldValue} burnRate={burnRateInBaseToken} {land} />
-  {:else if land}
+  {#if settingsStore.isNoobMode}
     <LandHudNormal {yieldInfo} {burnRate} {land} />
+  {:else if land}
+    <LandHudPro {totalYieldValue} burnRate={burnRateInBaseToken} {land} />
   {/if}
 </div>
