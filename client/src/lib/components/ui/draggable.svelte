@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Card } from '$lib/components/ui/card';
   import { widgetsStore } from '$lib/stores/widgets.store';
+  import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+  import { Slider } from '$lib/components/ui/slider';
   import '@interactjs/actions';
   import '@interactjs/actions/drag';
   import '@interactjs/actions/resize';
@@ -10,7 +12,7 @@
   import '@interactjs/modifiers';
   import '@interactjs/reflow';
   import '@interactjs/snappers';
-  import { Minus, X } from 'lucide-svelte';
+  import { Minus, MoreVertical, X } from 'lucide-svelte';
   import { onMount } from 'svelte';
 
   interface Position {
@@ -37,9 +39,36 @@
   let currentPosition = $state<Position>(initialPosition);
   let currentDimensions = $state<Dimensions>(initialDimensions);
   let isMinimized = $state(false);
+  let isFixed = $state($widgetsStore[id]?.fixed || false);
+  let fixedStyles = $state($widgetsStore[id]?.fixedStyles || '');
+  let disableControls = $state($widgetsStore[id]?.disableControls || false);
+  let transparency = $state($widgetsStore[id]?.transparency ?? 1);
+  let sliderValue = $state(transparency * 100);
+
+  let showDropdown = $state(false);
+  let dropdownEl = $state<HTMLElement | null>(null);
+
+  // Compute the style string based on whether the widget is fixed or not
+  let styleString = $derived(
+    isFixed
+      ? `${fixedStyles} pointer-events:all;z-index:${$widgetsStore[id]?.zIndex || 0};opacity:${transparency}`
+      : `transform: translate(${currentPosition.x}px, ${currentPosition.y}px); pointer-events:all; width:${currentDimensions?.width}px; height:${
+          isMinimized ? 0 : currentDimensions?.height
+        }px; z-index: ${$widgetsStore[id]?.zIndex || 0}; opacity:${transparency}`,
+  );
 
   function handleClick() {
     widgetsStore.bringToFront(id);
+  }
+
+  function handleTransparencyChange(value: number) {
+    const newValue = Math.max(10, Math.min(100, value)) / 100;
+    transparency = newValue;
+    widgetsStore.updateWidget(id, { transparency: newValue });
+  }
+
+  function toggleDropdown() {
+    showDropdown = !showDropdown;
   }
 
   onMount(() => {
@@ -55,73 +84,81 @@
         dimensions: initialDimensions,
         isMinimized: false,
         isOpen: true,
+        fixed: false,
+        fixedStyles: '',
       });
+    } else {
+      isFixed = currentWidget.fixed || false;
+      fixedStyles = currentWidget.fixedStyles || '';
     }
 
-    const interactable = interact(el)
-      .draggable({
-        allowFrom: '.window-header',
-        modifiers: [
-          interact.modifiers.snap({
-            targets: [interact.snappers.grid({ x: gridSize, y: gridSize })],
-            range: Infinity,
-            relativePoints: [{ x: 0, y: 0 }],
-          }),
-          ...(restrictToParent
-            ? [
-                interact.modifiers.restrict({
-                  restriction: el.parentNode as HTMLElement,
-                  elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
-                  endOnly: true,
-                }),
-              ]
-            : []),
-        ],
-        listeners: {
-          move(event) {
-            currentPosition = {
-              x: currentPosition.x + event.dx,
-              y: currentPosition.y + event.dy,
-            };
+    // Only set up interact if the widget is not fixed
+    if (!isFixed) {
+      const interactable = interact(el)
+        .draggable({
+          allowFrom: '.window-header',
+          modifiers: [
+            interact.modifiers.snap({
+              targets: [interact.snappers.grid({ x: gridSize, y: gridSize })],
+              range: Infinity,
+              relativePoints: [{ x: 0, y: 0 }],
+            }),
+            ...(restrictToParent
+              ? [
+                  interact.modifiers.restrict({
+                    restriction: el.parentNode as HTMLElement,
+                    elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
+                    endOnly: true,
+                  }),
+                ]
+              : []),
+          ],
+          listeners: {
+            move(event) {
+              currentPosition = {
+                x: currentPosition.x + event.dx,
+                y: currentPosition.y + event.dy,
+              };
 
-            // Save both position and current dimensions
-            widgetsStore.updateWidget(id, {
-              position: { ...currentPosition },
-              dimensions: currentDimensions || undefined,
-            });
+              // Save both position and current dimensions
+              widgetsStore.updateWidget(id, {
+                position: { ...currentPosition },
+                dimensions: currentDimensions || undefined,
+              });
+            },
           },
-        },
-      })
-      .resizable({
-        allowFrom: '.window-resize-handle',
-        edges: { right: true, bottom: true },
-        listeners: {
-          move(event) {
-            // Update current dimensions
-            currentDimensions = {
-              width: event.rect.width,
-              height: event.rect.height,
-            };
+        })
+        .resizable({
+          allowFrom: '.window-resize-handle',
+          edges: { right: true, bottom: true },
+          listeners: {
+            move(event) {
+              // Update current dimensions
+              currentDimensions = {
+                width: event.rect.width,
+                height: event.rect.height,
+              };
 
-            // Save both position and dimensions
-            widgetsStore.updateWidget(id, {
-              dimensions: currentDimensions,
-            });
+              // Save both position and dimensions
+              widgetsStore.updateWidget(id, {
+                dimensions: currentDimensions,
+              });
+            },
           },
-        },
-        modifiers: [
-          interact.modifiers.restrictSize({
-            min: { width: 200, height: 50 },
-          }),
-        ],
-      });
+          modifiers: [
+            interact.modifiers.restrictSize({
+              min: { width: 200, height: 50 },
+            }),
+          ],
+        });
 
-    async function onWindowResize() {
-      // start a resize action and wait for inertia to finish
-      await interactable.reflow({ name: 'drag', axis: 'xy' });
+      async function onWindowResize() {
+        // start a resize action and wait for inertia to finish
+        await interactable.reflow({ name: 'drag', axis: 'xy' });
+      }
+
+      window.addEventListener('resize', onWindowResize);
     }
-
-    window.addEventListener('resize', onWindowResize);
   });
 
   function handleMinimize() {
@@ -146,21 +183,47 @@
 <div
   bind:this={el}
   class="draggable overflow-hidden"
-  style="transform: translate({currentPosition.x}px, {currentPosition.y}px); pointer-events:all; width:{currentDimensions?.width}px; height:{isMinimized
-    ? 0
-    : currentDimensions?.height}px; z-index: {$widgetsStore[id]?.zIndex || 0};"
+  class:fixed={isFixed}
+  style={styleString}
   onclick={handleClick}
 >
   <Card class="w-full h-full">
-    <div class="window-header">
+    <div class="window-header" class:no-drag={isFixed}>
       <div class="window-title">{type}</div>
-      <div class="window-controls">
-        <button class="window-control" onclick={handleMinimize}>
-          <Minus size={16} />
-        </button>
-        <button class="window-control" onclick={handleClose}>
-          <X size={16} />
-        </button>
+      <div class="window-controls text-white">
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <button class="window-control">
+              <MoreVertical size={16} />
+            </button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content>
+            <Card style="opacity: {transparency}">
+              <DropdownMenu.Group>
+                <DropdownMenu.Label>Transparency</DropdownMenu.Label>
+                <Slider
+                  type="single"
+                  bind:value={sliderValue}
+                  max={100}
+                  min={10}
+                  step={10}
+                  onValueChange={handleTransparencyChange}
+                />
+                <span class="transparency-value text-white"
+                  >{Math.round(transparency * 100)}%</span
+                >
+              </DropdownMenu.Group>
+            </Card>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+        {#if !disableControls}
+          <button class="window-control" onclick={handleMinimize}>
+            <Minus size={16} />
+          </button>
+          <button class="window-control" onclick={handleClose}>
+            <X size={16} />
+          </button>
+        {/if}
       </div>
     </div>
     {#if !isMinimized}
@@ -169,7 +232,7 @@
       </div>
     {/if}
   </Card>
-  {#if !isMinimized}
+  {#if !isMinimized && !isFixed}
     <div class="window-resize-handle" style="pointer-events:all"></div>
   {/if}
 </div>
@@ -186,6 +249,12 @@
     min-height: 50px;
   }
 
+  .draggable.fixed {
+    pointer-events: all;
+    /* Remove transform and position styles when fixed as they'll be handled by fixedStyles */
+    transform: none !important;
+  }
+
   .window-header {
     display: flex;
     justify-content: space-between;
@@ -193,7 +262,11 @@
     cursor: grab;
   }
 
-  .window-header:active {
+  .window-header.no-drag {
+    cursor: default;
+  }
+
+  .window-header:active:not(.no-drag) {
     cursor: grabbing;
   }
 
@@ -255,5 +328,27 @@
       transparent 2px,
       transparent 4px
     );
+  }
+
+  .dropdown-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 200px;
+  }
+
+  :global(.dropdown-item [data-radix-dropdown-menu-item]) {
+    padding: 0;
+  }
+
+  :global(.dropdown-item [data-radix-dropdown-menu-label]) {
+    font-weight: 500;
+  }
+
+  .slider-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 0 8px;
   }
 </style>
