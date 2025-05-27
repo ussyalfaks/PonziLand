@@ -1,15 +1,17 @@
 <script lang="ts">
-  import type { LandWithActions } from '$lib/api/land.svelte';
-  import LandNukeShield from '$lib/components/+game-map/land/land-nuke-shield.svelte';
-  import { Label } from '$lib/components/ui/label';
+  import type { LandWithActions } from '$lib/api/land';
+  import { BuildingLand } from '$lib/api/land/building_land';
+  import Button from '$lib/components/ui/button/button.svelte';
+  import PonziSlider from '$lib/components/ui/ponzi-slider/ponzi-slider.svelte';
   import { Slider } from '$lib/components/ui/slider';
   import type { Token } from '$lib/interfaces';
+  import { displayCurrency } from '$lib/utils/currency';
   import {
     calculateBurnRate,
     calculateTaxes,
     estimateNukeTime,
   } from '$lib/utils/taxes';
-  import BuyInsightsNeighborGrid from '../tax-impact/buy-insights-neighbor-grid.svelte';
+  import BuyInsightsNeighborGrid from './buy-insights-neighbor-grid.svelte';
 
   let {
     sellAmountVal = undefined,
@@ -132,16 +134,27 @@
   let estimatedTimeString = $derived.by(() => {
     const time = estimatedNukeTimeSeconds;
 
-    if (time == 0) {
+    if (time === 0) {
       return '0s';
     }
-    // format seconds to dd hh mm ss
+
     const days = Math.floor(time / (3600 * 24));
     const hours = Math.floor((time % (3600 * 24)) / 3600);
     const minutes = Math.floor((time % 3600) / 60);
     const seconds = Math.floor(time % 60);
 
-    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    const parts = [
+      days ? `${days}d` : '',
+      hours ? `${hours}h` : '',
+      minutes ? `${minutes}m` : '',
+      seconds ? `${seconds}s` : '',
+    ];
+
+    const final = parts.filter(Boolean).join(' ');
+    if (!final) {
+      return 'Now !!!';
+    }
+    return final;
   });
 
   let estimatedNukeDate = $derived.by(() => {
@@ -157,78 +170,75 @@
   });
 </script>
 
-<Label class="font-semibold text-xl mt-3">Neighborhood Overview</Label>
-<div class="flex w-full justify-between items-center gap-4">
-  <div class="w-64 flex items-center justify-center">
-    {#if filteredNeighbors}
-      <BuyInsightsNeighborGrid {filteredNeighbors} {selectedToken} />
-    {/if}
-  </div>
-  <div class="w-full flex flex-col gap-4 mr-8">
-    <div class="w-full text-stroke-none flex flex-col leading-4 mt-3">
-      <div class="flex justify-between">
-        <p class="opacity-50">Per Neighbors</p>
-        <p>
-          -{taxes}
-          <span class="opacity-50">{selectedToken?.symbol}/h</span>
-        </p>
-      </div>
-      <div class="flex justify-between">
-        <p class="opacity-50">Max:</p>
-        <p>
-          -{Number(taxes) * maxNumberOfNeighbors}
-          <span class="opacity-50">{selectedToken?.symbol}/h</span>
-        </p>
-      </div>
-      <div class="flex justify-between">
-        <p class="">
-          <span class="opacity-50"> For </span>
-          {nbNeighbors}
-          <span class="opacity-50"> neighbors: </span>
-        </p>
-        <p class="text-right">
-          -{Number(taxes) * nbNeighbors}
-          <span class="opacity-50">{selectedToken?.symbol}/h</span>
-        </p>
-      </div>
+<div class="w-full flex flex-col gap-2">
+  <h2 class="font-ponzi-number">Neighborhood Tax Impact</h2>
+  <p class="leading-none -mt-1 opacity-75">
+    You can get an estimation of your land survival time in function of its
+    neighbors
+  </p>
+  <div class="flex gap-2">
+    <div>
+      {#if filteredNeighbors}
+        <BuyInsightsNeighborGrid {filteredNeighbors} {selectedToken} />
+      {/if}
     </div>
-
-    <div class="flex flex-col gap-4">
-      <div class="flex justify-between text-gray-400">
-        {#each Array(8) as _, i}
-          <span
-            class={i + 1 == neighbors.getNeighbors().length
-              ? 'text-white font-bold'
-              : ''}
-          >
-            {i + 1}
-          </span>
-        {/each}
+    <PonziSlider bind:value={nbNeighbors} />
+    <div class="flex flex-col flex-1 ml-4 justify-center tracking-wide">
+      <div
+        class="flex justify-between font-ponzi-number select-text text-xs items-end"
+      >
+        <div>
+          <span class="opacity-50">For</span>
+          <span class="text-xl text-blue-300 leading-none">{nbNeighbors}</span>
+          <span class="opacity-50"> neighbors </span>
+        </div>
+        <div class="opacity-75">
+          -{displayCurrency(Number(taxes) * nbNeighbors)}
+          {selectedToken?.symbol}
+        </div>
       </div>
-      <Slider
-        min={1}
-        max={8}
-        step={1}
-        value={[nbNeighbors]}
-        onValueChange={(val) => {
-          nbNeighbors = val[0];
-        }}
-      />
-    </div>
-    <div class="flex gap-2 items-center">
-      <LandNukeShield
-        estimatedNukeTime={estimatedNukeTimeSeconds}
-        class="h-10 w-10"
-      />
-      <div class="flex flex-col gap-1">
-        <span>
-          <span class="text-gray-400"> nuke in </span>
+      <hr class="my-1 opacity-50" />
+      <div
+        class="flex justify-between font-ponzi-number select-text text-xs items-end"
+      >
+        <div class="opacity-25">Per neighbors / h</div>
+        <div class="opacity-25">
+          -{displayCurrency(Number(taxes))}
+          {selectedToken?.symbol}
+        </div>
+      </div>
+      <div
+        class="flex justify-between font-ponzi-number select-text text-xs items-end"
+      >
+        <div class="opacity-25">Max / h</div>
+        <div class="opacity-25">
+          -{displayCurrency(Number(taxes) * maxNumberOfNeighbors)}
+          {selectedToken?.symbol}
+        </div>
+      </div>
+      <div
+        class="flex justify-between font-ponzi-number select-text text-xs items-end"
+      >
+        <div>
+          <span class="opacity-25">Nuke time with</span>
+          <span class="text-blue-300 leading-none">{nbNeighbors}</span>
+          <span class="opacity-25"> neighbors </span>
+        </div>
+        <div
+          class=" {estimatedTimeString.includes('Now')
+            ? 'text-red-500'
+            : 'text-green-500'}"
+        >
           {estimatedTimeString}
-        </span>
-
-        <span class="">
+        </div>
+      </div>
+      <div
+        class="flex justify-between font-ponzi-number select-text text-xs items-end"
+      >
+        <div></div>
+        <div class="opacity-25">
           {estimatedNukeDate}
-        </span>
+        </div>
       </div>
     </div>
   </div>

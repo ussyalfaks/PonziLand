@@ -182,12 +182,12 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   bind:this={el}
-  class="draggable overflow-hidden"
+  class="draggable relative"
   class:fixed={isFixed}
   style={styleString}
   onclick={handleClick}
 >
-  <Card class="w-full h-full">
+  <Card class="w-full h-full bg-ponzi">
     <div class="window-header" class:no-drag={isFixed}>
       <div class="window-title font-ponzi-number">{type}</div>
       <div class="window-controls text-white">

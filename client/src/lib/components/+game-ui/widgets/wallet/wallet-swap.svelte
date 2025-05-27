@@ -1,7 +1,6 @@
 <script lang="ts">
   import Button from '$lib/components/ui/button/button.svelte';
   import data from '$profileData';
-  import TokenSelect from './TokenSelect.svelte';
   import { useDojo } from '$lib/contexts/dojo';
   import { useAvnu, type QuoteParams } from '$lib/utils/avnu.svelte';
   import { CurrencyAmount } from '$lib/utils/CurrencyAmount';
@@ -9,6 +8,7 @@
   import { type Quote } from '@avnu/avnu-sdk';
   import { onMount } from 'svelte';
   import { fetchTokenBalance } from '$lib/accounts/balances';
+  import TokenSelect from '$lib/components/swap/token-select.svelte';
 
   let { client, accountManager } = useDojo();
   let avnu = useAvnu();
@@ -137,6 +137,7 @@
 <div class="flex flex-col relative">
   <div class="flex gap-2 rounded border border-[#ffffff55] p-2">
     <input
+      type="number"
       class="w-full bg-[#282835] text-white rounded p-1"
       bind:value={input1}
       oninput={() => (leadingSide = 'sell')}
@@ -145,6 +146,7 @@
   </div>
   <div class="flex gap-2 rounded border border-[#ffffff55] p-2 mt-1">
     <input
+      type="number"
       class="w-full bg-[#282835] text-white rounded p-1"
       bind:value={input2}
       oninput={() => (leadingSide = 'buy')}
