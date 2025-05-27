@@ -3,6 +3,16 @@
   import { useDojo } from '$lib/contexts/dojo';
   import { useAccount } from '$lib/contexts/account.svelte';
   import { generateMessageTypedData } from './helpers';
+  import { ModelsMapping, type SchemaType } from '$lib/models.gen';
+  import type { Account } from 'starknet';
+
+  import {
+    KeysClause,
+    MemberClause,
+    QueryBuilder,
+    ToriiQueryBuilder,
+  } from '@dojoengine/sdk';
+
   const { client: sdk } = useDojo();
   // State for the chat
   let messages: {
@@ -27,7 +37,7 @@
       },
     ];
 
-    newMessage = '';
+    newMessage = 'test message';
     const provider = useAccount()?.getProvider();
     const account = provider?.getWalletAccount();
     if (!account) {
@@ -39,15 +49,14 @@
       newMessage,
       Date.now().toString(),
     );
-    const signature = await account?.signMessage(data);
-    sdk.toriiClient.publishMessage(JSON.stringify(data), signature as string[]);
 
-    // Scroll to bottom after message is added
-    setTimeout(() => {
-      if (chatContainer) {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      }
-    }, 0);
+    const signature = await account?.signMessage(data);
+
+    let res = await sdk.toriiClient.publishMessage(
+      JSON.stringify(data),
+      signature as string[],
+    );
+    console.log('Response from publishMessage:', res);
   }
   // Handle Enter key to send message
   function handleKeydown(event: KeyboardEvent) {
@@ -58,10 +67,34 @@
   }
 
   onMount(() => {
+    let messages = getMessages();
+    console.log('Mounting chat widget, fetching messages:', messages);
     if (chatContainer) {
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
   });
+
+  const getMessages = async () => {
+    const { client: sdk } = useDojo();
+
+    const query = new ToriiQueryBuilder()
+      .addEntityModel(ModelsMapping.Message)
+      .includeHashedKeys();
+
+    console.log('Querying messages with query:', query);
+
+    try {
+      const messages = await sdk.getEntities({
+        query,
+      });
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      return [];
+    }
+    console.log('Fetched messages:', messages);
+
+    return messages;
+  };
 </script>
 
 <div

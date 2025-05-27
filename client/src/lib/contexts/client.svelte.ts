@@ -27,7 +27,7 @@ async function _setupDojo(config: DojoConfig) {
       name: 'ponzi_land',
       version: '1',
       chainId: PUBLIC_DOJO_CHAIN_ID,
-      revision: '1.0',
+      revision: '1',
     },
   });
 

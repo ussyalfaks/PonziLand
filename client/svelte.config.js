@@ -22,6 +22,7 @@ const profiles = {
     BYPASS_TOKEN: process.env.BYPASS_TOKEN,
     PUBLIC_SOCIALINK_URL: process.env.SOCIALINK_URL,
     PUBLIC_PONZI_API_URL: process.env.PONZI_API_URL,
+    PUBLIC_RELAY_URL: process.env.RELAY_URL,
   },
   dev: {
     PUBLIC_DOJO_RPC_URL: 'http://127.0.0.1:5050',
@@ -45,6 +46,8 @@ const profiles = {
     BYPASS_TOKEN: '',
     PUBLIC_SOCIALINK_URL: 'https://socialink-sepolia.ponzi.land',
     PUBLIC_PONZI_API_URL: 'https://api-sepolia.ponzi.land',
+    PUBLIC_RELAY_URL:
+      '/dns4/api.cartridge.gg/tcp/443/x-parity-wss/%2Fx%2Fponziland-sepolia-internal%2Ftorii%2Fwss',
   },
   'mainnet-test': {
     PUBLIC_DOJO_RPC_URL: 'https://api.cartridge.gg/x/starknet/mainnet',
