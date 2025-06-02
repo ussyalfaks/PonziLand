@@ -12,7 +12,7 @@
     }
   },
   "mainCurrency": "nftSTRK",
-  "mainCurrencyAddress": "0x05735fa6be5dd248350866644c0a137e571f9d637bb4db6532ddd63a95854b58",
+  "mainCurrencyAddress": "0x056893df1e063190aabda3c71304e9842a1b3d638134253dd0f69806a4f106eb",
   "aiAgents": [
     {
       "address": "0x05144466224fde5d648d6295a2fb6e7cd45f2ca3ede06196728026f12c84c9ff",
@@ -39,7 +39,7 @@
     {
       "name": "Emulated NFT STRK",
       "symbol": "nftSTRK",
-      "address": "0x05735fa6be5dd248350866644c0a137e571f9d637bb4db6532ddd63a95854b58",
+      "address": "0x056893df1e063190aabda3c71304e9842a1b3d638134253dd0f69806a4f106eb",
       "liquidityPoolType": "1-2",
       "decimals": 18,
       "images": {
