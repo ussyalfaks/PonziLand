@@ -11,7 +11,7 @@ use super::IPlaytestTokenDispatcher;
 
 fn get_dispatcher(token: TokenType) -> IPlaytestTokenDispatcher {
     let contract_address = match token {
-        TokenType::eSTRK => 0x56893df1e063190aabda3c71304e9842a1b3d638134253dd0f69806a4f106eb
+        TokenType::eSTRK => 0x056893df1e063190aabda3c71304e9842a1b3d638134253dd0f69806a4f106eb
             .try_into()
             .unwrap(),
     };
