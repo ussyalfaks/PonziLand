@@ -342,7 +342,6 @@ export class LandTileStore {
           newLand = new AuctionLand(previousLand, auctionModel as Auction);
           // Nuke the land
           this.triggerNukeAnimation(location.x, location.y);
-          nuke_sound.play();
         }
 
         this.currentLands.update((lands) => {
