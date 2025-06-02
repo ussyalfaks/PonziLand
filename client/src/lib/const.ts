@@ -3,7 +3,7 @@ export const GAME_SPEED = 5;
 export const GRID_SIZE = 64;
 export const TAX_RATE = 2; // as a percentage
 
-export const DATE_GATE: Date | undefined = new Date('2025-06-02T21:00:00Z');
+export const DATE_GATE: Date | undefined = new Date('2025-06-02T21:30:00Z');
 export const CLOSING_DATE: Date | undefined = undefined;
 
 /**
