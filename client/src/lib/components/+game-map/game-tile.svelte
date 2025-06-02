@@ -23,6 +23,7 @@
   import LandTaxClaimer from './land/land-tax-claimer.svelte';
   import data from '$profileData';
   import { biomeSelect_sound, hover_sound } from '$lib/sfx';
+  import { tutorialState, tutorialLandStore } from '../tutorial/stores.svelte';
 
   const SIZE = TILE_SIZE;
 
@@ -126,18 +127,27 @@
   const handleLandInfoClick = () => {
     if (!BuildingLand.is(land)) return;
 
-    const landWithActions = createLandWithActions(land, () =>
-      globalLandStore.getAllLands(),
-    );
+    const landWithActions = createLandWithActions(land, () => {
+      if (tutorialState.tutorialEnabled) return tutorialLandStore.getAllLands();
+      return globalLandStore.getAllLands();
+    });
+
+    console.log('land', land);
+    console.log('landWithActions', landWithActions);
     openLandInfoWidget(landWithActions);
   };
 
   const handleBidClick = () => {
     if (!AuctionLand.is(land)) return;
 
-    const landWithActions = createLandWithActions(land, () =>
-      globalLandStore.getAllLands(),
-    );
+    const landWithActions = createLandWithActions(land, () => {
+      if (tutorialState.tutorialEnabled) return tutorialLandStore.getAllLands();
+
+      return globalLandStore.getAllLands();
+    });
+
+    console.log('land', land);
+    console.log('landWithActions', landWithActions);
     openLandInfoWidget(landWithActions);
   };
 
@@ -146,6 +156,9 @@
     const landWithActions = createLandWithActions(land, () =>
       globalLandStore.getAllLands(),
     );
+    if (tutorialState.tutorialEnabled) {
+      return tutorialLandStore.getEstimatedNukeTime(landWithActions);
+    }
     return landWithActions.getEstimatedNukeTime();
   });
 

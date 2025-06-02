@@ -9,6 +9,7 @@
   import WidgetEntityUpdate from './entity-update/widget-entity-update.svelte';
   import WidgetAuctions from './auctions/widget-auctions.svelte';
   import WidgetHelp from './help/widget-help.svelte';
+  import WidgetTutorial from './tutorial/widget-tutorial.svelte';
 </script>
 
 {#each Object.entries($widgetsStore) as [id, widget]}
@@ -18,6 +19,7 @@
       type={widget.type}
       initialPosition={widget.position}
       initialDimensions={widget.dimensions}
+      bind:isMinimized={widget.isMinimized}
     >
       {@const type = widget.type}
       {#if type === 'wallet'}
@@ -36,6 +38,8 @@
         <WidgetAuctions />
       {:else if type === 'help'}
         <WidgetHelp />
+      {:else if type === 'tutorial'}
+        <WidgetTutorial />
       {/if}
     </Draggable>
   {/if}
