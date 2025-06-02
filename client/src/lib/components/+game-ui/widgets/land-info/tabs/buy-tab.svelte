@@ -14,7 +14,6 @@
   import TaxImpact from '../tax-impact/tax-impact.svelte';
   import account from '$lib/account.svelte';
   import { padAddress } from '$lib/utils';
-  import { buy_sound } from '$lib/sfx';
   import {
     nextStep,
     tutorialState,
@@ -220,8 +219,6 @@
         const landPromise = land.wait();
 
         await Promise.any([txPromise, landPromise]);
-
-        buy_sound.play();
         console.log('Bought land with TX: ', result.transaction_hash);
       }
     } catch (error) {

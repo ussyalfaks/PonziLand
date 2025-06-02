@@ -13,7 +13,6 @@
   import { setupAccount } from '$lib/contexts/account.svelte';
   import { setupClient } from '$lib/contexts/client.svelte';
   import { dojoConfig } from '$lib/dojoConfig';
-  import { launchGame_sound } from '$lib/sfx';
   import { landStore } from '$lib/stores/store.svelte';
 
   const promise = Promise.all([
@@ -95,7 +94,6 @@
 
         tutorialState.tutorialEnabled = false;
         clearLoading();
-        launchGame_sound.play();
       })
       .catch((err) => {
         console.error('An error occurred:', err);

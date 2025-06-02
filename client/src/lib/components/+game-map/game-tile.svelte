@@ -22,7 +22,6 @@
   import RatesOverlay from './land/land-rates-overlay.svelte';
   import LandTaxClaimer from './land/land-tax-claimer.svelte';
   import data from '$profileData';
-  import { biomeSelect_sound, hover_sound } from '$lib/sfx';
   import { tutorialState, tutorialLandStore } from '../tutorial/stores.svelte';
 
   const SIZE = TILE_SIZE;
@@ -117,9 +116,6 @@
     if (selected) {
       moveCameraTo(land.location.x + 1, land.location.y + 1);
     }
-
-    if (land.type !== 'empty' && selectedLand.value != land)
-      biomeSelect_sound.play();
 
     selectedLand.value = land;
   }
