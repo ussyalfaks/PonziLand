@@ -77,21 +77,28 @@ export function changeMap() {
     tutorialLandStore.buyAuction(31, 32, 1);
     tutorialLandStore.buyAuction(33, 32, 2);
     tutorialLandStore.buyAuction(33, 33, 3);
+    tutorialLandStore.setStake(10000000000000000000000);
     tutorialLandStore.setDisplayRates(true);
-  }
-  if (tutorialState.tutorialProgress >= 13) {
-    tutorialLandStore.setDisplayRates(false);
-  }
-
-  if (tutorialState.tutorialProgress === 14) {
-    tutorialLandStore.setStake(10000000000000000000);
   }
 
   if (tutorialState.tutorialProgress === 15) {
-    tutorialLandStore.setNuke(true);
+    tutorialLandStore.setStake(7000000000000000000000);
+  }
+
+  if (tutorialState.tutorialProgress === 16) {
+    tutorialLandStore.setStake(4000000000000000000000);
+  }
+
+  if (tutorialState.tutorialProgress === 17) {
+    tutorialLandStore.setStake(1000000000000000000);
+  }
+
+  if (tutorialState.tutorialProgress === 18) {
+    tutorialLandStore.setStake(0);
+    tutorialLandStore.setNuke(false);
   }
 
   if (tutorialState.tutorialProgress === 19) {
-    tutorialLandStore.addAuction();
+    tutorialLandStore.setNuke(true);
   }
 }
