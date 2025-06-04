@@ -56,7 +56,10 @@
   $effect(() => {
     if (tokenPrices) {
       if (land?.token?.address === BASE_TOKEN) {
-        burnRateInBaseToken = burnRate;
+        burnRateInBaseToken = CurrencyAmount.fromScaled(
+          burnRate.toNumber(),
+          land?.token,
+        );
       } else {
         const tokenPrice = tokenPrices.find(
           (p) => p.address === land?.token?.address,
@@ -143,15 +146,17 @@
       <div class="text-center pb-2 text-ponzi-number">
         <span class="opacity-50">Total Tokens Earned</span>
         <div
-          class="{totalYieldValue - Number(burnRate.toString()) >= 0
+          class="{totalYieldValue - Number(burnRateInBaseToken.toString()) >= 0
             ? 'text-green-500'
             : 'text-red-500'} text-2xl flex items-center justify-center gap-2"
         >
           <span class="stroke-3d-black">
-            {totalYieldValue - Number(burnRate.toString()) >= 0
+            {totalYieldValue - Number(burnRateInBaseToken.toString()) >= 0
               ? '+ '
               : '- '}{displayCurrency(
-              Math.abs(totalYieldValue - Number(burnRate.toString())),
+              Math.abs(
+                totalYieldValue - Number(burnRateInBaseToken.toString()),
+              ),
             )}
           </span>
           <TokenAvatar token={baseToken} class="border border-white w-6 h-6" />
@@ -172,7 +177,7 @@
         <div class="opacity-50 text-sm">Burning / hour :</div>
         <div class="text-red-500 flex items-center gap-2">
           <span class="text-xl stroke-3d-black"
-            >- {displayCurrency(burnRate)}</span
+            >- {displayCurrency(burnRateInBaseToken.toString())}</span
           >
           <TokenAvatar token={baseToken} class="border border-white w-5 h-5" />
         </div>
