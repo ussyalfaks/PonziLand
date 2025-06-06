@@ -249,7 +249,7 @@
 <div class="scale-indicator">
   {Math.round($cameraPosition.scale * 100)}%
 </div>
-<div class="overflow-hidden h-screen w-screen">
+<div class="overflow-hidden h-screen w-screen full-layer">
   <div class="map-wrapper" bind:this={mapWrapper}>
     <!-- Column numbers -->
     <div
@@ -285,7 +285,7 @@
       <!-- Map container -->
       <!-- svelte-ignore a11y_no_interactive_element_to_noninteractive_role -->
       <button
-        class="map-container z-20"
+        class="map-container z-10"
         role="application"
         aria-label="Draggable map"
         onwheel={handleWheel}
@@ -302,38 +302,42 @@
           <div class="row">
             {#each Array(GRID_SIZE) as _, x}
               {@const land = landStore.getLand(x, y)!}
-              <div
-                style="width: {TILE_SIZE}px; height: {TILE_SIZE}px"
-                class="relative"
-              >
-                <!-- Check if the current coordinates are out of bounds -->
-                {#if x < bounds.minX || x > bounds.maxX || y < bounds.minY || y > bounds.maxY}
-                  <!-- Render an empty div if out of bounds -->
-                  <div
+
+              <!-- Check if the current coordinates are out of bounds -->
+              {#if x < bounds.minX || x > bounds.maxX || y < bounds.minY || y > bounds.maxY}
+                <!-- Render an empty div if out of bounds -->
+                <!-- <div
                     class="empty-tile"
                     style="width: {TILE_SIZE}px; height: {TILE_SIZE}px;"
-                  ></div>
-                {:else}
-                  <!-- Render the GameTile if within bounds -->
+                  ></div> -->
+                <div
+                  style="width: {TILE_SIZE}px; height: {TILE_SIZE}px; z-index: 10"
+                  class="relative"
+                >
                   <GameTile {land} {dragged} scale={$cameraPosition.scale} />
-                {/if}
-              </div>
+                </div>
+              {:else}
+                <!-- Render the GameTile if within bounds -->
+                <div
+                  style="width: {TILE_SIZE}px; height: {TILE_SIZE}px; z-index: 30"
+                  class="relative"
+                >
+                  <GameTile {land} {dragged} scale={$cameraPosition.scale} />
+                </div>
+              {/if}
             {/each}
           </div>
         {/each}
+        <div
+          class="fog-layer-scaled"
+          style="
+            --grid-size: {TILE_SIZE}px;
+            --camera-scale: {1 / $cameraPosition.scale};
+          "
+        ></div>
       </button>
     </div>
   </div>
-
-  <!-- Scaled fog layer that follows camera movement and scaling -->
-  <div
-    class="fog-layer-scaled"
-    style="
-      transform: translate({$cameraPosition.offsetX}px, {$cameraPosition.offsetY}px) scale({$cameraPosition.scale});
-      --grid-size: {TILE_SIZE}px;
-      --camera-scale: {$cameraPosition.scale};
-    "
-  ></div>
 </div>
 
 <style>
@@ -461,7 +465,8 @@
     height: 200%;
     background-image: url('/land-display/fog.jpg'); /* Replace with your fog texture */
     background-repeat: repeat;
-    background-size: calc(var(--grid-size) * 4) calc(var(--grid-size) * 4); /* 128px at base scale */
+    background-size: calc(var(--grid-size) * 2500) calc(var(--grid-size) * 2500); /* Pixelated: 512px tiles */
+    image-rendering: pixelated;
     mix-blend-mode: screen;
   }
 
@@ -469,14 +474,16 @@
   .fog-layer-scaled::before {
     animation: scaledFogDrift1 120s ease-in-out infinite alternate;
     opacity: calc(0.3 * var(--camera-scale));
-    background-size: calc(var(--grid-size) * 4) calc(var(--grid-size) * 4); /* 128px at base scale */
+    background-size: calc(var(--grid-size) * 2500) calc(var(--grid-size) * 2500); /* Pixelated: 512px tiles */
+    image-rendering: pixelated;
   }
 
   /* Second fog layer - different speed and direction */
   .fog-layer-scaled::after {
     animation: scaledFogDrift2 180s ease-in-out infinite alternate-reverse;
     opacity: calc(0.2 * var(--camera-scale));
-    background-size: calc(var(--grid-size) * 6) calc(var(--grid-size) * 6); /* 192px at base scale */
+    background-size: calc(var(--grid-size) * 2500) calc(var(--grid-size) * 2500); /* Pixelated: 512px tiles */
+    image-rendering: pixelated;
     background-image: url('/land-display/fog.jpg'); /* Different fog texture for variation */
   }
 
@@ -486,7 +493,6 @@
     background-repeat: repeat;
     background-size: calc(var(--grid-size) * 8) calc(var(--grid-size) * 8); /* 256px at base scale */
     animation: scaledFogDrift3 200s linear infinite;
-    mix-blend-mode: soft-light;
   }
 
   /* Keyframe animations for organic movement */
@@ -563,10 +569,14 @@
 
   @keyframes scaledFogPulse {
     0% {
-      opacity: calc(0.4 * var(--camera-scale));
+      opacity: calc(1 * var(--camera-scale));
     }
     100% {
-      opacity: calc(0.6 * var(--camera-scale));
+      opacity: calc(2 * var(--camera-scale));
     }
+  }
+
+  .full-layer {
+    background-color: #2a2a2a;
   }
 </style>
