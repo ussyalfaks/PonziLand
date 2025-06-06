@@ -10,6 +10,7 @@
   import { onMount } from 'svelte';
   import GameTile from '$lib/components/+game-map/game-tile.svelte';
   import { landStore } from '$lib/stores/store.svelte';
+  import { get } from 'svelte/store';
 
   // Throttle mechanism
   let lastWheelTime = 0;
@@ -26,6 +27,20 @@
   // Map dimensions
   let mapDimensions = $state({ width: 0, height: 0 });
   let mapWrapper: HTMLElement;
+
+  // Reactive variable to store bounds
+  let bounds = $state({
+    minX: 0,
+    minY: 0,
+    maxX: GRID_SIZE - 1,
+    maxY: GRID_SIZE - 1,
+  });
+
+  // Update bounds on mount and when relevant data changes
+  onMount(() => {
+    bounds = calculateBounds();
+    // You can add additional logic here to update bounds when necessary
+  });
 
   // Calculate visible tiles based on camera position and scale
   function getVisibleTiles() {
@@ -162,21 +177,64 @@
     }
   }
 
+  // Function to calculate the bounds of non-empty lands
+  function calculateBounds() {
+    let minX = GRID_SIZE;
+    let minY = GRID_SIZE;
+    let maxX = -1;
+    let maxY = -1;
+
+    for (let x = 0; x < GRID_SIZE; x++) {
+      for (let y = 0; y < GRID_SIZE; y++) {
+        const land = landStore.getLand(x, y);
+        if (land && get(land).type !== 'empty') {
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+
+    minX--;
+    minY--;
+    maxX++;
+    maxY++;
+
+    return { minX, minY, maxX, maxY };
+  }
+
   function updateOffsets(newX: number, newY: number) {
     if (!mapDimensions.width || !mapDimensions.height) return;
 
-    const mapWidth = GRID_SIZE * TILE_SIZE * $cameraPosition.scale;
-    const mapHeight = GRID_SIZE * TILE_SIZE * $cameraPosition.scale;
-    const containerWidth = mapDimensions.width;
-    const containerHeight = mapDimensions.height;
+    // Calculate the bounds of non-empty lands
+    let { minX, minY, maxX, maxY } = calculateBounds();
 
-    const minX = Math.min(0, containerWidth - mapWidth);
-    const minY = Math.min(0, containerHeight - mapHeight);
+    console.log('Bounds:', {
+      minX,
+      minY,
+      maxX,
+      maxY,
+    });
 
+    minX--;
+    minY--;
+    maxX++;
+    maxY++;
+
+    // Calculate the maximum offsets based on the bounds of non-empty lands
+    const maxOffsetX = (maxX + 1) * TILE_SIZE * $cameraPosition.scale;
+    const maxOffsetY = (maxY + 1) * TILE_SIZE * $cameraPosition.scale;
+
+    // Calculate the minimum offsets based on the bounds of non-empty lands
+    const minOffsetX = minX * TILE_SIZE * $cameraPosition.scale;
+    const minOffsetY = minY * TILE_SIZE * $cameraPosition.scale;
+
+    // Ensure that the offsets are constrained correctly
     $cameraTransition = {
       ...$cameraPosition,
-      offsetX: Math.max(minX, Math.min(0, newX)),
-      offsetY: Math.max(minY, Math.min(0, newY)),
+      offsetX: Math.max(-maxOffsetX, Math.min(-minOffsetX, newX)), // Constrain to maxOffsetX and minOffsetX
+      offsetY: Math.max(-maxOffsetY, Math.min(-minOffsetY, newY)), // Constrain to maxOffsetY and minOffsetY
     };
   }
 
@@ -239,7 +297,7 @@
         style="transform: translate({$cameraPosition.offsetX}px, {$cameraPosition.offsetY}px) scale({$cameraPosition.scale});"
       >
         <!-- Road layer -->
-        <div class="road-layer"></div>
+        <!-- <div class="road-layer"></div> -->
 
         {#each Array(GRID_SIZE) as _, y}
           <div class="row">
@@ -249,10 +307,16 @@
                 style="width: {TILE_SIZE}px; height: {TILE_SIZE}px"
                 class="relative"
               >
-                {#if y >= visibleTiles.startY && y < visibleTiles.endY}
-                  {#if x >= visibleTiles.startX && x < visibleTiles.endX}
-                    <GameTile {land} {dragged} scale={$cameraPosition.scale} />
-                  {/if}
+                <!-- Check if the current coordinates are out of bounds -->
+                {#if x < bounds.minX || x > bounds.maxX || y < bounds.minY || y > bounds.maxY}
+                  <!-- Render an empty div if out of bounds -->
+                  <div
+                    class="empty-tile"
+                    style="width: {TILE_SIZE}px; height: {TILE_SIZE}px;"
+                  ></div>
+                {:else}
+                  <!-- Render the GameTile if within bounds -->
+                  <GameTile {land} {dragged} scale={$cameraPosition.scale} />
                 {/if}
               </div>
             {/each}
@@ -262,17 +326,6 @@
     </div>
   </div>
 </div>
-
-<!-- {#each Array(GRID_SIZE) as _, y}
-  <div class="flex">
-    {#each Array(GRID_SIZE) as _, x}
-      {@const land = landStore.getLand(x, y)!}
-      <div class="h-8 w-8">
-        <GameTile {land} />
-      </div>
-    {/each}
-  </div>
-{/each} -->
 
 <style>
   .map-wrapper {
