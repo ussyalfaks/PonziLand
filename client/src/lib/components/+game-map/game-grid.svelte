@@ -1,6 +1,5 @@
 <script lang="ts">
   import { GRID_SIZE } from '$lib/const';
-
   import { TILE_SIZE } from '$lib/const';
   import {
     cameraPosition,
@@ -286,7 +285,7 @@
       <!-- Map container -->
       <!-- svelte-ignore a11y_no_interactive_element_to_noninteractive_role -->
       <button
-        class="map-container"
+        class="map-container z-20"
         role="application"
         aria-label="Draggable map"
         onwheel={handleWheel}
@@ -325,6 +324,16 @@
       </button>
     </div>
   </div>
+
+  <!-- Scaled fog layer that follows camera movement and scaling -->
+  <div
+    class="fog-layer-scaled"
+    style="
+      transform: translate({$cameraPosition.offsetX}px, {$cameraPosition.offsetY}px) scale({$cameraPosition.scale});
+      --grid-size: {TILE_SIZE}px;
+      --camera-scale: {$cameraPosition.scale};
+    "
+  ></div>
 </div>
 
 <style>
@@ -357,7 +366,7 @@
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 12px;
-    z-index: 20;
+    z-index: 22;
   }
 
   .column-numbers {
@@ -367,7 +376,7 @@
     left: 0;
     gap: 0;
     padding-left: 0;
-    z-index: 10;
+    z-index: 21;
     transform-origin: 0 0;
     background: #2a2a2a; /* Dark grey background */
     will-change: transform;
@@ -381,7 +390,7 @@
     flex-direction: column;
     gap: 0;
     padding-top: 0;
-    z-index: 10;
+    z-index: 21;
     transform-origin: 0 0;
     background: #2a2a2a; /* Dark grey background */
     will-change: transform;
@@ -426,5 +435,138 @@
 
   .row {
     display: flex;
+  }
+
+  /* Scaled fog layer that responds to camera position and scale */
+  .fog-layer-scaled {
+    position: absolute;
+    top: 32px; /* Offset by coordinate header height */
+    left: 32px; /* Offset by coordinate header width */
+    width: calc(var(--grid-size) * 100); /* Adjust based on your grid size */
+    height: calc(var(--grid-size) * 100);
+    pointer-events: none;
+    overflow: visible;
+    transform-origin: 0 0;
+    z-index: 15; /* Between map and UI elements */
+  }
+
+  /* Fog patterns using repeating background images */
+  .fog-layer-scaled::before,
+  .fog-layer-scaled::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background-image: url('/land-display/fog.jpg'); /* Replace with your fog texture */
+    background-repeat: repeat;
+    background-size: calc(var(--grid-size) * 4) calc(var(--grid-size) * 4); /* 128px at base scale */
+    mix-blend-mode: screen;
+  }
+
+  /* First fog layer - slower movement */
+  .fog-layer-scaled::before {
+    animation: scaledFogDrift1 120s ease-in-out infinite alternate;
+    opacity: calc(0.3 * var(--camera-scale));
+    background-size: calc(var(--grid-size) * 4) calc(var(--grid-size) * 4); /* 128px at base scale */
+  }
+
+  /* Second fog layer - different speed and direction */
+  .fog-layer-scaled::after {
+    animation: scaledFogDrift2 180s ease-in-out infinite alternate-reverse;
+    opacity: calc(0.2 * var(--camera-scale));
+    background-size: calc(var(--grid-size) * 6) calc(var(--grid-size) * 6); /* 192px at base scale */
+    background-image: url('/land-display/fog.jpg'); /* Different fog texture for variation */
+  }
+
+  /* Base fog layer with repeating background texture */
+  .fog-layer-scaled {
+    background-image: url('/land-display/fog.jpg'); /* Base fog texture */
+    background-repeat: repeat;
+    background-size: calc(var(--grid-size) * 8) calc(var(--grid-size) * 8); /* 256px at base scale */
+    animation: scaledFogDrift3 200s linear infinite;
+    mix-blend-mode: soft-light;
+  }
+
+  /* Keyframe animations for organic movement */
+  @keyframes scaledFogDrift1 {
+    0% {
+      transform: translate(-5%, -5%) rotate(0deg) scale(1);
+    }
+    25% {
+      transform: translate(3%, -3%) rotate(0.5deg) scale(1.02);
+    }
+    50% {
+      transform: translate(-3%, 5%) rotate(-0.3deg) scale(0.99);
+    }
+    75% {
+      transform: translate(4%, 3%) rotate(0.4deg) scale(1.01);
+    }
+    100% {
+      transform: translate(-4%, -4%) rotate(-0.5deg) scale(1.005);
+    }
+  }
+
+  @keyframes scaledFogDrift2 {
+    0% {
+      transform: translate(4%, 6%) rotate(0.3deg) scale(1.05);
+    }
+    20% {
+      transform: translate(-6%, 4%) rotate(-0.2deg) scale(0.97);
+    }
+    40% {
+      transform: translate(3%, -5%) rotate(0.4deg) scale(1.03);
+    }
+    60% {
+      transform: translate(-4%, 3%) rotate(-0.3deg) scale(0.99);
+    }
+    80% {
+      transform: translate(5%, -3%) rotate(0.2deg) scale(1.04);
+    }
+    100% {
+      transform: translate(-3%, 5%) rotate(-0.1deg) scale(1.01);
+    }
+  }
+
+  @keyframes scaledFogDrift3 {
+    0% {
+      background-position: 0% 0%;
+    }
+    25% {
+      background-position: 25% 25%;
+    }
+    50% {
+      background-position: 50% 0%;
+    }
+    75% {
+      background-position: 75% 75%;
+    }
+    100% {
+      background-position: 100% 0%;
+    }
+  }
+
+  /* Enhanced scaling for very zoomed in states */
+  @media (min-resolution: 2dppx) {
+    .fog-layer-scaled {
+      filter: blur(0.5px);
+    }
+  }
+
+  /* Responsive fog intensity based on zoom level */
+  .fog-layer-scaled {
+    animation:
+      scaledFogDrift3 200s linear infinite,
+      scaledFogPulse 15s ease-in-out infinite alternate;
+  }
+
+  @keyframes scaledFogPulse {
+    0% {
+      opacity: calc(0.4 * var(--camera-scale));
+    }
+    100% {
+      opacity: calc(0.6 * var(--camera-scale));
+    }
   }
 </style>
