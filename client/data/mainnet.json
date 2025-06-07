@@ -43,7 +43,7 @@
       "liquidityPoolType": "1-2",
       "decimals": 18,
       "images": {
-        "icon": "/tokens/eSTRK/icon.png",
+        "icon": "/tokens/nftSTRK/icon.png",
         "biome": {
           "x": 2,
           "y": 3
