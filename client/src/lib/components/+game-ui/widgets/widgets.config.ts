@@ -28,13 +28,13 @@ export const availableWidgets: Widget[] = [
     id: 'guild',
     type: 'guild',
     label: 'Guild',
-    icon: '/ui/icons/Icon_Thin_Guild.png',
+    icon: '/ui/icons/Icon_Guilds.png',
   },
   {
     id: 'leaderboard',
     type: 'leaderboard',
     label: 'Leaderboard',
-    icon: '/ui/icons/Icon_Thin_Leaderboard.png',
+    icon: '/ui/icons/Icon_Cup.png',
   },
   // {
   //   id: 'notifications',
