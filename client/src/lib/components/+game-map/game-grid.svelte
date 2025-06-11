@@ -16,8 +16,8 @@
   const THROTTLE_DELAY = 10; // approximately 60fps
 
   // Camera position
-  const MIN_SCALE = 0.6;
-  const MAX_SCALE = 16;
+  const MIN_SCALE = 0.075;
+  const MAX_SCALE = 2.5;
   let isDragging = $state(false);
   let dragged = $state(false);
   let startX = 0;
@@ -65,7 +65,7 @@
   });
 
   onMount(() => {
-    moveCameraToLocation(2080, 3);
+    moveCameraToLocation(2080, 0.4);
 
     // Set up ResizeObserver
     if (mapWrapper) {
@@ -239,7 +239,7 @@
         style="transform: translate({$cameraPosition.offsetX}px, {$cameraPosition.offsetY}px) scale({$cameraPosition.scale});"
       >
         <!-- Road layer -->
-        <div class="road-layer"></div>
+        <div class="road-layer" style="--size:{TILE_SIZE}px"></div>
 
         {#each Array(GRID_SIZE) as _, y}
           <div class="row">
@@ -284,13 +284,14 @@
   }
 
   .road-layer {
+    --size: 32px;
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background-image: url('/land-display/road.png');
-    background-size: 32px 32px;
+    background-size: var(--size) var(--size);
     background-repeat: repeat;
     pointer-events: none;
   }
