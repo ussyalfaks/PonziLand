@@ -14,12 +14,17 @@
   import { createLandWithActions } from '$lib/utils/land-actions';
   import { onDestroy, onMount } from 'svelte';
   import { get } from 'svelte/store';
-  // Assuming this exists
 
   const dojo = useDojo();
   const account = () => {
     return dojo.accountManager?.getProvider();
   };
+
+  // Claiming state management
+  let claimingAll = $state(false);
+  let claimingTokens = $state<string[]>([]);
+  let claimCooldowns = $state<Record<string, number>>({});
+  let timerIntervals: Record<string, NodeJS.Timeout> = {};
 
   // Method 1: Using setInterval with counter
   function soundAtInterval(nbLands: number) {
@@ -35,13 +40,36 @@
     }, 200);
   }
 
+  function startCooldown(key: string, duration: number = 30000) {
+    claimCooldowns = { ...claimCooldowns, [key]: duration / 1000 };
+
+    const intervalId = setInterval(() => {
+      const currentTime = claimCooldowns[key];
+      if (currentTime && currentTime > 0) {
+        claimCooldowns = { ...claimCooldowns, [key]: currentTime - 1 };
+      } else {
+        const { [key]: removed, ...rest } = claimCooldowns;
+        claimCooldowns = rest;
+        clearInterval(intervalId);
+        delete timerIntervals[key];
+      }
+    }, 1000);
+
+    timerIntervals[key] = intervalId;
+  }
+
   async function handleClaimAll() {
+    claimingAll = true;
     claimAll(dojo, account()?.getWalletAccount()!)
       .then(() => {
         soundAtInterval(lands.length);
+        startCooldown('all');
       })
       .catch((e) => {
         console.error('error claiming ALL', e);
+      })
+      .finally(() => {
+        claimingAll = false;
       });
   }
 
@@ -49,19 +77,24 @@
     land: LandWithActions | undefined,
     nbLands: number = 1,
   ) {
-    if (!land) return;
-
-    if (!land.token) {
+    if (!land || !land.token) {
       console.error("Land doesn't have a token");
       return;
     }
 
+    const tokenKey = land.token.symbol || land.token.name || 'unknown';
+    claimingTokens = [...claimingTokens, tokenKey];
+
     claimAllOfToken(land.token, dojo, account()?.getWalletAccount()!)
       .then(() => {
         soundAtInterval(nbLands);
+        startCooldown(tokenKey);
       })
       .catch((e) => {
         console.error('error claiming from coin', e);
+      })
+      .finally(() => {
+        claimingTokens = claimingTokens.filter((t) => t !== tokenKey);
       });
   }
 
@@ -213,6 +246,10 @@
     if (unsubscribe) {
       unsubscribe();
     }
+    // Clean up any remaining timers
+    Object.values(timerIntervals).forEach((interval) => {
+      clearInterval(interval);
+    });
   });
 </script>
 
@@ -270,14 +307,24 @@
         <Button
           size="md"
           class="sticky top-0 z-10"
+          disabled={claimingAll || 'all' in claimCooldowns}
           onclick={() => {
             handleClaimAll();
-          }}>CLAIM AAAAALLLLL</Button
+          }}
         >
+          {#if claimingAll}
+            CLAIMING...
+          {:else if 'all' in claimCooldowns}
+            CLAIM ALL ({claimCooldowns['all']}s)
+          {:else}
+            CLAIM AAAAALLLLL
+          {/if}
+        </Button>
       {/if}
       {#each Object.entries(groupedLands) as [groupName, groupLands]}
         {#if groupByToken && Object.keys(groupedLands).length >= 1}
           {@const token = groupLands.at(0)?.token}
+          {@const tokenKey = token?.symbol || token?.name || 'unknown'}
           <div
             class="px-4 py-2 bg-gray-800 border-b border-gray-700 sticky top-0 z-10 flex gap-2 items-center"
           >
@@ -286,11 +333,19 @@
             </h3>
             <Button
               size="md"
+              disabled={claimingTokens.includes(tokenKey) ||
+                tokenKey in claimCooldowns}
               onclick={() => {
                 handleClaimFromCoin(groupLands.at(0), groupLands.length);
               }}
             >
-              CLAIM ALL
+              {#if claimingTokens.includes(tokenKey)}
+                CLAIMING...
+              {:else if tokenKey in claimCooldowns}
+                CLAIM ALL ({claimCooldowns[tokenKey]}s)
+              {:else}
+                CLAIM ALL
+              {/if}
               <span class="text-yellow-500">
                 &nbsp;{token?.symbol}&nbsp;
               </span>
