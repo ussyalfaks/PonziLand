@@ -2,21 +2,25 @@
   import type { LandWithActions } from '$lib/api/land';
   import { BuildingLand } from '$lib/api/land/building_land';
   import LandOverview from '$lib/components/+game-map/land/land-overview.svelte';
+  import TokenSelect from '$lib/components/swap/token-select.svelte';
+  import { Input } from '$lib/components/ui/input';
   import PriceDisplay from '$lib/components/ui/price-display.svelte';
   import { ScrollArea } from '$lib/components/ui/scroll-area';
   import TokenAvatar from '$lib/components/ui/token-avatar/token-avatar.svelte';
-  import TokenSelect from '$lib/components/swap/token-select.svelte';
   import { useDojo } from '$lib/contexts/dojo';
+  import { usernamesStore } from '$lib/stores/account.store.svelte';
   import { moveCameraTo } from '$lib/stores/camera.store';
-  import { landStore, selectedLand } from '$lib/stores/store.svelte';
+  import {
+    highlightedLands,
+    landStore,
+    selectedLand,
+  } from '$lib/stores/store.svelte';
   import { padAddress, parseLocation } from '$lib/utils';
   import { createLandWithActions } from '$lib/utils/land-actions';
+  import data from '$profileData';
+  import { toNumber } from 'ethers';
   import { onDestroy, onMount } from 'svelte';
   import { get } from 'svelte/store';
-  import { toNumber } from 'ethers';
-  import data from '$profileData';
-  import { Input } from '$lib/components/ui/input';
-  import { usernamesStore } from '$lib/stores/account.store.svelte';
 
   const dojo = useDojo();
   const account = () => {
@@ -85,6 +89,15 @@
     return filtered;
   });
 
+  // Update highlighted lands when filters change
+  $effect(() => {
+    if (selectedTokenAddress || searchQuery) {
+      highlightedLands.value = filteredLands.map((land) => land.location);
+    } else {
+      highlightedLands.value = [];
+    }
+  });
+
   // Function to sort lands
   function sortLands(landsToSort: LandWithActions[]): LandWithActions[] {
     return [...landsToSort].sort((a, b) => {
@@ -107,13 +120,6 @@
         return sortAscending ? dateB - dateA : dateA - dateB;
       }
     });
-  }
-
-  // Function to highlight matching text
-  function highlightMatch(text: string, query: string): string {
-    if (!query) return text;
-    const regex = new RegExp(`(${query})`, 'gi');
-    return text.replace(regex, '<span class="bg-yellow-500/50">$1</span>');
   }
 
   onMount(async () => {
@@ -289,19 +295,11 @@
                     alt={getAiAgent(land.owner)?.name}
                     class="w-4 h-4"
                   />
-                  <span>
-                    {@html highlightMatch(
-                      getAiAgent(land.owner)?.name || '',
-                      searchQuery,
-                    )}
-                  </span>
+                  <span> {getAiAgent(land.owner)?.name} </span>
                 </div>
               {:else}
                 <span>
-                  {@html highlightMatch(
-                    getUsername(land.owner) || land.owner,
-                    searchQuery,
-                  )}
+                  {getUsername(land.owner)}
                 </span>
               {/if}
             </div>
