@@ -120,7 +120,7 @@
   });
 </script>
 
-<div class="h-full w-full pb-16">
+<div class="h-full w-full pb-16 min-h-0">
   <div class="flex items-center justify-end py-2 border-white/10">
     <button
       class="flex items-center gap-2 text-sm font-medium bg-blue-500 px-2"
