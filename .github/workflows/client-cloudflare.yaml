@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   sepolia-deployment:
-    name: Deploy UI to cloudflare (Mainnet, temp)
+    name: Deploy UI to cloudflare (mainnet-sepolia, temp)
     runs-on: ubuntu-latest
 
     steps:
@@ -45,7 +45,10 @@ jobs:
         working-directory: ./client
         run: bun install --frozen-lockfile
 
-      - name: Build frontend for sepolia
+      - name: Get short git hash
+        run: echo "PUBLIC_GIT_COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Build frontend for mainnet
         run: bun run build:mainnet
         working-directory: ./client
         env:
@@ -58,7 +61,7 @@ jobs:
         uses: andykenward/github-actions-cloudflare-pages@v2.3.2
         id: page
         # Do not deploy to cloudflare pages if it's a PR with main (check if the on is PR, and ref is main)
-        if: "!(github.event_name == 'push' && github.ref == 'refs/heads/main')"
+        # if: "!(github.event_name == 'push' && github.ref == 'refs/heads/main')"
         with:
           cloudflare-api-token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           cloudflare-account-id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}

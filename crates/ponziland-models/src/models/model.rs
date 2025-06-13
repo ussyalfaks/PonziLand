@@ -6,6 +6,13 @@ use crate::models::{Land, LandStake};
 
 use super::Auction;
 
+/// Represents a parsed model with additional metadata
+pub struct ParsedModel {
+    pub model: Model,
+    pub timestamp: Option<DateTime<Utc>>,
+    pub event_id: Option<String>,
+}
+
 pub enum Model {
     Land(Land),
     LandStake(LandStake),
@@ -50,12 +57,23 @@ impl Model {
     /// # Errors
     ///
     /// Returns an error if the raw Torii data cannot be parsed into the corresponding model.
-    pub fn parse(
-        data: RawToriiData,
-    ) -> Result<(Self, Option<DateTime<Utc>>), ToriiConversionError> {
+    pub fn parse(data: RawToriiData) -> Result<ParsedModel, ToriiConversionError> {
         Ok(match data {
-            RawToriiData::Json { name, data, at } => (Self::from_json(&name, data)?, Some(at)),
-            RawToriiData::Grpc(data) => (Self::try_from(data)?, None),
+            RawToriiData::Json {
+                name,
+                data,
+                at,
+                event_id,
+            } => ParsedModel {
+                model: Self::from_json(&name, data)?,
+                timestamp: Some(at),
+                event_id: Some(event_id),
+            },
+            RawToriiData::Grpc(data) => ParsedModel {
+                model: Self::try_from(data)?,
+                timestamp: None,
+                event_id: None,
+            },
         })
     }
 }

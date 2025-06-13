@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Select as SelectPrimitive } from 'bits-ui';
+  import { Select as SelectPrimitive } from 'bits-ui-old';
   import { cn } from '$lib/utils.js';
 
   type $$Props = SelectPrimitive.LabelProps;
@@ -9,7 +9,7 @@
 </script>
 
 <SelectPrimitive.Label
-  class={cn('py-1.5 pl-8 pr-2 text-sm font-semibold', className)}
+  class={cn('py-1.5 pl-8 pr-2  font-semibold', className)}
   {...$$restProps}
 >
   <slot />

@@ -1,13 +1,17 @@
 use std::{cmp::max, sync::Arc};
 
-use chaindata_models::models::{LandModel, LandStakeModel};
+use chaindata_models::{
+    events::EventId,
+    models::{LandModel, LandStakeModel},
+};
 use chaindata_repository::{LandRepository, LandStakeRepository};
 use chrono::{DateTime, Utc};
 use ponziland_models::models::Model;
+use sqlx::error::DatabaseError;
 use tokio::select;
 use tokio_stream::StreamExt;
 use torii_ingester::{RawToriiData, ToriiClient};
-use tracing::info;
+use tracing::{debug, error, info};
 
 use super::Task;
 
@@ -60,30 +64,44 @@ impl ModelListenerTask {
 
     #[allow(clippy::match_wildcard_for_single_variants)]
     async fn process_model(&self, model_data: RawToriiData) {
-        let (model, at) = Model::parse(model_data).expect("Error while parsing model data");
-        match model {
+        let model = Model::parse(model_data).expect("Error while parsing model data");
+        let result = match model.model {
             Model::Land(land) => {
                 self.land_repository
                     .save(LandModel::from_at(
                         &land,
-                        at.unwrap_or(Utc::now()).naive_utc(),
+                        EventId::parse_from_torii(&model.event_id.unwrap()).unwrap(),
+                        model.timestamp.unwrap_or(Utc::now()).naive_utc(),
                     ))
                     .await
-                    .expect("Failed to save land model");
             }
             Model::LandStake(land_stake) => {
                 self.land_stake_repository
                     .save(LandStakeModel::from_at(
                         &land_stake,
-                        at.unwrap_or(Utc::now()).naive_utc(),
+                        EventId::parse_from_torii(&model.event_id.unwrap()).unwrap(),
+                        model.timestamp.unwrap_or(Utc::now()).naive_utc(),
                     ))
                     .await
-                    .expect("Failed to save land stake model");
             }
             _ => {
                 //TODO: Implement this later
+                return;
             }
+        };
+
+        if let Err(chaindata_repository::Error::SqlError(err)) = result {
+            if !err
+                .as_database_error()
+                .is_some_and(DatabaseError::is_unique_violation)
+            {
+                error!("Failed to save event: {}", err);
+            }
+
+            // It is a duplicate, so ignore it
+            return;
         }
+        info!("Successfully saved event!");
     }
 }
 
@@ -92,44 +110,49 @@ impl Task for ModelListenerTask {
     const NAME: &'static str = "ModelsListenerTask";
 
     async fn do_task(self: std::sync::Arc<Self>, mut rx: tokio::sync::oneshot::Receiver<()>) {
-        // Get the last update time for models
-        let last_check = self
-            .get_last_update_time()
-            .await
-            .expect("Failed to retrieve last update time");
+        info!("Starting ModelListenerTask with 10-second polling interval");
 
-        // Start both a SQL catch up and a model listener
-        let models_catchup = self
-            .client
-            .get_all_entities_after(last_check)
-            .expect("Error while fetching existing entities");
-
-        let models_listener = self
-            .client
-            .subscribe_entities()
-            .await
-            .expect("Error while subscribing for model updates");
-
-        // Join the two streams (on the heap to not anger the borrow checker)
-        let mut models = Box::pin(models_catchup.merge(models_listener));
-
-        // Process models
         loop {
+            // Poll for new models from the database
+            let last_check = self
+                .get_last_update_time()
+                .await
+                .expect("Failed to retrieve last update time");
+
+            let last_check = last_check - chrono::Duration::seconds(1);
+
+            info!("Polling for models after: {:?}", last_check);
+
+            // Get all entities that were updated after the last check
+            let mut models_stream = self
+                .client
+                .get_all_entities_after(last_check)
+                .expect("Error while fetching entities");
+
+            // Process models as they go
+            let mut model_count = 0;
+            while let Some(model) = models_stream.next().await {
+                self.process_model(model).await;
+                model_count += 1;
+            }
+
+            if model_count > 0 {
+                info!("Processed {} new models", model_count);
+            } else {
+                debug!("No new models found");
+            }
+
+            // Wait for 10 seconds before the next poll (or until stop signal)
             select! {
-                maybe_model = models.next() => {
-                    if let Some(model) = maybe_model {
-                        self.process_model(model).await;
-                    } else {
-                        info!("Model stream completed, exiting model processing loop");
-                        break;
-                    }
+                () = tokio::time::sleep(std::time::Duration::from_secs(10)) => {
+                    debug!("Polling interval completed, checking for new models...");
                 },
                 stop_result = &mut rx => {
                     match stop_result {
                         Ok(()) => info!("Received stop signal, shutting down model processing"),
                         Err(e) => info!("Stop channel closed unexpectedly: {}", e),
                     }
-                    break;
+                    return;
                 }
             }
         }

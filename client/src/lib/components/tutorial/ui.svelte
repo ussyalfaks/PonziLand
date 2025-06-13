@@ -1,15 +1,23 @@
 <script lang="ts">
-  import TutoProgression from './tuto-progression.svelte';
-  import Button from '$lib/components/ui/button/button.svelte';
-  import { goto } from '$app/navigation';
+  import { widgetsStore } from '$lib/stores/widgets.store';
+  import { onMount } from 'svelte';
+  import WidgetProvider from '../+game-ui/widgets/widget-provider.svelte';
+
+  onMount(() => {
+    widgetsStore.addWidget({
+      id: 'tutorial',
+      type: 'tutorial',
+      position: { x: 100, y: 20 },
+      dimensions: { width: 500, height: 0 },
+      isMinimized: false,
+      isOpen: true,
+    });
+  });
 </script>
 
-<div class="z-50 absolute top-0 left-0">
-  <TutoProgression />
-  <Button
-    class="top-0 right-0 m-4 p-2 bg-blue-500 text-white rounded "
-    on:click={() => goto('/game')}
-  >
-    Skip Tutorial
-  </Button>
+<div
+  class="z-40 absolute top-0 left-0 right-0 bottom-0"
+  style="pointer-events: none;"
+>
+  <WidgetProvider />
 </div>

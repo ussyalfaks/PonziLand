@@ -40,7 +40,7 @@ http = { workspace = true }
 sqlx = { workspace = true, features = [
     "derive",
     "runtime-tokio",
-    "tls-rustls",
+    "tls-native-tls",
     "postgres",
     "uuid",
     "chrono",
@@ -48,6 +48,8 @@ sqlx = { workspace = true, features = [
 ] }
 dotenv = "0.15.0"
 migrations = { path = "../migrations" }
+chaindata-repository = { path = "../chaindata/repository" }
+serde_json.workspace = true
 
 [lints]
 workspace = true

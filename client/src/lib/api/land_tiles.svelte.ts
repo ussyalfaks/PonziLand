@@ -1,7 +1,10 @@
-import { GRID_SIZE } from '$lib/const';
+import { DEFAULT_TIMEOUT, GRID_SIZE } from '$lib/const';
 import type { Client } from '$lib/contexts/client.svelte';
 import type { Auction, Land, LandStake, SchemaType } from '$lib/models.gen';
+import { gameSounds } from '$lib/stores/sfx.svelte';
+import { claimStore } from '$lib/stores/claim.store.svelte';
 import { nukeStore } from '$lib/stores/nuke.store.svelte';
+import { createLandWithActions } from '$lib/utils/land-actions';
 import type { ParsedEntity } from '@dojoengine/sdk';
 import type { Subscription } from '@dojoengine/torii-client';
 import { derived, writable, type Readable, type Writable } from 'svelte/store';
@@ -10,8 +13,8 @@ import { AuctionLand } from './land/auction_land';
 import { BuildingLand } from './land/building_land';
 import { toLocation, type Location } from './land/location';
 import { setupLandsSubscription } from './land/torii';
-import { claimStore } from '$lib/stores/claim.store.svelte';
-import { createLandWithActions } from '$lib/stores/store.svelte';
+import { waitForLandChange, waitForLandType } from './storeWait';
+import { padAddress } from '$lib/utils';
 
 // Constants for random updates
 const MIN_RANDOM_UPDATES = 20;
@@ -63,7 +66,7 @@ export class LandTileStore {
   private store: WrappedLand[][];
   private currentLands: Writable<BaseLand[][]>;
   private allLands: Readable<BaseLand[]>;
-  private pendingStake: Map<Location, LandStake> = new Map();
+  private pendingStake: Map<string, LandStake> = new Map(); // Use string key for better lookup
   private sub: Subscription | undefined;
   private updateTracker: Writable<number> = writable(0);
   private fakeUpdateInterval: NodeJS.Timeout | undefined;
@@ -215,11 +218,19 @@ export class LandTileStore {
       }
       return lands;
     });
+  }
 
-    // Start random updates every 10ms
+  public startRandomUpdates() {
     this.fakeUpdateInterval = setInterval(() => {
       this.randomLandUpdate();
     }, UPDATE_INTERVAL);
+  }
+
+  public stopRandomUpdates() {
+    if (this.fakeUpdateInterval) {
+      clearInterval(this.fakeUpdateInterval);
+      this.fakeUpdateInterval = undefined;
+    }
   }
 
   public cleanup() {
@@ -249,18 +260,52 @@ export class LandTileStore {
     });
   }
 
-  private updateLand(entity: ParsedEntity<SchemaType>): void {
+  // Helper method to get pending stake key
+  private getPendingStakeKey(location: Location): string {
+    return `${location.x}-${location.y}`;
+  }
+
+  // Helper method to check and apply pending stake
+  private checkAndApplyPendingStake(
+    land: BuildingLand,
+    location: Location,
+  ): BuildingLand {
+    const pendingStakeKey = this.getPendingStakeKey(location);
+    const pendingStake = this.pendingStake.get(pendingStakeKey);
+
+    if (pendingStake) {
+      console.log(
+        'Applying pending stake for location',
+        location,
+        pendingStake,
+      );
+      land.updateStake(pendingStake);
+      this.pendingStake.delete(pendingStakeKey);
+    }
+
+    return land;
+  }
+
+  public updateLand(entity: ParsedEntity<SchemaType>): void {
     const location = getLocationFromEntity(entity);
     if (location === undefined) return;
 
-    // TODO: Handle the land being deleted, but that requires a more complex logic (mapping from/to the hashed location)
+    console.log('Updating land', entity);
+
     const landStore = this.store[location.x][location.y];
+    const pendingStakeKey = this.getPendingStakeKey(location);
+
     landStore.update(({ value: previousLand }) => {
       const landModel = entity.models.ponzi_land?.Land;
+      const auctionModel = entity.models.ponzi_land?.Auction;
+      const landStakeModel = entity.models.ponzi_land?.LandStake;
 
+      // Handle land deletion
       if (landModel !== undefined && Object.keys(landModel).length === 0) {
         // Land model is being deleted, delete the entire land
         const newLand = new EmptyLand(location);
+        // Clear any pending stake for this location
+        this.pendingStake.delete(pendingStakeKey);
         this.currentLands.update((lands) => {
           lands[location.x][location.y] = newLand;
           return lands;
@@ -268,7 +313,18 @@ export class LandTileStore {
         return { value: newLand };
       }
 
+      // Handle empty land case
       if (EmptyLand.is(previousLand) && landModel == undefined) {
+        // If we only have a stake update for an empty land, store it as pending
+        if (landStakeModel !== undefined) {
+          console.log(
+            'Storing stake for empty land at location',
+            location,
+            landStakeModel,
+          );
+          this.pendingStake.set(pendingStakeKey, landStakeModel as LandStake);
+        }
+
         this.currentLands.update((lands) => {
           lands[location.x][location.y] = previousLand;
           return lands;
@@ -276,89 +332,260 @@ export class LandTileStore {
         return { value: previousLand };
       }
 
-      // If we get an auction, go ahead with the auction
-      const auctionModel = entity.models.ponzi_land?.Auction;
+      // Handle auction case
       if (auctionModel !== undefined && auctionModel.is_finished == false) {
+        let newLand: AuctionLand;
+
         if (AuctionLand.is(previousLand)) {
           previousLand.update(landModel as Land, auctionModel as Auction);
-          this.currentLands.update((lands) => {
-            lands[location.x][location.y] = previousLand;
-            return lands;
-          });
-          return { value: previousLand };
+          newLand = previousLand;
         } else if (landModel !== undefined) {
-          const newLand = new AuctionLand(
-            landModel as Land,
-            auctionModel as Auction,
-          );
-          this.currentLands.update((lands) => {
-            lands[location.x][location.y] = newLand;
-            return lands;
-          });
-          return {
-            value: newLand,
-          };
+          newLand = new AuctionLand(landModel as Land, auctionModel as Auction);
         } else {
-          const newLand = new AuctionLand(
-            previousLand,
-            auctionModel as Auction,
-          );
-          this.currentLands.update((lands) => {
-            lands[location.x][location.y] = newLand;
-            return lands;
-          });
+          newLand = new AuctionLand(previousLand, auctionModel as Auction);
           // Nuke the land
-          this.triggerNukeAnimation(location.x, location.y);
-
-          return {
-            value: newLand,
-          };
+          gameSounds.play('nuke');
+          setTimeout(
+            () => this.triggerNukeAnimation(location.x, location.y),
+            1000,
+          );
         }
+
+        this.currentLands.update((lands) => {
+          lands[location.x][location.y] = newLand;
+          return lands;
+        });
+        return { value: newLand };
       }
 
-      const landStakeModel = entity.models.ponzi_land?.LandStake;
       let newLand = previousLand;
 
+      // Handle land model updates
       if (landModel !== undefined) {
         if (AuctionLand.is(newLand) && Number(landModel.owner) == 0) {
           // Do not change the land, this is an empty update.
           return { value: previousLand };
-        } else if (BuildingLand.is(newLand)) {
-          newLand.update(landModel as Land);
         } else {
+          // Create new BuildingLand
           newLand = new BuildingLand(landModel as Land);
-          // Check if we have a pending stake
-          if (this.pendingStake.has(newLand.location)) {
-            const pendingStake = this.pendingStake.get(newLand.location)!;
-            (newLand as BuildingLand).updateStake(pendingStake);
-            this.pendingStake.delete(newLand.location);
+
+          // First, check for pending stake and apply it
+          newLand = this.checkAndApplyPendingStake(
+            newLand as BuildingLand,
+            location,
+          );
+
+          // Then, if we have a current stake update, apply it (this will override pending stake)
+          if (landStakeModel !== undefined) {
+            console.log('Applying current stake update', landStakeModel);
+            (newLand as BuildingLand).updateStake(landStakeModel as LandStake);
+          } else if (
+            BuildingLand.is(previousLand) &&
+            previousLand.stakeAmount
+          ) {
+            // If no new stake but previous land had stake, preserve it
+            (newLand as BuildingLand).updateStake({
+              location: landModel.location,
+              amount: previousLand.stakeAmount.toBigint(),
+              last_pay_time: previousLand.lastPayTime.getTime(),
+            } as LandStake);
           }
-        }
-      }
 
-      if (landStakeModel !== undefined) {
+          console.log('New land created', newLand);
+        }
+      } else if (landStakeModel !== undefined) {
+        // We only have a stake update
         if (BuildingLand.is(newLand)) {
+          // Apply stake to existing BuildingLand
+          console.log(
+            'Updating stake on existing BuildingLand',
+            landStakeModel,
+          );
           newLand.updateStake(landStakeModel as LandStake);
+          newLand = BuildingLand.fromBuildingLand(newLand);
         } else {
-          this.pendingStake.set(newLand.location, landStakeModel as LandStake);
+          // Store stake as pending since we don't have a BuildingLand yet
+          console.log(
+            'Storing pending stake for non-BuildingLand',
+            location,
+            landStakeModel,
+          );
+          this.pendingStake.set(pendingStakeKey, landStakeModel as LandStake);
+          // Return early, no land change needed
+          return { value: previousLand };
         }
       }
 
+      // Update claim store for BuildingLand
       if (BuildingLand.is(newLand)) {
         claimStore.value[newLand.locationString] = {
           lastClaimTime: 0,
           animating: false,
-          land: createLandWithActions(newLand),
+          land: createLandWithActions(newLand, () => this.getAllLands()),
           claimable: true,
         };
       }
 
+      // Update the currentLands store
       this.currentLands.update((lands) => {
         lands[location.x][location.y] = newLand;
         return lands;
       });
 
       return { value: newLand };
+    });
+  }
+
+  public updateLandDirectly(x: number, y: number, land: BaseLand): void {
+    if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) return;
+
+    this.store[x][y].set({ value: land });
+    this.currentLands.update((lands) => {
+      lands[x][y] = land;
+      return lands;
+    });
+  }
+
+  // Wait for a specific land to change
+  async waitForLandChange(
+    x: number,
+    y: number,
+    predicate: (land: BaseLand) => boolean,
+    timeout: number = DEFAULT_TIMEOUT,
+  ): Promise<BaseLand> {
+    const landStore = this.getLand(x, y);
+    if (!landStore) {
+      throw new Error(`Invalid land coordinates: ${x}, ${y}`);
+    }
+    return waitForLandChange(landStore, predicate, timeout);
+  }
+
+  // Wait for land to become a specific type
+  async waitForLandType<T extends BaseLand>(
+    x: number,
+    y: number,
+    typeChecker: (land: BaseLand) => land is T,
+    timeout: number = DEFAULT_TIMEOUT,
+  ): Promise<T> {
+    const landStore = this.getLand(x, y);
+    if (!landStore) {
+      throw new Error(`Invalid land coordinates: ${x}, ${y}`);
+    }
+    return waitForLandType(landStore, typeChecker, timeout);
+  }
+
+  // Wait for land owner to change
+  async waitForOwnerChange(
+    x: number,
+    y: number,
+    expectedOwner: string,
+    timeout: number = DEFAULT_TIMEOUT,
+  ): Promise<BaseLand> {
+    return this.waitForLandChange(
+      x,
+      y,
+      (land) =>
+        'owner' in land && padAddress(land.owner) === padAddress(expectedOwner),
+      timeout,
+    );
+  }
+
+  // Wait for land to become empty
+  async waitForEmptyLand(
+    x: number,
+    y: number,
+    timeout: number = DEFAULT_TIMEOUT,
+  ): Promise<BaseLand> {
+    return this.waitForLandChange(
+      x,
+      y,
+      (land) => land.constructor.name === 'EmptyLand',
+      timeout,
+    );
+  }
+
+  // Wait for land to become a building
+  async waitForBuildingLand(
+    x: number,
+    y: number,
+    timeout: number = DEFAULT_TIMEOUT,
+  ): Promise<BaseLand> {
+    return this.waitForLandChange(
+      x,
+      y,
+      (land) => land.constructor.name === 'BuildingLand',
+      timeout,
+    );
+  }
+
+  // Wait for auction to finish
+  async waitForAuctionEnd(
+    x: number,
+    y: number,
+    timeout: number = DEFAULT_TIMEOUT,
+  ): Promise<BaseLand> {
+    return this.waitForLandChange(
+      x,
+      y,
+      (land) => land.constructor.name !== 'AuctionLand',
+      timeout,
+    );
+  }
+
+  // Wait for stake amount to reach a certain threshold
+  async waitForStakeThreshold(
+    x: number,
+    y: number,
+    minStakeAmount: number,
+    timeout: number = DEFAULT_TIMEOUT,
+  ): Promise<BaseLand> {
+    return this.waitForLandChange(
+      x,
+      y,
+      (land) => {
+        if ('stakeAmount' in land && land.stakeAmount) {
+          return Number(land.stakeAmount) >= minStakeAmount;
+        }
+        return false;
+      },
+      timeout,
+    );
+  }
+
+  // Wait for any land in the grid to change
+  async waitForAnyLandChange(
+    predicate: (land: BaseLand) => boolean,
+    timeout: number = DEFAULT_TIMEOUT,
+  ): Promise<{ land: BaseLand; x: number; y: number }> {
+    const allLandsStore = this.getAllLands();
+
+    return new Promise((resolve, reject) => {
+      let timeoutId: NodeJS.Timeout;
+      let unsubscribe: (() => void) | undefined;
+
+      timeoutId = setTimeout(() => {
+        if (unsubscribe) {
+          unsubscribe();
+        }
+        reject(new Error(`Wait timeout after ${timeout}ms`));
+      }, timeout);
+
+      unsubscribe = allLandsStore.subscribe((lands: BaseLand[]) => {
+        for (let i = 0; i < lands.length; i++) {
+          const land = lands[i];
+          if (predicate(land)) {
+            const x = i % GRID_SIZE;
+            const y = Math.floor(i / GRID_SIZE);
+
+            clearTimeout(timeoutId);
+            if (unsubscribe) {
+              unsubscribe();
+            }
+            resolve({ land, x, y });
+            return;
+          }
+        }
+      });
     });
   }
 }

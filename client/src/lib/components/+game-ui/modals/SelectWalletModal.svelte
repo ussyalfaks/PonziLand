@@ -60,11 +60,13 @@
 </script>
 
 {#if visible}
-  <div class="bg-black opacity-60 absolute w-screen h-screen top-0 left-0 z-40">
+  <div
+    class="bg-black opacity-60 absolute w-screen h-screen top-0 left-0 z-[99]"
+  >
     &nbsp;
   </div>
   <Card
-    class="absolute top-absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 p-10 text-2xl min-w-80"
+    class="absolute top-absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] p-10 text-2xl min-w-80"
   >
     <CloseButton
       onclick={() => {
@@ -91,27 +93,25 @@
                     ? controllerWallet.icon
                     : controllerWallet.icon.light}
                 <Button
-                  class="flex flex-row justify-start w-full min-h-[60px] p-3"
-                  on:click={() => login(controllerWallet.id)}
+                  class="flex flex-row justify-start w-full min-h-[60px]"
+                  onclick={() => login(controllerWallet.id)}
                 >
                   <img
                     src={image}
                     alt={controllerWallet.name + ' logo'}
                     class="h-10 p-2 pr-4"
                   />
-                  <div class="flex flex-col items-start text-left">
+                  <div class="flex gap-4 items-center text-left text-sm">
                     <div class="text-lg">
                       {controllerWallet.name}
                     </div>
-                    <div class="text-sm opacity-70 text-green-500">
-                      FREE GAS!
-                    </div>
+                    <div class="opacity-70 text-green-500">FREE GAS!</div>
                   </div>
                 </Button>
                 <Button
-                  class="text-sm flex items-center justify-center mt-2 text-sm opacity-50"
+                  size="md"
                   variant="red"
-                  on:click={() => (showAllWallets = true)}
+                  onclick={() => (showAllWallets = true)}
                 >
                   <ChevronDown class="h-4 w-4 mr-1" />
                   <span>Want to use a different wallet?</span>
@@ -124,36 +124,33 @@
                     ? wallet.icon
                     : wallet.icon.light}
                 <Button
-                  class="flex flex-row justify-start w-full min-h-[60px] p-3"
-                  on:click={() => login(wallet.id)}
+                  class="flex flex-row justify-start w-full min-h-[60px]"
+                  onclick={() => login(wallet.id)}
                 >
                   <img
                     src={image}
                     alt={wallet.name + ' logo'}
                     class="h-10 p-2 pr-4"
                   />
-                  <div class="flex flex-col items-start text-left">
+                  <div class="flex gap-4 items-center text-left">
                     <div class="text-lg">
                       {wallet.name}
                     </div>
                     {#if wallet.id == 'controller'}
-                      <div class="text-sm opacity-70 text-green-500">
+                      <div class=" opacity-70 text-green-500 text-sm">
                         FREE GAS!
                       </div>
                     {:else}
-                      <div class="text-sm opacity-70 text-red-600">
+                      <div class=" opacity-70 text-red-600 text-sm">
                         Standard
                       </div>
                     {/if}
                   </div>
                 </Button>
               {/each}
-              <Button
-                class="text-sm flex items-center justify-center mt-2"
-                on:click={() => (showAllWallets = false)}
-              >
+              <Button size="md" onclick={() => (showAllWallets = false)}>
                 <ChevronUp class="h-4 w-4 mr-1" />
-                <span>Show fewer options</span>
+                Show fewer options
               </Button>
             {/if}
           {:else}
@@ -164,7 +161,7 @@
                   : wallet.icon.light}
               <Button
                 class="flex flex-row justify-start w-full min-h-[60px] p-3"
-                on:click={() => login(wallet.id)}
+                onclick={() => login(wallet.id)}
               >
                 <img
                   src={image}
@@ -181,7 +178,7 @@
             _________________________
             <Button
               class="flex flex-row justify-start"
-              on:click={() => {
+              onclick={() => {
                 visible = false;
                 goto('/ramp');
               }}>Phantom</Button

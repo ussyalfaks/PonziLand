@@ -1,137 +1,104 @@
-import { toHexWithPadding } from '$lib/utils';
-import data from '$profileData';
+import { selectedLand } from '$lib/stores/store.svelte';
+import { get } from 'svelte/store';
+import { TutorialLandStore } from './tutorial-land-store';
+import { widgetsStore } from '$lib/stores/widgets.store';
 
-export const MAP_SIZE = 16;
+export let tutorialLandStore = $state(new TutorialLandStore());
 
-interface BaseTile {
-  location: string;
-  timeToNuke: number;
-  owner?: string;
-}
+export let tutorialState = $state({
+  tutorialEnabled: false,
+  tutorialProgress: 1,
+});
 
-interface GrassTile extends BaseTile {
-  type: 'grass';
-}
-
-interface AuctionTile extends BaseTile {
-  type: 'auction';
-}
-
-interface HouseTile extends BaseTile {
-  type: 'house';
-  level: 1 | 2 | 3;
-  token: (typeof data.availableTokens)[number];
-}
-
-// Union type for all possible tiles
-export type Tile = GrassTile | AuctionTile | HouseTile;
-
-function createFakeTiles(): Tile[][] {
-  return Array(MAP_SIZE)
-    .fill(null)
-    .map((_, i) =>
-      Array(MAP_SIZE)
-        .fill(null)
-        .map((_, j) => ({
-          location: toHexWithPadding(i * MAP_SIZE + j),
-          type: 'grass',
-          timeToNuke: 10000000,
-        })),
-    );
-}
-
-class TileState {
-  public tilesStore: Tile[][] = $state(createFakeTiles());
-  public nuke = $state(false);
-  public displayRates = $state(false);
-
-  getDisplayRates() {
-    return this.displayRates;
-  }
-
-  setDisplayRates(displayRates: boolean) {
-    this.displayRates = displayRates;
-  }
-  getTiles() {
-    return this.tilesStore;
-  }
-
-  getNuke() {
-    return this.nuke;
-  }
-
-  setNuke(nuke: boolean) {
-    this.nuke = nuke;
-  }
-
-  addAuction(x: number = 8, y: number = 8): void {
-    if (this.tilesStore[x] && this.tilesStore[x][y]) {
-      this.tilesStore[x][y] = {
-        ...this.tilesStore[x][y],
-        type: 'auction',
-        owner: '0x',
-      };
-    }
-  }
-
-  removeAuction(x: number = 8, y: number = 8): void {
-    if (this.tilesStore[x] && this.tilesStore[x][y]) {
-      this.tilesStore[x][y] = {
-        ...this.tilesStore[x][y],
-        type: 'grass',
-      };
-    }
-  }
-
-  buyAuction(x: number = 8, y: number = 8, tokenId: number = 0): void {
-    if (this.tilesStore[x] && this.tilesStore[x][y]) {
-      this.tilesStore[x][y] = {
-        ...this.tilesStore[x][y],
-        type: 'house',
-        level: 1 as 1 | 2 | 3,
-        token: data.availableTokens[tokenId],
-      };
-    }
-  }
-
-  reduceTimeToNuke(x: number, y: number): void {
-    if (this.tilesStore[x] && this.tilesStore[x][y]) {
-      this.tilesStore[x][y].timeToNuke = this.tilesStore[x][y].timeToNuke / 2;
-    }
-  }
-
-  getNukeTime(x: number, y: number): number {
-    if (this.tilesStore[x] && this.tilesStore[x][y]) {
-      return this.tilesStore[x][y].timeToNuke;
-    }
-    return 0;
-  }
-
-  levelUp(x: number, y: number): void {
-    if (
-      this.tilesStore[x] &&
-      this.tilesStore[x][y] &&
-      this.tilesStore[x][y].type === 'house' &&
-      'level' in this.tilesStore[x][y]
-    ) {
-      this.tilesStore[x][y] = {
-        ...this.tilesStore[x][y],
-        level: (Number(this.tilesStore[x][y].level) + 1) as 1 | 2 | 3,
-      };
-    }
+export function nextStep() {
+  if (tutorialState.tutorialProgress < 25) {
+    tutorialState.tutorialProgress += 1;
+    changeMap();
   }
 }
 
-export const tileState = new TileState();
+export function previousStep() {
+  if (tutorialState.tutorialProgress > 1) {
+    tutorialState.tutorialProgress -= 1;
+    changeMap();
+  }
+}
 
-export function tutorialProgression() {
-  let value = $state(1);
+// Tutorial progression handler:
+export function changeMap() {
+  if (
+    tutorialState.tutorialProgress >= 3 &&
+    tutorialState.tutorialProgress < 8
+  ) {
+    tutorialLandStore.addAuction();
+  } else if (tutorialState.tutorialProgress < 3) {
+    tutorialLandStore.removeAuction();
+  }
+  if (tutorialState.tutorialProgress === 4) {
+    // Select the auction tile at position [32][32]
+    const landStore = tutorialLandStore.getLand(32, 32);
+    if (landStore) {
+      const land = get(landStore);
+      selectedLand.value = land;
+    }
+  }
 
-  return {
-    get value() {
-      return value;
-    },
-    increment: () => (value += 1),
-    decrement: () => (value -= 1),
-  };
+  if (tutorialState.tutorialProgress === 5) {
+    widgetsStore.addWidget({
+      id: 'tutorial',
+      type: 'tutorial',
+      position: { x: 100, y: 20 },
+      dimensions: { width: 500, height: 0 },
+      isMinimized: false,
+      isOpen: true,
+    });
+  }
+
+  if (tutorialState.tutorialProgress === 8) {
+    tutorialLandStore.buyAuction(32, 32);
+  }
+  if (tutorialState.tutorialProgress === 9) {
+    tutorialLandStore.levelUp(32, 32);
+  }
+  if (tutorialState.tutorialProgress === 10) {
+    tutorialLandStore.levelUp(32, 32);
+  }
+  if (tutorialState.tutorialProgress === 11) {
+    tutorialLandStore.addAuction(31, 32);
+    tutorialLandStore.addAuction(33, 32);
+    tutorialLandStore.addAuction(33, 33);
+  } else if (tutorialState.tutorialProgress <= 11) {
+    tutorialLandStore.removeAuction(31, 32);
+    tutorialLandStore.removeAuction(33, 32);
+    tutorialLandStore.removeAuction(33, 33);
+    tutorialLandStore.setDisplayRates(false);
+  }
+  if (tutorialState.tutorialProgress === 12) {
+    tutorialLandStore.buyAuction(31, 32, 1);
+    tutorialLandStore.buyAuction(33, 32, 2);
+    tutorialLandStore.buyAuction(33, 33, 3);
+    tutorialLandStore.setStake(10000000000000000000000);
+    tutorialLandStore.setDisplayRates(true);
+  }
+
+  if (tutorialState.tutorialProgress === 15) {
+    tutorialLandStore.setStake(7000000000000000000000);
+  }
+
+  if (tutorialState.tutorialProgress === 16) {
+    tutorialLandStore.setStake(4000000000000000000000);
+  }
+
+  if (tutorialState.tutorialProgress === 17) {
+    tutorialLandStore.setStake(1000000000000000000);
+  }
+
+  if (tutorialState.tutorialProgress === 18) {
+    tutorialLandStore.setStake(0);
+    tutorialLandStore.setNuke(false);
+  }
+
+  if (tutorialState.tutorialProgress === 19) {
+    tutorialLandStore.setNuke(true);
+  }
 }

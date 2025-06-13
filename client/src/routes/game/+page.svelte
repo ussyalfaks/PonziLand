@@ -2,20 +2,34 @@
   import { goto } from '$app/navigation';
   import { refresh, setup as setupAccountState } from '$lib/account.svelte';
   import { setupSocialink } from '$lib/accounts/social/index.svelte';
-  import LoadingScreen from '$lib/components/loading-screen/loading-screen.svelte';
+  import GameGrid from '$lib/components/+game-map/game-grid.svelte';
+  import GameUi from '$lib/components/+game-ui/game-ui.svelte';
   import SwitchChainModal from '$lib/components/+game-ui/modals/SwitchChainModal.svelte';
+  import {
+    fetchUsernamesBatch,
+    getUserAddresses,
+  } from '$lib/components/+game-ui/widgets/leaderboard/request';
+  import LoadingScreen from '$lib/components/loading-screen/loading-screen.svelte';
+  import {
+    tutorialLandStore,
+    tutorialState,
+  } from '$lib/components/tutorial/stores.svelte';
   import { setupAccount } from '$lib/contexts/account.svelte';
   import { setupClient } from '$lib/contexts/client.svelte';
   import { dojoConfig } from '$lib/dojoConfig';
-  import GameGrid from '$lib/components/+game-map/game-grid.svelte';
-  import GameUi from '$lib/components/+game-ui/game-ui.svelte';
+  import { gameSounds } from '$lib/stores/sfx.svelte';
+  import { usernamesStore } from '$lib/stores/account.store.svelte';
   import { landStore } from '$lib/stores/store.svelte';
+  import { onMount } from 'svelte';
 
   const promise = Promise.all([
     setupSocialink().then(() => {
       return setupAccountState();
     }),
-    setupClient(dojoConfig).then((client) => landStore.setup(client!)),
+    setupClient(dojoConfig).then((client) => {
+      landStore.setup(client!);
+      landStore.stopRandomUpdates();
+    }),
     setupAccount(),
   ]);
 
@@ -24,6 +38,7 @@
   let value = $state(10);
 
   $effect(() => {
+    tutorialLandStore.stopRandomUpdates();
     let increment = 10;
 
     const interval = setInterval(() => {
@@ -50,11 +65,6 @@
           console.error('Account state is null!');
 
           return;
-        }
-
-        if (accountManager?.getProvider()?.getAccount() == null) {
-          console.info('The user is not logged in! Attempting login.');
-          await accountManager?.getProvider()?.connect();
         }
 
         // Check if the user needs to signup with socialink
@@ -84,12 +94,43 @@
 
         console.log('Everything is ready!', dojo != undefined);
 
+        tutorialState.tutorialEnabled = false;
         clearLoading();
+        gameSounds.play('launchGame');
       })
       .catch((err) => {
         console.error('An error occurred:', err);
         // TODO: Redirect to an error page!
       });
+  });
+
+  async function getUsernames() {
+    try {
+      const addresses = usernamesStore.getAddresses().map((a) => a.address);
+
+      if (addresses.length === 0) {
+        console.warn('No addresses to lookup.');
+        return;
+      }
+
+      const fetchedUsernames = await fetchUsernamesBatch(addresses);
+
+      await usernamesStore.updateUsernames(fetchedUsernames);
+    } catch (error) {
+      console.error('Error refreshing usernames:', error);
+    }
+  }
+
+  onMount(async () => {
+    const addresses: Array<{ address: string }> = await getUserAddresses();
+
+    const formattedAddresses = addresses.map(({ address }) => ({
+      address: address,
+    }));
+
+    usernamesStore.addAddresses(formattedAddresses);
+
+    await getUsernames();
   });
 </script>
 

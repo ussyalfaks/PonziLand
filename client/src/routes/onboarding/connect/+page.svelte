@@ -3,7 +3,7 @@
   import accountDataProvider from '$lib/account.svelte';
 
   import { Button } from '$lib/components/ui/button';
-  import SelectWallet from '$lib/components/wallet/select-wallet.svelte';
+  import SelectWallet from '$lib/components/+game-ui/widgets/wallet/select-wallet.svelte';
   import { useAccount } from '$lib/contexts/account.svelte';
   import { ENABLE_RAMP } from '$lib/flags';
 
@@ -45,7 +45,7 @@
     <div class="self-center text-xl font-bold mx-2">or</div>
 
     <Button
-      on:click={() => {
+      onclick={() => {
         goto('/ramp');
       }}>Phantom</Button
     >

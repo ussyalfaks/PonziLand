@@ -1,52 +1,12 @@
+import {
+  DEFAULT_WIDGETS_STATE,
+  type WidgetsState,
+  type WidgetState,
+} from '$lib/components/+game-ui/widgets/widgets.config';
+import { WIDGETS_STORAGE_KEY } from '$lib/const';
 import { writable } from 'svelte/store';
 
-const STORAGE_KEY = 'ponziland-widgets-state';
-
-const DEFAULT_WIDGETS_STATE: WidgetsState = {
-  wallet: {
-    id: 'wallet',
-    type: 'wallet',
-    position: { x: window.innerWidth - 320, y: 20 }, // Top right
-    isMinimized: false,
-    isOpen: true,
-  },
-  'land-hud': {
-    id: 'land-hud',
-    type: 'land-hud',
-    position: { x: window.innerWidth - 320, y: window.innerHeight - 280 }, // Bottom right
-    isMinimized: false,
-    isOpen: true,
-  },
-  settings: {
-    id: 'settings',
-    type: 'settings',
-    position: { x: 20, y: 20 }, // Top left
-    isMinimized: false,
-    isOpen: false,
-  },
-  'my-lands': {
-    id: 'my-lands',
-    type: 'my-lands',
-    position: { x: 20, y: window.innerHeight - 280 }, // Bottom left
-    isMinimized: false,
-    isOpen: false,
-  },
-};
-
-export interface WidgetState {
-  id: string;
-  type: string;
-  position: { x: number; y: number };
-  isMinimized: boolean;
-  isOpen: boolean;
-  dimensions?: { width: number; height: number };
-  data?: Record<string, any>;
-  zIndex?: number;
-}
-
-interface WidgetsState {
-  [key: string]: WidgetState;
-}
+const STORAGE_KEY = WIDGETS_STORAGE_KEY;
 
 // Validate widget data structure
 function isValidWidget(widget: any): widget is WidgetState {
@@ -111,22 +71,18 @@ function loadState(): WidgetsState {
       return DEFAULT_WIDGETS_STATE;
     }
 
+    // Start with default widgets
+    const finalState = { ...DEFAULT_WIDGETS_STATE };
+
     // Process each widget's data after loading
-    const processedState: WidgetsState = {};
     for (const [id, widget] of Object.entries(parsed)) {
       const processedWidget = processWidgetDataAfterLoad(widget);
       if (processedWidget) {
-        processedState[id] = processedWidget;
+        finalState[id] = processedWidget;
       }
     }
 
-    // If no valid widgets were found, return defaults
-    if (Object.keys(processedState).length === 0) {
-      console.warn('No valid widgets found in saved state, using defaults');
-      return DEFAULT_WIDGETS_STATE;
-    }
-
-    return processedState;
+    return finalState;
   } catch (e) {
     console.error('Failed to load widgets state:', e);
     // Clear corrupted data
@@ -156,6 +112,28 @@ function saveState(state: WidgetsState) {
   }
 }
 
+// Normalize z-indices to prevent them from growing too large
+function normalizeZIndices(state: WidgetsState): WidgetsState {
+  const widgets = Object.entries(state);
+  if (widgets.length === 0) return state;
+
+  // Sort widgets by their current z-index
+  const sortedWidgets = widgets.sort(
+    ([, a], [, b]) => (a.zIndex || 0) - (b.zIndex || 0),
+  );
+
+  // Assign new z-indices starting from 1
+  const newState = { ...state };
+  sortedWidgets.forEach(([id, widget], index) => {
+    newState[id] = {
+      ...widget,
+      zIndex: index + 1,
+    };
+  });
+
+  return newState;
+}
+
 function createWidgetsStore() {
   const { subscribe, set, update } = writable<WidgetsState>(
     DEFAULT_WIDGETS_STATE,
@@ -178,12 +156,34 @@ function createWidgetsStore() {
           ...Object.values(state).map((w) => w.zIndex || 0),
           0,
         );
+
+        // If a widget already has this position offset it by 10px and retry if another exists at this position
+        const position = { ...widget.position };
+        let offset = 0;
+
+        while (
+          Object.values(state).some(
+            (w) => w.position.x === position.x && w.position.y === position.y,
+          )
+        ) {
+          offset += 10;
+          position.x = widget.position.x + offset;
+          position.y = widget.position.y + offset;
+        }
+
         const newState = {
           ...state,
-          [widget.id]: { ...widget, zIndex: maxZIndex + 1 },
+          [widget.id]: {
+            ...widget,
+            position,
+            zIndex: maxZIndex + 1,
+            isMinimized: false,
+            isOpen: true,
+          },
         };
-        saveState(newState);
-        return newState;
+        const normalizedState = normalizeZIndices(newState);
+        saveState(normalizedState);
+        return normalizedState;
       }),
     updateWidget: (id: string, updates: Partial<WidgetState>) =>
       update((state) => {
@@ -191,12 +191,17 @@ function createWidgetsStore() {
           console.error('Widget not found:', id);
           return state;
         }
+        const maxZIndex = Math.max(
+          ...Object.values(state).map((w) => w.zIndex || 0),
+          0,
+        );
         const newState = {
           ...state,
-          [id]: { ...state[id], ...updates },
+          [id]: { ...state[id], ...updates, zIndex: maxZIndex + 1 },
         };
-        saveState(newState);
-        return newState;
+        const normalizedState = normalizeZIndices(newState);
+        saveState(normalizedState);
+        return normalizedState;
       }),
     removeWidget: (id: string) =>
       update((state) => {
@@ -224,6 +229,16 @@ function createWidgetsStore() {
           console.error('Widget not found:', id);
           return state;
         }
+
+        // For land-info widgets, remove them completely
+        if (state[id].type === 'land-info') {
+          const newState = { ...state };
+          delete newState[id];
+          saveState(newState);
+          return newState;
+        }
+
+        // For other widgets, just mark them as closed
         const newState = {
           ...state,
           [id]: { ...state[id], isOpen: false },
@@ -249,8 +264,9 @@ function createWidgetsStore() {
           ...state,
           [id]: { ...state[id], zIndex: maxZIndex + 1 },
         };
-        saveState(newState);
-        return newState;
+        const normalizedState = normalizeZIndices(newState);
+        saveState(normalizedState);
+        return normalizedState;
       }),
   };
 }

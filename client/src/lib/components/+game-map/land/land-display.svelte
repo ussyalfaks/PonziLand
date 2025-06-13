@@ -1,10 +1,9 @@
 <script lang="ts">
+  import SpriteSheet from '$lib/components/ui/sprite-sheet.svelte';
   import type { Token } from '$lib/interfaces';
   import { cn } from '$lib/utils';
   import 'seedrandom';
   import seedrandom from 'seedrandom';
-  import SpriteSheet from '$lib/components/ui/sprite-sheet.svelte';
-  import type { Level } from '$lib/api/land.svelte';
 
   let {
     class: className = '',
@@ -17,6 +16,7 @@
     level = 1,
     selected = false,
     hovering = false,
+    highlighted = false,
   }: {
     class?: string;
     token?: Token;
@@ -28,6 +28,7 @@
     level?: Level;
     selected?: boolean;
     hovering?: boolean;
+    highlighted?: boolean;
   } = $props();
 
   let rng = $derived(seedrandom(seed));
@@ -76,24 +77,31 @@
   {/if}
   {#if auction}
     <SpriteSheet
-      src="/land-display/empty.png"
-      x={3}
-      y={2}
+      src="/land-display/auction-idle.png"
       xSize={256}
-      xMax={1024}
+      xMax={1280}
       ySize={256}
-      yMax={768}
+      yMax={512}
       {width}
       {height}
-      class={cn('absolute h-full w-full top-0 bottom-0 left-0 right-0', {
+      class={cn('Biome absolute h-full w-full top-0 bottom-0 left-0 right-0', {
         selected: selected,
         hovering: hovering,
+        highlighted: highlighted,
       })}
+      animate={true}
+      frameDelay={100}
+      startFrame={0}
+      endFrame={9}
+      loop={true}
+      horizontal={true}
+      autoplay={true}
     />
   {/if}
   {#if token}
+    <!-- Biome Shadow -->
     <SpriteSheet
-      src="/tokens/+global/biomes.png"
+      src="/tokens/+global/biomes-shadow.png"
       x={token.images.biome.x}
       y={token.images.biome.y}
       xSize={256}
@@ -102,9 +110,22 @@
       yMax={3328}
       {width}
       {height}
+      class="Biome absolute h-full w-full top-0 bottom-0 left-0 right-0"
+    />
+    <!-- Main Biome -->
+    <SpriteSheet
+      src="/tokens/+global/biomes.png"
+      x={token.images.biome.x}
+      y={token.images.biome.y}
+      xSize={256}
+      xMax={1024}
+      ySize={256}
+      yMax={1280}
+      {width}
+      {height}
       class="Biome absolute h-full w-full top-0 bottom-0 left-0 right-0 {selected
         ? 'selected'
-        : ''} {hovering ? 'hovering' : ''}"
+        : ''} {hovering ? 'hovering' : ''} {highlighted ? 'highlighted' : ''}"
     />
     {#if token.images.building[level].frames}
       {@const animationMeta = token.images.building[level]}
@@ -130,9 +151,11 @@
           horizontal={true}
           autoplay={true}
           delay={animationMeta.delay}
-          class="absolute h-full w-full top-0 bottom-0 left-0 right-0 -translate-y-[3px] scale-75 {selected
+          class="absolute h-full w-full -translate-y-[15%] scale-75 {selected
             ? 'selected'
-            : ''} {hovering ? 'hovering' : ''}"
+            : ''} {hovering ? 'hovering' : ''} {highlighted
+            ? 'highlighted'
+            : ''}"
         />
       {/if}
     {:else}
@@ -141,14 +164,14 @@
         x={token.images.building[level].x}
         y={token.images.building[level].y}
         xSize={256}
-        xMax={1536}
+        xMax={3072}
         ySize={256}
         yMax={5376}
         {width}
         {height}
-        class="absolute h-full w-full top-0 bottom-0 left-0 right-0 -translate-y-[3px] {selected
+        class="absolute h-full w-full top-0 bottom-0 left-0 right-0 {selected
           ? 'selected'
-          : ''} {hovering ? 'hovering' : ''}"
+          : ''} {hovering ? 'hovering' : ''} {highlighted ? 'highlighted' : ''}"
       />
     {/if}
   {:else if basic}

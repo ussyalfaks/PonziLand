@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getTokenPrices } from '$lib/api/defi/ekubo/requests';
-  import type { LandWithActions } from '$lib/api/land.svelte';
+  import type { LandWithActions } from '$lib/api/land';
   import type { LandYieldInfo } from '$lib/interfaces';
   import { settingsStore } from '$lib/stores/settings.store.svelte';
   import { toHexWithPadding } from '$lib/utils';
@@ -33,7 +33,13 @@
   let totalYieldValue: number = $state(0);
 
   let burnRate = $derived(
-    calculateBurnRate(land as LandWithActions, getNumberOfNeighbours() || 0),
+    CurrencyAmount.fromScaled(
+      calculateBurnRate(
+        land as LandWithActions,
+        getNumberOfNeighbours() || 0,
+      ).toNumber(),
+      land.token,
+    ),
   );
 
   let burnRateInBaseToken: CurrencyAmount = $state(
@@ -50,7 +56,10 @@
         );
         if (tokenPrice) {
           burnRateInBaseToken = CurrencyAmount.fromScaled(
-            burnRate.dividedBy(tokenPrice.ratio || 0).toString(),
+            burnRate
+              .rawValue()
+              .dividedBy(tokenPrice.ratio || 0)
+              .toString(),
             land?.token,
           );
         }
@@ -60,7 +69,11 @@
 
   function getNumberOfNeighbours() {
     if (land == undefined) return;
-    return yieldInfo?.yield_info.filter((info) => info.percent_rate).length;
+    const nbNeighbors = yieldInfo?.yield_info.filter(
+      (info) => info.percent_rate,
+    ).length;
+    console.log('neighbours', nbNeighbors);
+    return nbNeighbors;
   }
 
   $effect(() => {
@@ -123,15 +136,13 @@
   });
 </script>
 
-<div class="flex flex-row">
-  <div class="py-4 pl-4">
-    {#if showLand}
-      <LandOverview {land} {isOwner} />
-    {/if}
-  </div>
-  {#if settingsStore.isProMode}
-    <LandHudPro {totalYieldValue} burnRate={burnRateInBaseToken} {land} />
-  {:else if land}
+<div class="flex flex-row gap-6 px-6">
+  {#if showLand}
+    <LandOverview {land} {isOwner} />
+  {/if}
+  {#if settingsStore.isNoobMode}
     <LandHudNormal {yieldInfo} {burnRate} {land} />
+  {:else if land}
+    <LandHudPro {totalYieldValue} burnRate={burnRateInBaseToken} {land} />
   {/if}
 </div>

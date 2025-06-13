@@ -4,6 +4,7 @@ use chaindata_models::events::{EventDataModel, EventId, FetchedEvent};
 use chaindata_repository::event::Repository as EventRepository;
 use chrono::Utc;
 use ponziland_models::events::EventData;
+use sqlx::error::DatabaseError;
 use tokio::select;
 use tokio_stream::StreamExt;
 use torii_ingester::{RawToriiData, ToriiClient};
@@ -41,18 +42,23 @@ impl EventListenerTask {
                 debug!("Processing GRPC event");
 
                 FetchedEvent {
-                    id: EventId::new(),
+                    id: EventId::new_test(0, 0, 0),
                     at: Utc::now().naive_utc(),
                     data: EventData::try_from(data)
                         .expect("An error occurred while deserializing model")
                         .into(),
                 }
             }
-            RawToriiData::Json { name, data, at } => {
+            RawToriiData::Json {
+                name,
+                data,
+                at,
+                event_id,
+            } => {
                 debug!("Processing JSON event");
 
                 FetchedEvent {
-                    id: EventId::new(),
+                    id: EventId::parse_from_torii(&event_id).unwrap(),
                     at: at.naive_utc(),
                     data: EventData::from_json(&name, data.clone())
                         .unwrap_or_else(|_| {
@@ -65,10 +71,20 @@ impl EventListenerTask {
             }
         };
 
-        self.event_repository
-            .save_event(event.clone())
-            .await
-            .expect("An error occurred while saving event");
+        if let Err(chaindata_repository::Error::SqlError(err)) =
+            self.event_repository.save_event(event.clone()).await
+        {
+            if !err
+                .as_database_error()
+                .is_some_and(DatabaseError::is_unique_violation)
+            {
+                error!("Failed to save event: {}", err);
+            }
+
+            // It is a duplicate, so ignore it
+            return;
+        }
+        info!("Successfully saved event!");
 
         if let Some(gg_api) = &self.gg_api {
             // If the event is used to submit something to gg, send it.
@@ -111,55 +127,47 @@ impl Task for EventListenerTask {
     const NAME: &'static str = "EventListenerTask";
 
     async fn do_task(self: std::sync::Arc<Self>, mut rx: tokio::sync::oneshot::Receiver<()>) {
-        // Loop with a wait
+        info!("Starting EventListenerTask with 10-second polling interval");
+
         loop {
-            // Start both a sql catch up and a torii event listener
+            // Poll for new events from the database
             let last_check = self
                 .event_repository
                 .get_last_event_date()
                 .await
-                .expect("Too bad...");
+                .expect("Failed to get last event date");
 
-            let events_catchup = self
+            // Subtract 1 second to avoid missing events due to timestamp precision issues
+            let safe_last_check = last_check - chrono::Duration::seconds(1);
+
+            info!(
+                "Polling for events after: {:?} (with 1s safety buffer)",
+                safe_last_check
+            );
+
+            // Get all events that occurred after the last check (with safety buffer)
+            let mut events_stream = self
                 .client
-                .get_all_events_after(last_check)
-                .expect("Error while fetching entities");
+                .get_all_events_after(safe_last_check)
+                .expect("Error while fetching events");
 
-            let events_listener = self
-                .client
-                .subscribe_events()
-                .await
-                .expect("Error while subscribing for events");
-
-            // Join the two streams (on the heap to not anger the borrow checker)
-            let mut events = Box::pin(events_catchup.merge(events_listener));
-
-            // Process events
-            loop {
-                select! {
-                    maybe_event = events.next() => {
-                        if let Some(event) = maybe_event {
-                            info!("Processing new event");
-                            self.process_event(event).await;
-                        } else {
-                            info!("Event stream completed, exiting event processing loop before connecting again.");
-                            break;
-                        }
-                    },
-                    stop_result = &mut rx => {
-                        match stop_result {
-                            Ok(()) => info!("Received stop signal, shutting down event processing"),
-                            Err(e) => info!("Stop channel closed unexpectedly: {}", e),
-                        }
-                        return;
-                    }
-                }
+            // Process events as they go
+            let mut event_count = 0;
+            while let Some(event) = events_stream.next().await {
+                self.process_event(event).await;
+                event_count += 1;
             }
 
-            // Wait for 10 seconds before connecting again (and check the stop result at the same time)
+            if event_count > 0 {
+                info!("Processed {} new events", event_count);
+            } else {
+                debug!("No new events found");
+            }
+
+            // Wait for 10 seconds before the next poll (or until stop signal)
             select! {
                 () = tokio::time::sleep(std::time::Duration::from_secs(10)) => {
-                    info!("Finished waiting, catching up and logging in again...");
+                    debug!("Polling interval completed, checking for new events...");
                 },
                 stop_result = &mut rx => {
                     match stop_result {

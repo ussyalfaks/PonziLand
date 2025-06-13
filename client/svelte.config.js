@@ -23,6 +23,8 @@ const profiles = {
     PUBLIC_SOCIALINK_URL: process.env.SOCIALINK_URL,
     PUBLIC_PONZI_API_URL: process.env.PONZI_API_URL,
     PUBLIC_RELAY_URL: process.env.RELAY_URL,
+    PUBLIC_FARO_COLLECTOR_URL: process.env.FARO_COLLECTOR_URL,
+    PUBLIC_GIT_COMMIT_HASH: process.env.PUBLIC_GIT_COMMIT_HASH,
   },
   dev: {
     PUBLIC_DOJO_RPC_URL: 'http://127.0.0.1:5050',
@@ -33,6 +35,8 @@ const profiles = {
     PUBLIC_DOJO_BURNER_PRIVATE:
       '0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912',
     BYPASS_TOKEN: '',
+    PUBLIC_FARO_COLLECTOR_URL: null,
+    PUBLIC_GIT_COMMIT_HASH: null,
   },
   sepolia: {
     PUBLIC_DOJO_RPC_URL: 'https://api.cartridge.gg/x/starknet/sepolia',
@@ -48,10 +52,14 @@ const profiles = {
     PUBLIC_PONZI_API_URL: 'https://api-sepolia.ponzi.land',
     PUBLIC_RELAY_URL:
       '/dns4/api.cartridge.gg/tcp/443/x-parity-wss/%2Fx%2Fponziland-sepolia-internal%2Ftorii%2Fwss',
+    PUBLIC_FARO_COLLECTOR_URL:
+      'https://faro-collector-prod-eu-west-2.grafana.net/collect/6b0946d2811fceca6349c46b402a3d2c',
+    PUBLIC_GIT_COMMIT_HASH: process.env.PUBLIC_GIT_COMMIT_HASH,
   },
   'mainnet-test': {
     PUBLIC_DOJO_RPC_URL: 'https://api.cartridge.gg/x/starknet/mainnet',
-    PUBLIC_DOJO_TORII_URL: 'https://api.cartridge.gg/x/ponziland-testing/torii',
+    PUBLIC_DOJO_TORII_URL:
+      'https://api.cartridge.gg/x/ponziland-tourney-2/torii',
     PUBLIC_DOJO_CHAIN_ID: 'SN_MAIN',
     PUBLIC_AVNU_URL: 'https://starknet.api.avnu.fi',
     PUBLIC_EKUBO_URL: 'https://mainnet-api.ekubo.org',
@@ -60,10 +68,14 @@ const profiles = {
     BYPASS_TOKEN: '',
     PUBLIC_SOCIALINK_URL: 'https://socialink.ponzi.land',
     PUBLIC_PONZI_API_URL: 'https://api.ponzi.land',
+    PUBLIC_FARO_COLLECTOR_URL:
+      'https://faro-collector-prod-eu-west-2.grafana.net/collect/6b0946d2811fceca6349c46b402a3d2c',
+    PUBLIC_GIT_COMMIT_HASH: process.env.PUBLIC_GIT_COMMIT_HASH,
   },
   mainnet: {
     PUBLIC_DOJO_RPC_URL: 'https://api.cartridge.gg/x/starknet/mainnet',
-    PUBLIC_DOJO_TORII_URL: 'https://api.cartridge.gg/x/ponziland-tourney/torii',
+    PUBLIC_DOJO_TORII_URL:
+      'https://api.cartridge.gg/x/ponziland-tourney-2/torii',
     PUBLIC_DOJO_CHAIN_ID: 'SN_MAIN',
     PUBLIC_AVNU_URL: 'https://starknet.api.avnu.fi',
     PUBLIC_EKUBO_URL: 'https://mainnet-api.ekubo.org',
@@ -72,6 +84,9 @@ const profiles = {
     BYPASS_TOKEN: '',
     PUBLIC_SOCIALINK_URL: 'https://socialink.ponzi.land',
     PUBLIC_PONZI_API_URL: 'https://api.ponzi.land',
+    PUBLIC_FARO_COLLECTOR_URL:
+      'https://faro-collector-prod-eu-west-2.grafana.net/collect/6b0946d2811fceca6349c46b402a3d2c',
+    PUBLIC_GIT_COMMIT_HASH: process.env.PUBLIC_GIT_COMMIT_HASH,
   },
 };
 
@@ -91,7 +106,8 @@ for (const val of Object.entries(envProfile)) {
 console.log(process.env['BYPASS_TOKEN']);
 
 const manifestPath = `../contracts/manifest_${profile}.json`;
-const dataPath = `data/${profile}.json`;
+// Replace profile mainnet-test to mainnet
+const dataPath = `data/${profile.replace('-test', '')}.json`;
 
 console.log('Manifest: ', manifestPath);
 /** @type {import('@sveltejs/kit').Config} */

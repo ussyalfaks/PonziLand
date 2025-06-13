@@ -7,6 +7,13 @@
   import WidgetSettings from './settings/widget-settings.svelte';
   import WidgetWallet from './wallet/widget-wallet.svelte';
   import WidgetChat from './chat/widget-chat.svelte';
+  import WidgetEntityUpdate from './entity-update/widget-entity-update.svelte';
+  import WidgetMarket from './market/widget-market.svelte';
+  import WidgetHelp from './help/widget-help.svelte';
+  import WidgetTutorial from './tutorial/widget-tutorial.svelte';
+  import WidgetNftLink from './nft-link/widget-nft-link.svelte';
+  import WidgetGuild from './guild/widget-guild.svelte';
+  import WidgetLeaderboard from './leaderboard/Leaderboard.svelte';
 </script>
 
 {#each Object.entries($widgetsStore) as [id, widget]}
@@ -16,6 +23,8 @@
       type={widget.type}
       initialPosition={widget.position}
       initialDimensions={widget.dimensions}
+      bind:isMinimized={widget.isMinimized}
+      disableResize={widget.disableResize}
     >
       {@const type = widget.type}
       {#if type === 'wallet'}
@@ -30,6 +39,20 @@
         <WidgetMyLands />
       {:else if type === 'chat'}
         <WidgetChat />
+      {:else if type === 'entity-update'}
+        <WidgetEntityUpdate />
+      {:else if type === 'market'}
+        <WidgetMarket />
+      {:else if type === 'help'}
+        <WidgetHelp />
+      {:else if type === 'tutorial'}
+        <WidgetTutorial />
+      {:else if type === 'nft-link'}
+        <WidgetNftLink />
+      {:else if type === 'guild'}
+        <WidgetGuild />
+      {:else if type === 'leaderboard'}
+        <WidgetLeaderboard />
       {/if}
     </Draggable>
   {/if}

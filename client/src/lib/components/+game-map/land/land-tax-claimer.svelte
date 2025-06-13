@@ -1,6 +1,7 @@
 <script lang="ts">
   import { type LandWithActions } from '$lib/api/land';
   import { useDojo } from '$lib/contexts/dojo';
+  import { gameSounds } from '$lib/stores/sfx.svelte';
   import { claimSingleLand, claimStore } from '$lib/stores/claim.store.svelte';
   import {
     clearPending,
@@ -10,7 +11,6 @@
   import { getAggregatedTaxes, type TaxData } from '$lib/utils/taxes';
   import Particles from '@tsparticles/svelte';
   import { particlesConfig } from './particlesConfig';
-
   let onParticlesLoaded = (event: any) => {
     const particlesContainer = event.detail.particles;
 
@@ -52,9 +52,13 @@
       return;
     }
 
-    claimSingleLand(land, dojo, account()?.getWalletAccount()!).catch((e) => {
-      console.error('error claiming from coin', e);
-    });
+    claimSingleLand(land, dojo, account()?.getWalletAccount()!)
+      .then(() => {
+        gameSounds.play('claim');
+      })
+      .catch((e) => {
+        console.error('error claiming from coin', e);
+      });
   }
 
   async function fetchTaxes() {
@@ -93,7 +97,7 @@
         <img
           src="/ui/icons/Icon_Coin2.png"
           alt="coins"
-          class="h-[8px] w-[8px] -mt-1 coin unselectable"
+          class="h-[64px] w-[64px] -mt-8 coin unselectable"
         />
       </button>
     {/if}
@@ -111,10 +115,12 @@
       />
     </div>
     <div
-      class="h-2 w-full flex flex-col items-center justify-end animate-fade-up"
+      class="h-16 w-full flex flex-col items-center justify-end animate-fade-up"
     >
       {#each aggregatedTaxes as tax}
-        <div class="text-ponzi text-nowrap text-claims pointer-events-none">
+        <div
+          class="text-ponzi text-2xl text-nowrap text-claims pointer-events-none"
+        >
           + {tax.totalTax}
           {tax.tokenSymbol}
         </div>

@@ -18,7 +18,6 @@ in {
     jq
     bc
     colorized-logs
-    wrangler
 
     graphite-cli
 
@@ -26,8 +25,9 @@ in {
     just
 
     # Cargo dependencies
-    openssl
     pkg-config
+    openssl
+    gcc
 
     # Depdencies for ledger interconnection
     node-gyp
@@ -91,6 +91,7 @@ in {
 
   services.postgres = {
     enable = true;
+    package = pkgs.postgresql_16;
     initialDatabases = [
       {
         name = "chaindata";

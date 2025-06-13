@@ -1,37 +1,37 @@
 <script lang="ts">
   import { GRID_SIZE } from '$lib/const';
 
+  import GameTile from '$lib/components/+game-map/game-tile.svelte';
   import { TILE_SIZE } from '$lib/const';
   import {
     cameraPosition,
     cameraTransition,
     moveCameraToLocation,
   } from '$lib/stores/camera.store';
-  import { onMount } from 'svelte';
-  import GameTile from '$lib/components/+game-map/game-tile.svelte';
   import { landStore } from '$lib/stores/store.svelte';
+  import { onMount } from 'svelte';
 
   // Throttle mechanism
   let lastWheelTime = 0;
   const THROTTLE_DELAY = 10; // approximately 60fps
 
   // Camera position
-  const MIN_SCALE = 0.6;
-  const MAX_SCALE = 16;
+  const MIN_SCALE = 0.075;
+  const MAX_SCALE = 2.5;
   let isDragging = $state(false);
   let dragged = $state(false);
   let startX = 0;
   let startY = 0;
 
-  // Add container ref to get dimensions
+  // Map dimensions
+  let mapDimensions = $state({ width: 0, height: 0 });
   let mapWrapper: HTMLElement;
 
   // Calculate visible tiles based on camera position and scale
   function getVisibleTiles() {
-    if (!mapWrapper)
+    if (!mapDimensions.width || !mapDimensions.height)
       return { startX: 0, startY: 0, endX: GRID_SIZE, endY: GRID_SIZE };
 
-    const rect = mapWrapper.getBoundingClientRect();
     const scale = $cameraPosition.scale;
     const offsetX = $cameraPosition.offsetX;
     const offsetY = $cameraPosition.offsetY;
@@ -39,8 +39,12 @@
     // Calculate visible area in tile coordinates
     const startX = Math.floor(-offsetX / (TILE_SIZE * scale));
     const startY = Math.floor(-offsetY / (TILE_SIZE * scale));
-    const endX = Math.ceil((rect.width - offsetX) / (TILE_SIZE * scale));
-    const endY = Math.ceil((rect.height - offsetY) / (TILE_SIZE * scale));
+    const endX = Math.ceil(
+      (mapDimensions.width - offsetX) / (TILE_SIZE * scale),
+    );
+    const endY = Math.ceil(
+      (mapDimensions.height - offsetY) / (TILE_SIZE * scale),
+    );
 
     // Add some padding to prevent pop-in
     const padding = 1;
@@ -61,7 +65,21 @@
   });
 
   onMount(() => {
-    moveCameraToLocation(2080, 3);
+    moveCameraToLocation(2080, 0.4);
+
+    // Set up ResizeObserver
+    if (mapWrapper) {
+      const observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          mapDimensions = {
+            width: entry.contentRect.width,
+            height: entry.contentRect.height,
+          };
+        }
+      });
+      observer.observe(mapWrapper);
+      return () => observer.disconnect();
+    }
   });
 
   function handleWheel(event: WheelEvent) {
@@ -94,9 +112,9 @@
     );
 
     // move the camera position towards the mouse position
-    const rect = mapWrapper.getBoundingClientRect(); // Assuming 'canvas' is the rendering element
-    const mouseX = event.clientX - rect.left; // Mouse X position relative to the canvas
-    const mouseY = event.clientY - rect.top; // Mouse Y position relative to the canvas
+    const rect = mapWrapper.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
 
     const cameraX = (mouseX - $cameraPosition.offsetX) / $cameraPosition.scale;
     const cameraY = (mouseY - $cameraPosition.offsetY) / $cameraPosition.scale;
@@ -142,17 +160,15 @@
       dragged = true;
       updateOffsets(newOffsetX, newOffsetY);
     }
-
-    if (!mapWrapper) return;
   }
 
   function updateOffsets(newX: number, newY: number) {
-    if (!mapWrapper) return;
+    if (!mapDimensions.width || !mapDimensions.height) return;
 
     const mapWidth = GRID_SIZE * TILE_SIZE * $cameraPosition.scale;
     const mapHeight = GRID_SIZE * TILE_SIZE * $cameraPosition.scale;
-    const containerWidth = mapWrapper.clientWidth;
-    const containerHeight = mapWrapper.clientHeight;
+    const containerWidth = mapDimensions.width;
+    const containerHeight = mapDimensions.height;
 
     const minX = Math.min(0, containerWidth - mapWidth);
     const minY = Math.min(0, containerHeight - mapHeight);
@@ -179,7 +195,10 @@
 <div class="overflow-hidden h-screen w-screen">
   <div class="map-wrapper" bind:this={mapWrapper}>
     <!-- Column numbers -->
-    <div class="column-numbers" style="left: {$cameraPosition.offsetX}px">
+    <div
+      class="column-numbers"
+      style="transform: translateX({$cameraPosition.offsetX}px)"
+    >
       {#each Array(GRID_SIZE) as _, i}
         <div
           class="coordinate"
@@ -192,7 +211,10 @@
 
     <div class="map-with-rows">
       <!-- Row numbers -->
-      <div class="row-numbers" style="top: {$cameraPosition.offsetY}px">
+      <div
+        class="row-numbers"
+        style="transform: translateY({$cameraPosition.offsetY}px)"
+      >
         {#each Array(GRID_SIZE) as _, i}
           <div
             class="coordinate"
@@ -217,7 +239,7 @@
         style="transform: translate({$cameraPosition.offsetX}px, {$cameraPosition.offsetY}px) scale({$cameraPosition.scale});"
       >
         <!-- Road layer -->
-        <div class="road-layer"></div>
+        <div class="road-layer" style="--size:{TILE_SIZE}px"></div>
 
         {#each Array(GRID_SIZE) as _, y}
           <div class="row">
@@ -262,13 +284,14 @@
   }
 
   .road-layer {
+    --size: 32px;
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background-image: url('/land-display/road.png');
-    background-size: 32px 32px;
+    background-size: var(--size) var(--size);
     background-repeat: repeat;
     pointer-events: none;
   }
@@ -282,7 +305,7 @@
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 12px;
-    z-index: 50;
+    z-index: 20;
   }
 
   .column-numbers {
@@ -295,6 +318,7 @@
     z-index: 10;
     transform-origin: 0 0;
     background: #2a2a2a; /* Dark grey background */
+    will-change: transform;
   }
 
   .row-numbers {
@@ -308,6 +332,7 @@
     z-index: 10;
     transform-origin: 0 0;
     background: #2a2a2a; /* Dark grey background */
+    will-change: transform;
   }
 
   .row-numbers .coordinate {

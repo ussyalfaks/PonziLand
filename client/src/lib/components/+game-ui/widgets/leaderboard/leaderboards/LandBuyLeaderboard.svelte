@@ -34,9 +34,7 @@
   });
 </script>
 
-<ScrollArea
-  class={`${leaderboardSize === 1 ? 'h-96' : 'h-32'} w-full text-white`}
->
+<ScrollArea class={`h-full w-full text-white`}>
   {#if isLoading}
     <div class="text-center py-2">Loading leaderboard data...</div>
   {:else if leaderboard.length === 0}
@@ -53,7 +51,7 @@
               formatAddress(user.address)}</span
           >
           {#if user.address === address}
-            <span class="text-xs bg-primary/30 px-1 rounded">You</span>
+            <span class=" bg-primary/30 px-1 rounded">You</span>
           {/if}
           {#if index === 0}
             <img src="/extra/crown.png" alt="Crown" class="w-4 h-4" />

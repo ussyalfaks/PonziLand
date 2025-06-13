@@ -1,10 +1,10 @@
 import data from '$profileData';
 import { type ClassValue, clsx } from 'clsx';
+import type { BigNumberish } from 'starknet';
 import { cubicOut } from 'svelte/easing';
 import type { TransitionConfig } from 'svelte/transition';
 import { twMerge } from 'tailwind-merge';
-import type { BigNumberish } from 'starknet';
-import type { LandWithActions } from './api/land.svelte';
+import type { LandWithActions } from './api/land';
 import { GRID_SIZE } from './const';
 
 export function cn(...inputs: ClassValue[]) {
@@ -128,6 +128,11 @@ export function parseLocation(
 export function locationIntToString(location: number | string | undefined) {
   const [x, y] = parseLocation(location);
   return `${x}, ${y}`;
+}
+
+export function locationToCoordinates(location: number | string | undefined) {
+  const [x, y] = parseLocation(location);
+  return { x, y };
 }
 
 export function coordinatesToLocation(location: { x: number; y: number }) {

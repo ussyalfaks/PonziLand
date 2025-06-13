@@ -1,13 +1,12 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { setupAccount, useAccount } from '$lib/contexts/account.svelte';
-  import { dojoConfig } from '$lib/dojoConfig';
+  import Button from '$lib/components/ui/button/button.svelte';
+  import { useAccount } from '$lib/contexts/account.svelte';
+  import type { Container } from '@tsparticles/engine';
+  import { loadSlim } from '@tsparticles/slim';
+  import Particles, { particlesInit } from '@tsparticles/svelte';
   import { onMount } from 'svelte';
   import { fly } from 'svelte/transition';
-  import Button from '$lib/components/ui/button/button.svelte';
-  import Particles, { particlesInit } from '@tsparticles/svelte';
-  import { loadSlim } from '@tsparticles/slim';
-  import type { Container } from '@tsparticles/engine';
 
   let particlesConfig = {
     particles: {
@@ -150,9 +149,12 @@
 
   <Button
     variant="red"
+    size="lg"
     onclick={startGame}
-    class="z-[3] text-xl px-12 py-4 font-bold">Play</Button
+    class="z-[3] text-3xl px-12 py-4 font-bold"
   >
+    PLAY
+  </Button>
 </main>
 
 <style>

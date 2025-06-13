@@ -1,10 +1,8 @@
-use crate::Database;
-use chaindata_models::{
-    models::{LandId, LandModel},
-    shared::Location,
-};
+use crate::{Database, Error};
+use chaindata_models::{events::EventId, models::LandModel, shared::Location};
 use chrono::NaiveDateTime;
 use sqlx::{query, query_as};
+use std::collections::HashMap;
 
 pub struct Repository {
     db: Database,
@@ -19,8 +17,8 @@ impl Repository {
     /// Saves a land model to the database
     /// # Errors
     /// Returns an error if the land could not be saved.
-    pub async fn save(&self, land: LandModel) -> Result<LandId, sqlx::Error> {
-        query!(
+    pub async fn save(&self, land: LandModel) -> Result<EventId, Error> {
+        Ok(query!(
             r#"
             INSERT INTO land (
                 id, at, location, bought_at, owner, sell_price, token_used, level
@@ -28,7 +26,7 @@ impl Repository {
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING id
             "#,
-            land.id as LandId,
+            land.id as EventId,
             land.at,
             land.location as Location,
             land.bought_at,
@@ -38,8 +36,9 @@ impl Repository {
             land.level as _
         )
         .fetch_one(&mut *(self.db.acquire().await?))
-        .await
-        .map(|row| row.id.into())
+        .await?
+        .id
+        .parse()?)
     }
 
     /// Gets the latest land model at a specific location at or before the given timestamp
@@ -55,7 +54,7 @@ impl Repository {
             LandModel,
             r#"
             SELECT
-                id as "id: LandId",
+                id as "id: _",
                 at,
                 location as "location: Location",
                 bought_at,
@@ -92,7 +91,7 @@ impl Repository {
                 ORDER BY location, at DESC
             )
             SELECT
-                id as "id: LandId",
+                id as "id: _",
                 at,
                 location as "location: Location",
                 bought_at,
@@ -112,12 +111,12 @@ impl Repository {
     ///
     /// # Errors
     /// Returns an error if the land could not be retrieved
-    pub async fn get_by_id(&self, id: LandId) -> Result<Option<LandModel>, sqlx::Error> {
+    pub async fn get_by_id(&self, id: EventId) -> Result<Option<LandModel>, sqlx::Error> {
         query_as!(
             LandModel,
             r#"
             SELECT
-                id as "id: LandId",
+                id as "id: _",
                 at,
                 location as "location: Location",
                 bought_at,
@@ -128,7 +127,7 @@ impl Repository {
             FROM land
             WHERE id = $1
             "#,
-            id as LandId
+            id as EventId
         )
         .fetch_optional(&mut *(self.db.acquire().await?))
         .await
@@ -149,6 +148,33 @@ impl Repository {
         .await
         .map(|row| row.latest_time)
     }
+
+    /// Gets the total distribution of tokens for all lands
+    ///
+    /// # Errors
+    /// Returns an error if the database could not be accessed
+    #[allow(clippy::cast_sign_loss)] // We are fine
+    pub async fn get_land_distribution(&self) -> Result<HashMap<String, u64>, sqlx::Error> {
+        query!(
+            r#"
+            SELECT token_used, count(*)
+            FROM (
+                SELECT *,
+                       ROW_NUMBER() OVER (PARTITION BY location ORDER BY id DESC) as rn
+                FROM land
+            ) ranked
+            WHERE rn = 1 AND owner <> '0'
+            GROUP BY token_used
+            "#
+        )
+        .fetch_all(&mut *(self.db.acquire().await?))
+        .await
+        .map(|rows| {
+            rows.into_iter()
+                .map(|row| (row.token_used, row.count.unwrap_or(0) as u64))
+                .collect()
+        })
+    }
 }
 
 #[cfg(test)]
@@ -157,21 +183,21 @@ mod tests {
 
     use super::*;
     use chaindata_models::{
-        models::{LandId, Level},
+        models::Level,
         shared::{Location, U256},
     };
     use chrono::Utc;
     use migrations::MIGRATOR;
 
     #[sqlx::test(migrator = "MIGRATOR")]
-    async fn test_save_and_get_land(pool: sqlx::PgPool) -> sqlx::Result<()> {
+    async fn test_save_and_get_land(pool: sqlx::PgPool) -> Result<(), Error> {
         let repo = Repository::new(pool);
 
         // Create a test land model
         let location: Location = 1234.into();
         let now = Utc::now().naive_utc();
         let land_model = LandModel {
-            id: LandId::new(),
+            id: EventId::new_test(0, 0, 0),
             at: now,
             location,
             bought_at: now,
@@ -217,7 +243,7 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "MIGRATOR")]
-    async fn test_land_versioning(pool: sqlx::PgPool) -> sqlx::Result<()> {
+    async fn test_land_versioning(pool: sqlx::PgPool) -> Result<(), Error> {
         let repo = Repository::new(pool);
 
         // Create a location
@@ -226,7 +252,7 @@ mod tests {
         // Create first version
         let time1 = Utc::now().naive_utc();
         let land1 = LandModel {
-            id: LandId::new(),
+            id: EventId::new_test(0, 0, 1),
             at: time1,
             location,
             bought_at: time1,
@@ -240,7 +266,7 @@ mod tests {
         // Create second version (one hour later)
         let time2 = time1 + chrono::Duration::hours(1);
         let land2 = LandModel {
-            id: LandId::new(),
+            id: EventId::new_test(0, 0, 2),
             at: time2,
             location,
             bought_at: land1.bought_at,                 // Same bought time

@@ -3,14 +3,14 @@
     getTokenPrices,
     type TokenPrice,
   } from '$lib/api/defi/ekubo/requests';
+  import { ScrollArea } from '$lib/components/ui/scroll-area';
+  import { AI_AGENT_ADDRESSES } from '$lib/const';
   import { usernamesStore } from '$lib/stores/account.store.svelte';
   import { padAddress } from '$lib/utils';
-  import { AI_AGENT_ADDRESS } from '$lib/const';
-  import { ScrollArea } from '$lib/components/ui/scroll-area';
-  import { formatAddress, formatValue } from '../helpers';
-  import { onMount } from 'svelte';
-  import { fetchTokenBalances } from '../request';
   import data from '$profileData';
+  import { onMount } from 'svelte';
+  import { formatAddress, formatValue } from '../helpers';
+  import { fetchTokenBalances } from '../request';
 
   const BASE_TOKEN = data.mainCurrencyAddress;
 
@@ -56,7 +56,7 @@
     const tokenPriceCache = await calculateTokenPrices();
 
     for (const [accountAddress, tokens] of Object.entries(leaderboardData)) {
-      if (padAddress(accountAddress) === AI_AGENT_ADDRESS) {
+      if (AI_AGENT_ADDRESSES.includes(padAddress(accountAddress) ?? '')) {
         continue;
       }
 
@@ -112,9 +112,7 @@
   });
 </script>
 
-<ScrollArea
-  class={`${leaderboardSize === 1 ? 'h-96' : 'h-32'} w-full text-white`}
->
+<ScrollArea class={`h-full w-full text-white`}>
   <div class="mr-3 flex flex-col gap-1">
     {#if isLoading}
       <div class="text-center py-2">Loading leaderboard data...</div>
@@ -134,7 +132,7 @@
                 formatAddress(user.address)}</span
             >
             {#if user.address === address}
-              <span class="text-xs bg-primary/30 px-1 rounded">You</span>
+              <span class=" bg-primary/30 px-1 rounded">You</span>
             {/if}
             {#if index === 0}
               <img src="/extra/crown.png" alt="Crown" class="w-4 h-4" />
@@ -152,9 +150,9 @@
 {#if userRank !== null && !isLoading && address}
   <div class="mt-2 px-2 py-1 text-white border-t border-white/20">
     <div class="flex items-center gap-2">
-      <span class="text-sm">Your rank:</span>
+      <span class="">Your rank:</span>
       <span class="font-bold">{userRank}</span>
-      <span class="font-mono text-red-500 text-sm">
+      <span class="font-mono text-red-500">
         {usernamesStore.getUsernames()[padAddress(address)!] ||
           formatAddress(address)}
       </span>

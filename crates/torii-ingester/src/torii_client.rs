@@ -10,7 +10,7 @@ use thiserror::Error;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_stream::Stream;
-use torii_client::client::Client as GrpcClient;
+use torii_client::Client as GrpcClient;
 
 // TODO(Red): Make sure we loose no messages between the catchup and the listen
 // (Maybe add the listen at the same time we do the catchup, and if we keep the event IDs somewhere, we can work with this system)
@@ -18,9 +18,9 @@ use torii_client::client::Client as GrpcClient;
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Error while starting torii: {0}")]
-    ToriiInitializationError(torii_client::client::error::Error),
+    ToriiInitializationError(torii_client::error::Error),
     #[error("Error while setting up subscription: {0}")]
-    GrpcSubscriptionError(torii_client::client::error::Error),
+    GrpcSubscriptionError(torii_client::error::Error),
     #[error("SQL Query error: {0}")]
     SqlError(#[from] super::torii_sql::Error),
 }
@@ -44,6 +44,7 @@ pub enum RawToriiData {
         name: String,
         data: Value,
         at: DateTime<Utc>,
+        event_id: String,
     },
     Grpc(Struct),
 }
@@ -86,7 +87,7 @@ impl ToriiClient {
         })
     }
 
-    /// Get all events after a given instant.
+    /// Get all events after a given instant with microsecond precision.
     ///
     /// # Errors
     /// Returns an error if the SQL query fails.
@@ -131,7 +132,7 @@ impl ToriiClient {
     pub async fn subscribe_events(&self) -> Result<impl Stream<Item = RawToriiData>, Error> {
         let grpc_stream = self
             .grpc_client
-            .on_event_message_updated(vec![])
+            .on_event_message_updated(None)
             .await
             .map_err(Error::GrpcSubscriptionError)?;
 
@@ -160,7 +161,7 @@ impl ToriiClient {
     pub async fn subscribe_entities(&self) -> Result<impl Stream<Item = RawToriiData>, Error> {
         let grpc_stream = self
             .grpc_client
-            .on_entity_updated(vec![]) // Get everything
+            .on_entity_updated(None) // Get everything
             .await
             .map_err(Error::GrpcSubscriptionError)?;
 
@@ -188,13 +189,13 @@ impl ToriiClient {
     ) -> Result<impl Stream<Item = RawToriiData>, Error> {
         let r#where = r#where.into();
         self.do_request(move |current_offset| {
-            format!(r#"
+            format!(r"
                 SELECT concat( m.namespace, '-', m.name) as selector, e.data as data, e.event_id as event_id, e.created_at as created_at
                 FROM entities_historical e
                 LEFT JOIN models m on e.model_id = m.id
                 WHERE {where}
                 LIMIT 100 OFFSET {current_offset};
-                "#)
+                ")
         })
     }
 
@@ -204,13 +205,13 @@ impl ToriiClient {
     ) -> Result<impl Stream<Item = RawToriiData>, Error> {
         let r#where = r#where.into();
         self.do_request(move |current_offset| {
-            format!(r#"
+            format!(r"
                 SELECT concat(m.namespace, '-',  m.name) as selector, em.data as data, em.event_id as event_id, em.created_at as created_at
                 FROM event_messages_historical em
                 LEFT JOIN models m on em.model_id = m.id
                 WHERE {where}
                 LIMIT 100 OFFSET {current_offset};
-                "#)
+                ")
         })
     }
 
@@ -250,6 +251,7 @@ impl ToriiClient {
                     let event = RawToriiData::Json {
                         name: elem.selector,
                         data: elem.data,
+                        event_id: elem.event_id,
                         // TODO: Migrate this to something else than panics
                         at: NaiveDateTime::parse_from_str(&elem.created_at, "%F %T")
                             .unwrap()

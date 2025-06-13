@@ -5,28 +5,45 @@
     SelectItem,
     SelectTrigger,
   } from '$lib/components/ui/select';
+  import TokenAvatar from '$lib/components/ui/token-avatar/token-avatar.svelte';
+  import { cn } from '$lib/utils';
   import data from '$profileData';
-  import type { Token } from '$lib/interfaces';
+  import { tutorialState } from '../tutorial/stores.svelte';
 
-  let { value = $bindable<Token | undefined>(), ...rest } = $props();
+  let {
+    value = $bindable<string>(),
+    class: className,
+  }: { value: string; class?: string } = $props();
 </script>
 
-<Select onSelectedChange={(v) => (value = v?.value as Token)}>
-  <SelectTrigger {...rest} class="text-stroke-none">
+<Select onSelectedChange={(v) => (value = v?.value as string)}>
+  <SelectTrigger
+    class={cn(
+      'w-full bg-[#282835] text-[#D9D9D9] rounded font-ponzi-number stroke-3d-black',
+      className,
+    )}
+  >
     {#if value}
-      <div class="flex gap-2 items-center text-black">
-        <img class="h-4 w-4" src={value.images.icon} alt={value.symbol} />
-        {value.symbol}
-      </div>
+      {#each data.availableTokens as token}
+        {#if token.address === value}
+          <div class="flex gap-2 items-center">
+            <TokenAvatar {token} class="h-6 w-6 border-2 border-black" />
+            {token.symbol}
+          </div>
+        {/if}
+      {/each}
     {:else}
-      <span> Select Token </span>
+      Select Token
     {/if}
   </SelectTrigger>
-  <SelectContent class="text-stroke-none">
+  <SelectContent class="bg-[#282835] text-white">
     {#each data.availableTokens as token}
-      <SelectItem value={token}>
-        <div class="flex gap-2 items-center text-stroke-none">
-          <img class="h-4 w-4" src={token.images.icon} alt={token.symbol} />
+      <SelectItem
+        value={token.address}
+        disabled={tutorialState.tutorialEnabled && token.symbol !== 'eSTRK'}
+      >
+        <div class="flex gap-2 items-center font-ponzi-number text-white">
+          <TokenAvatar {token} />
           {token.symbol}
         </div>
       </SelectItem>

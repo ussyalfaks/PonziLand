@@ -2,8 +2,7 @@
   import { cn } from '$lib/utils';
   import { onMount, onDestroy } from 'svelte';
   import { cameraPosition } from '$lib/stores/camera.store';
-
-  const MIN_SCALE_FOR_ANIMATION = 2;
+  import { MIN_SCALE_FOR_ANIMATION } from '$lib/const';
 
   const {
     class: className = '',
@@ -205,13 +204,20 @@
 
 <style>
   .selected {
-    --stroke-offset: 0.5px;
+    --stroke-offset: 2px;
+    -webkit-filter: drop-shadow(0 calc(-1 * var(--stroke-offset)) 0 #ff0)
+      drop-shadow(calc(-1 * var(--stroke-offset)) 0 0 #ff0)
+      drop-shadow(var(--stroke-offset) 0 0 #ff0);
     filter: drop-shadow(0 calc(-1 * var(--stroke-offset)) 0 #ff0)
       drop-shadow(calc(-1 * var(--stroke-offset)) 0 0 #ff0)
       drop-shadow(var(--stroke-offset) 0 0 #ff0);
   }
 
-  .selected.Biome {
+  div.selected.Biome {
+    -webkit-filter: drop-shadow(0 calc(-1 * var(--stroke-offset)) 0 #ff0)
+      drop-shadow(calc(-1 * var(--stroke-offset)) 0 0 #ff0)
+      drop-shadow(var(--stroke-offset) 0 0 #ff0)
+      drop-shadow(0 var(--stroke-offset) 0 #ff0);
     filter: drop-shadow(0 calc(-1 * var(--stroke-offset)) 0 #ff0)
       drop-shadow(calc(-1 * var(--stroke-offset)) 0 0 #ff0)
       drop-shadow(var(--stroke-offset) 0 0 #ff0)
@@ -219,16 +225,44 @@
   }
 
   .hovering {
-    --stroke-offset: 0.5px;
+    --stroke-offset: 2px;
+    -webkit-filter: drop-shadow(0 calc(-1 * var(--stroke-offset)) 0 #ff0)
+      drop-shadow(calc(-1 * var(--stroke-offset)) 0 0 #ff0)
+      drop-shadow(var(--stroke-offset) 0 0 #ff0);
     filter: drop-shadow(0 calc(-1 * var(--stroke-offset)) 0 #ff0)
       drop-shadow(calc(-1 * var(--stroke-offset)) 0 0 #ff0)
       drop-shadow(var(--stroke-offset) 0 0 #ff0);
   }
 
-  .hovering.Biome {
+  div.hovering.Biome {
+    -webkit-filter: drop-shadow(0 calc(-1 * var(--stroke-offset)) 0 #ff0)
+      drop-shadow(calc(-1 * var(--stroke-offset)) 0 0 #ff0)
+      drop-shadow(var(--stroke-offset) 0 0 #ff0)
+      drop-shadow(0 var(--stroke-offset) 0 #ff0);
     filter: drop-shadow(0 calc(-1 * var(--stroke-offset)) 0 #ff0)
       drop-shadow(calc(-1 * var(--stroke-offset)) 0 0 #ff0)
       drop-shadow(var(--stroke-offset) 0 0 #ff0)
       drop-shadow(0 var(--stroke-offset) 0 #ff0);
+  }
+
+  .highlighted {
+    --stroke-offset: 2px;
+    -webkit-filter: drop-shadow(0 calc(-1 * var(--stroke-offset)) 0 #00ffff)
+      drop-shadow(calc(-1 * var(--stroke-offset)) 0 0 #00ffff)
+      drop-shadow(var(--stroke-offset) 0 0 #00ffff);
+    filter: drop-shadow(0 calc(-1 * var(--stroke-offset)) 0 #00ffff)
+      drop-shadow(calc(-1 * var(--stroke-offset)) 0 0 #00ffff)
+      drop-shadow(var(--stroke-offset) 0 0 #00ffff);
+  }
+
+  .highlighted.Biome {
+    -webkit-filter: drop-shadow(0 calc(-1 * var(--stroke-offset)) 0 #00ffff)
+      drop-shadow(calc(-1 * var(--stroke-offset)) 0 0 #00ffff)
+      drop-shadow(var(--stroke-offset) 0 0 #00ffff)
+      drop-shadow(0 var(--stroke-offset) 0 #00ffff);
+    filter: drop-shadow(0 calc(-1 * var(--stroke-offset)) 0 #00ffff)
+      drop-shadow(calc(-1 * var(--stroke-offset)) 0 0 #00ffff)
+      drop-shadow(var(--stroke-offset) 0 0 #00ffff)
+      drop-shadow(0 var(--stroke-offset) 0 #00ffff);
   }
 </style>
