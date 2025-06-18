@@ -12,7 +12,10 @@
     buildSpritesheet,
     type SpritesheetMetadata,
   } from '@threlte/extras';
+  import { onMount } from 'svelte';
+
   let { billboarding = true } = $props();
+
   const buildingAtlasMeta = [
     {
       url: '/tokens/+global/buildings.png',
@@ -22,15 +25,36 @@
       animations: [{ name: 'lords_1', frameRange: [0, 0] }],
     },
   ] as const satisfies SpritesheetMetadata;
+
   const buildingAtlas =
     buildSpritesheet.from<typeof buildingAtlasMeta>(buildingAtlasMeta);
 
-  let sprite = $state();
+  let sprite: any = $state();
+
+  // Generate grid positions for 64x64 sprites
+  const gridSize = 64;
+  const spacing = 4; // Distance between sprites
+
+  const gridPositions: [number, number, number][] = Array.from(
+    { length: gridSize * gridSize },
+    (_, i) => {
+      const x = i % gridSize;
+      const z = Math.floor(i / gridSize);
+      const posX = (x - gridSize / 2) * spacing;
+      const posZ = (z - gridSize / 2) * spacing;
+      return [posX, 1, posZ];
+    },
+  );
+
+  onMount(() => {
+    console.log('Sprite initialized');
+    console.log(gridPositions);
+  });
 </script>
 
 {#await buildingAtlas.spritesheet then spritesheet}
   <InstancedSprite
-    count={1}
+    count={gridSize * gridSize + 1}
     autoUpdate={false}
     playmode={'PAUSE'}
     {billboarding}
@@ -38,8 +62,9 @@
     bind:ref={sprite}
   >
     {#snippet children({ Instance }: { Instance: any })}
-      <!-- Set and freeze a random frame from the spritesheet -->
-      <Instance animationName={'lords_1'} position={[0, 1, 0]} scale={[3, 3]} />
+      {#each gridPositions as position, i}
+        <Instance animationName={'lords_1'} {position} scale={[3, 3]} id={i} />
+      {/each}
     {/snippet}
   </InstancedSprite>
 {/await}
