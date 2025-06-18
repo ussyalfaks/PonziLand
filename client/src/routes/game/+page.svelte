@@ -21,6 +21,7 @@
   import { usernamesStore } from '$lib/stores/account.store.svelte';
   import { landStore } from '$lib/stores/store.svelte';
   import { onMount } from 'svelte';
+  import GameCanva from '$lib/components/+game-map/game-canva.svelte';
 
   const promise = Promise.all([
     setupSocialink().then(() => {
@@ -30,7 +31,7 @@
       landStore.setup(client!);
       landStore.stopRandomUpdates();
     }),
-    setupAccount(),
+    // setupAccount(),
   ]);
 
   let loading = $state(true);
@@ -140,7 +141,7 @@
   {#if loading}
     <LoadingScreen {value} />
   {:else}
-    <GameGrid />
+    <GameCanva />
     <GameUi />
   {/if}
 </div>
