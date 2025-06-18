@@ -39,7 +39,7 @@ jobs:
       - name: Install nextest
         uses: taiki-e/install-action@v2
         with:
-          tool: nextest
+          tool: nextest@0.9.98
 
       - name: migrate sqlx
         run: cargo run --package migrations migrate
