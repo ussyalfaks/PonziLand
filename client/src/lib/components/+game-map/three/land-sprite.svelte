@@ -1,3 +1,11 @@
+<!--
+	-	Example of using animations as a static sprite atlas
+	- each frame is named and used as a different tree randomly
+	- to achieve this playmode is "PAUSE" and autoUpdate={false}
+	- the instanced sprite has to be updated once when initialized
+		and then, each time the atlas changes
+	- uses <Instance/> component instead of hook to set positions and frames
+ -->
 <script lang="ts">
   import { AuctionLand } from '$lib/api/land/auction_land';
   import { BuildingLand } from '$lib/api/land/building_land';
@@ -6,11 +14,8 @@
     InstancedSprite,
     buildSpritesheet,
     type SpritesheetMetadata,
-    type Spritesheet, // Import Spritesheet type
   } from '@threlte/extras';
   import { onMount } from 'svelte';
-  import * as THREE from 'three'; // Import Three.js
-  import { OutlineSpriteMaterial } from '$lib/materials/OutlineSpriteMaterial'; // Adjust path
 
   let { billboarding = true } = $props();
 
@@ -258,9 +263,6 @@
     });
   });
 
-  // Declare custom material variable
-  let biomeOutlineMaterial: OutlineSpriteMaterial | undefined;
-
   $effect(() => {
     if (buildingSprite) {
       buildingSprite.update();
@@ -271,7 +273,6 @@
     if (roadSprite) {
       roadSprite.update();
     }
-    // No need to update biomeOutlineMaterial here, it's a material not a sprite instance
   });
 
   let roadSprite: any = $state();
@@ -279,19 +280,7 @@
   let buildingSprite: any = $state();
 </script>
 
-{#await Promise.all(
-    [buildingAtlas.spritesheet, biomeAtlas.spritesheet, roadAtlas.spritesheet],
-  ) then [buildingSpritesheet, biomeSpritesheet, roadSpritesheet]}
-
-  <!-- Instantiate the custom material AFTER spritesheets are loaded -->
-  <svelte:action={() => {
-    biomeOutlineMaterial = new OutlineSpriteMaterial(
-      biomeSpritesheet, // Pass the actual biome spritesheet
-      2.0,              // Outline width in pixels
-      0xffff00          // Yellow color (0xRRGGBB)
-    );
-  }} />
-
+{#await Promise.all( [buildingAtlas.spritesheet, biomeAtlas.spritesheet, roadAtlas.spritesheet], ) then [buildingSpritesheet, biomeSpritesheet, roadSpritesheet]}
   <!-- Road sprites-->
   <InstancedSprite
     count={gridSize * gridSize}
@@ -316,32 +305,6 @@
     {/snippet}
   </InstancedSprite>
 
-  <!-- Biome sprites (background layer) with custom outline shader -->
-  <!-- Check if biomeOutlineMaterial is ready before rendering this InstancedSprite -->
-  {#if biomeOutlineMaterial}
-    <InstancedSprite
-      count={gridSize * gridSize}
-      {billboarding}
-      spritesheet={biomeSpritesheet}
-      material={biomeOutlineMaterial} <!-- Apply the custom material here -->
-      bind:ref={biomeSprite}
-    >
-      {#snippet children({ Instance: BiomeInstance }: { Instance: any })}
-        {#each landTiles as tile, i}
-          <BiomeInstance
-            animationName={getBiomeAnimationOrFallback(tile, biomeAnimations)}
-            position={[
-              tile.position[0],
-              tile.position[1] - 0.01,
-              tile.position[2],
-            ]}
-            id={i}
-          />
-        {/each}
-      {/snippet}
-    </InstancedSprite>
-  {/if}
-
   <!-- Building sprites (foreground layer) -->
   <InstancedSprite
     count={gridSize * gridSize}
@@ -363,4 +326,25 @@
     {/snippet}
   </InstancedSprite>
 
+  <!-- Biome sprites (background layer) -->
+  <InstancedSprite
+    count={gridSize * gridSize}
+    {billboarding}
+    spritesheet={biomeSpritesheet}
+    bind:ref={biomeSprite}
+  >
+    {#snippet children({ Instance: BiomeInstance }: { Instance: any })}
+      {#each landTiles as tile, i}
+        <BiomeInstance
+          animationName={getBiomeAnimationOrFallback(tile, biomeAnimations)}
+          position={[
+            tile.position[0],
+            tile.position[1] - 0.01,
+            tile.position[2],
+          ]}
+          id={i}
+        />
+      {/each}
+    {/snippet}
+  </InstancedSprite>
 {/await}
