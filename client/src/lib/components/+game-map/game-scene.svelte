@@ -2,7 +2,7 @@
   import { T, useThrelte } from '@threlte/core';
   import { CSM, Sky, useTexture } from '@threlte/extras';
   import { NearestFilter, RepeatWrapping } from 'three';
-  import LandSprite from './land-sprite.svelte';
+  import LandSprite from './three/land-sprite.svelte';
   import { DEG2RAD } from 'three/src/math/MathUtils.js';
   export let billboarding = false;
   export let fps = 30;

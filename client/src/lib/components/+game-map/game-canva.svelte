@@ -1,13 +1,14 @@
 <script lang="ts">
   import { Canvas, T } from '@threlte/core';
   import Scene from './game-scene.svelte';
-  import { OrbitControls } from '@threlte/extras';
+  import { OrbitControls, PerfMonitor } from '@threlte/extras';
   let billboarding = true;
   let fps = 30;
 </script>
 
 <div>
   <Canvas>
+    <PerfMonitor />
     <T.PerspectiveCamera makeDefault position.z={0} position.y={50}>
       <OrbitControls
         enableRotate={false}
