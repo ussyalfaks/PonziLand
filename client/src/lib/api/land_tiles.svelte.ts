@@ -15,10 +15,11 @@ import { toLocation, type Location } from './land/location';
 import { setupLandsSubscription } from './land/torii';
 import { waitForLandChange, waitForLandType } from './storeWait';
 import { padAddress } from '$lib/utils';
+import data from '$profileData';
 
 // Constants for random updates
-const MIN_RANDOM_UPDATES = 20;
-const MAX_RANDOM_UPDATES = 50;
+const MIN_RANDOM_UPDATES = 100;
+const MAX_RANDOM_UPDATES = 200;
 const RANDOM_UPDATE_RANGE = MAX_RANDOM_UPDATES - MIN_RANDOM_UPDATES;
 
 const UPDATE_INTERVAL = 100;
@@ -26,11 +27,11 @@ const NUKE_RATE = 0.1;
 
 // Token addresses
 const TOKEN_ADDRESSES = [
-  '0x071de745c1ae996cfd39fb292b4342b7c086622e3ecf3a5692bd623060ff3fa0',
-  '0x0335e87d03baaea788b8735ea0eac49406684081bb669535bb7074f9d3f66825',
-  '0x04230d6e1203e0d26080eb1cf24d1a3708b8fc085a7e0a4b403f8cc4ec5f7b7b',
-  '0x07031b4db035ffe8872034a97c60abd4e212528416f97462b1742e1f6cf82afe',
-  '0x01d321fcdb8c0592760d566b32b707a822b5e516e87e54c85b135b0c030b1706',
+  '0x056893df1e063190aabda3c71304e9842a1b3d638134253dd0f69806a4f106eb',
+  '0x040025cec149bf1f58d2e34a6924605b571a5fce7b798a47ec52cfbd3ff68b6e',
+  '0x078c1138aa1cfd27436b26279d5ac4e3f8f5a432927d85d22b2a2e7c0e5528b4',
+  '0x074ad80778e07102902abdec71e0161023b45d1204c29e2c4ec3befab3bb82f5',
+  '0x00dcdc180a8b4b9cef2d039462ad30de95c5609178a1c2bc55779309c07d45db',
 ];
 
 // Default values
@@ -133,6 +134,9 @@ export class LandTileStore {
         const randomToken =
           TOKEN_ADDRESSES[Math.floor(Math.random() * TOKEN_ADDRESSES.length)];
 
+        const levels = ['Zero', 'First', 'Second'];
+        const randomLevel = levels[Math.floor(Math.random() * levels.length)];
+
         // Create a random update
         const fakeLand: Land = {
           owner: DEFAULT_OWNER,
@@ -143,7 +147,7 @@ export class LandTileStore {
             DEFAULT_SELL_PRICE / 2,
           token_used: randomToken,
           // @ts-ignore
-          level: 'Second',
+          level: randomLevel,
         };
 
         const fakeStake: LandStake = {

@@ -1,17 +1,16 @@
-<!--
-	-	Example of using animations as a static sprite atlas
-	- each frame is named and used as a different tree randomly
-	- to achieve this playmode is "PAUSE" and autoUpdate={false}
-	- the instanced sprite has to be updated once when initialized
-		and then, each time the atlas changes
-	- uses <Instance/> component instead of hook to set positions and frames
- -->
 <script lang="ts">
+  import { AuctionLand } from '$lib/api/land/auction_land';
+  import { BuildingLand } from '$lib/api/land/building_land';
+  import { landStore } from '$lib/stores/store.svelte';
   import {
     InstancedSprite,
     buildSpritesheet,
     type SpritesheetMetadata,
+    type Spritesheet, // Import Spritesheet type
   } from '@threlte/extras';
+  import { onMount } from 'svelte';
+  import * as THREE from 'three'; // Import Three.js
+  import { OutlineSpriteMaterial } from '$lib/materials/OutlineSpriteMaterial'; // Adjust path
 
   let { billboarding = true } = $props();
 
@@ -44,65 +43,6 @@
 
   // Generate grid positions and create LandTile instances
   const gridSize = 64;
-  const spacing = 1; // Distance between sprites
-
-  // Available token names (based on your biome animations)
-  const tokenNames = [
-    'lords',
-    'pal',
-    'pimp',
-    'ekubo',
-    'sisters',
-    'slinky',
-    'btc',
-    'dope',
-    'strk',
-    'eth',
-    'brother',
-    'circus',
-    'nums',
-    'flip',
-    'wnt',
-    'qq',
-    'evreai',
-  ];
-
-  // Create land tiles with random token data
-  // const landTiles: LandTile[] = Array.from(
-  //   { length: gridSize * gridSize },
-  //   (_, i) => {
-  //     const x = i % gridSize;
-  //     const z = Math.floor(i / gridSize);
-  //     const posX = (x - gridSize / 2) * spacing;
-  //     const posZ = (z - gridSize / 2) * spacing;
-  //     const position: [number, number, number] = [posX, 1, posZ];
-
-  //     // Random token name and level
-  //     const tokenName =
-  //       tokenNames[Math.floor(Math.random() * tokenNames.length)];
-  //     const level = Math.floor(Math.random() * 3) + 1; // levels 1, 2, 3
-
-  //     return new LandTile(position, tokenName, level);
-  //   },
-  // );
-
-  const landTiles: LandTile[] = Array.from(
-    { length: gridSize * gridSize },
-    (_, i) => {
-      const x = i % gridSize;
-      const z = Math.floor(i / gridSize);
-      const posX = (x - gridSize / 2) * spacing;
-      const posZ = (z - gridSize / 2) * spacing;
-      const position: [number, number, number] = [posX, 1, posZ];
-
-      // Iterate over token names and levels in order
-      const tokenName = tokenNames[i % tokenNames.length];
-      const level = (i % 3) + 1; // levels: 1, 2, 3, 1, 2, 3...
-
-      return new LandTile(position, tokenName, level);
-    },
-  );
-
   // BUILDING
   const buildingAtlasMeta = [
     {
@@ -114,6 +54,12 @@
         { name: 'lords_1', frameRange: [0, 0] },
         { name: 'lords_2', frameRange: [12, 12] },
         { name: 'lords_3', frameRange: [24, 24] },
+        { name: 'eLORDS_1', frameRange: [0, 0] },
+        { name: 'eLORDS_2', frameRange: [12, 12] },
+        { name: 'eLORDS_3', frameRange: [24, 24] },
+        { name: 'nftLORDS_1', frameRange: [0, 0] },
+        { name: 'nftLORDS_2', frameRange: [12, 12] },
+        { name: 'nftLORDS_3', frameRange: [24, 24] },
         { name: 'pal_1', frameRange: [36, 36] },
         { name: 'pal_2', frameRange: [48, 48] },
         { name: 'pal_3', frameRange: [60, 60] },
@@ -139,6 +85,9 @@
         { name: 'strk_1', frameRange: [39, 39] },
         { name: 'strk_2', frameRange: [51, 51] },
         { name: 'strk_3', frameRange: [63, 63] },
+        { name: 'nftSTRK_1', frameRange: [39, 39] },
+        { name: 'nftSTRK_2', frameRange: [51, 51] },
+        { name: 'nftSTRK_3', frameRange: [63, 63] },
         { name: 'brother_1', frameRange: [75, 75] },
         { name: 'brother_2', frameRange: [87, 87] },
         { name: 'brother_3', frameRange: [99, 99] },
@@ -157,55 +106,27 @@
         { name: 'wnt_1', frameRange: [6, 6] },
         { name: 'wnt_2', frameRange: [18, 18] },
         { name: 'wnt_3', frameRange: [30, 30] },
+        { name: 'eWNT_1', frameRange: [6, 6] },
+        { name: 'eWNT_2', frameRange: [18, 18] },
+        { name: 'eWNT_3', frameRange: [30, 30] },
         { name: 'qq_1', frameRange: [42, 42] },
         { name: 'qq_2', frameRange: [54, 54] },
         { name: 'qq_3', frameRange: [66, 66] },
+        { name: 'eQQ_1', frameRange: [42, 42] },
+        { name: 'eQQ_2', frameRange: [54, 54] },
+        { name: 'eQQ_3', frameRange: [66, 66] },
         { name: 'evreai_1', frameRange: [9, 9] },
         { name: 'evreai_2', frameRange: [21, 21] },
         { name: 'evreai_3', frameRange: [33, 33] },
+        { name: 'eSG_1', frameRange: [9, 9] },
+        { name: 'eSG_2', frameRange: [21, 21] },
+        { name: 'eSG_3', frameRange: [33, 33] },
         { name: 'empty', frameRange: [1, 1] },
       ],
     },
   ] as const satisfies SpritesheetMetadata;
   const buildingAtlas =
     buildSpritesheet.from<typeof buildingAtlasMeta>(buildingAtlasMeta);
-  let buildingSprite: any = $state();
-
-  $effect(() => {
-    if (buildingSprite) {
-      buildingSprite.update();
-    }
-  });
-
-  // LORDS
-  const lordsSpriteMeta = [
-    {
-      url: '/tokens/+global/buildings.png',
-      type: 'rowColumn',
-      width: 12,
-      height: 21,
-      animations: [
-        { name: '1', frameRange: [0, 0] },
-        { name: '2', frameRange: [12, 12] },
-        { name: '3', frameRange: [24, 24] },
-      ],
-    },
-    {
-      url: '/tokens/eLORDS/3-animated.png',
-      type: 'rowColumn',
-      width: 5,
-      height: 2,
-      animations: [{ name: '3_animated', frameRange: [0, 9] }],
-    },
-  ] as const satisfies SpritesheetMetadata;
-  const lords3animationAtlas =
-    buildSpritesheet.from<typeof lordsSpriteMeta>(lordsSpriteMeta);
-  let lords3Sprite: any = $state();
-  $effect(() => {
-    if (lords3Sprite) {
-      lords3Sprite.update();
-    }
-  });
 
   // BIOME
   const biomeAtlasMeta = [
@@ -223,6 +144,8 @@
         { name: 'eth', frameRange: [5, 5] },
         { name: 'flip', frameRange: [6, 6] },
         { name: 'lords', frameRange: [7, 7] },
+        { name: 'eLORDS', frameRange: [7, 7] },
+        { name: 'nftLORDS', frameRange: [7, 7] },
         { name: 'nums', frameRange: [8, 8] },
         { name: 'pal', frameRange: [9, 9] },
         { name: 'circus', frameRange: [10, 10] },
@@ -230,20 +153,39 @@
         { name: 'btc', frameRange: [12, 12] },
         { name: 'brother', frameRange: [13, 13] },
         { name: 'strk', frameRange: [14, 14] },
+        { name: 'nftSTRK', frameRange: [14, 14] },
         { name: 'wnt', frameRange: [15, 15] },
+        { name: 'eWNT', frameRange: [15, 15] },
         { name: 'qq', frameRange: [16, 16] },
+        { name: 'eQQ', frameRange: [16, 16] },
         { name: 'evreai', frameRange: [17, 17] },
+        { name: 'eSG', frameRange: [17, 17] },
+      ],
+    },
+    {
+      url: '/land-display/empty.png',
+      type: 'rowColumn',
+      width: 4,
+      height: 3,
+      animations: [
+        { name: 'empty', frameRange: [0, 0] },
+        { name: 'empty_0', frameRange: [0, 0] },
+        { name: 'empty_1', frameRange: [1, 1] },
+        { name: 'empty_2', frameRange: [2, 2] },
+        { name: 'empty_3', frameRange: [3, 3] },
+        { name: 'empty_4', frameRange: [4, 4] },
+        { name: 'empty_5', frameRange: [5, 5] },
+        { name: 'empty_6', frameRange: [6, 6] },
+        { name: 'empty_7', frameRange: [7, 7] },
+        { name: 'empty_8', frameRange: [8, 8] },
+        { name: 'empty_9', frameRange: [9, 9] },
+        { name: 'empty_10', frameRange: [10, 10] },
+        { name: 'auction_shadow', frameRange: [11, 11] },
       ],
     },
   ] as const satisfies SpritesheetMetadata;
   const biomeAtlas =
     buildSpritesheet.from<typeof biomeAtlasMeta>(biomeAtlasMeta);
-  let biomeSprite: any = $state();
-  $effect(() => {
-    if (biomeSprite) {
-      biomeSprite.update();
-    }
-  });
 
   // ROAD
   const roadAtlasMeta = [
@@ -256,12 +198,6 @@
     },
   ] as const satisfies SpritesheetMetadata;
   const roadAtlas = buildSpritesheet.from<typeof roadAtlasMeta>(roadAtlasMeta);
-  let roadSprite: any = $state();
-  $effect(() => {
-    if (roadSprite) {
-      roadSprite.update();
-    }
-  });
 
   // Helper function to get a fallback animation name if the derived one doesn't exist
   function getBuildingAnimationOrFallback(
@@ -281,11 +217,12 @@
     availableAnimations: string[],
   ): string {
     const derivedName = tile.getBiomeAnimationName();
+
     if (availableAnimations.includes(derivedName)) {
       return derivedName;
     }
-    // Fallback to a random available animation
-    return 'auction';
+
+    return 'empty';
   }
 
   // Get available animation names
@@ -293,9 +230,68 @@
     (anim) => anim.name,
   );
   const biomeAnimations = biomeAtlasMeta[0].animations.map((anim) => anim.name);
+
+  let landTiles: any[] = $state([]);
+
+  onMount(() => {
+    // Initialize land tiles from store
+    landStore.getAllLands().subscribe((tiles) => {
+      landTiles = tiles.map((tile) => {
+        let tokenSymbol = 'empty';
+
+        if (BuildingLand.is(tile)) {
+          tokenSymbol =
+            tile?.token?.symbol ??
+            console.warn('BuildingLand without token', tile);
+        }
+
+        if (AuctionLand.is(tile)) {
+          tokenSymbol = 'auction';
+        }
+
+        return new LandTile(
+          [tile.location.x, 1, tile.location.y],
+          tokenSymbol,
+          tile.level,
+        );
+      });
+    });
+  });
+
+  // Declare custom material variable
+  let biomeOutlineMaterial: OutlineSpriteMaterial | undefined;
+
+  $effect(() => {
+    if (buildingSprite) {
+      buildingSprite.update();
+    }
+    if (biomeSprite) {
+      biomeSprite.update();
+    }
+    if (roadSprite) {
+      roadSprite.update();
+    }
+    // No need to update biomeOutlineMaterial here, it's a material not a sprite instance
+  });
+
+  let roadSprite: any = $state();
+  let biomeSprite: any = $state();
+  let buildingSprite: any = $state();
 </script>
 
-{#await Promise.all( [buildingAtlas.spritesheet, biomeAtlas.spritesheet, lords3animationAtlas.spritesheet, roadAtlas.spritesheet], ) then [buildingSpritesheet, biomeSpritesheet, lords3Spritesheet, roadSpritesheet]}
+{#await Promise.all(
+    [buildingAtlas.spritesheet, biomeAtlas.spritesheet, roadAtlas.spritesheet],
+  ) then [buildingSpritesheet, biomeSpritesheet, roadSpritesheet]}
+
+  <!-- Instantiate the custom material AFTER spritesheets are loaded -->
+  <svelte:action={() => {
+    biomeOutlineMaterial = new OutlineSpriteMaterial(
+      biomeSpritesheet, // Pass the actual biome spritesheet
+      2.0,              // Outline width in pixels
+      0xffff00          // Yellow color (0xRRGGBB)
+    );
+  }} />
+
   <!-- Road sprites-->
   <InstancedSprite
     count={gridSize * gridSize}
@@ -311,7 +307,7 @@
           animationName={'default'}
           position={[
             tile.position[0],
-            tile.position[1] - 0.01,
+            tile.position[1] - 0.02,
             tile.position[2],
           ]}
           id={i}
@@ -320,36 +316,37 @@
     {/snippet}
   </InstancedSprite>
 
-  <!-- Biome sprites (background layer) -->
-  <InstancedSprite
-    count={gridSize * gridSize}
-    autoUpdate={false}
-    playmode={'PAUSE'}
-    {billboarding}
-    spritesheet={biomeSpritesheet}
-    bind:ref={biomeSprite}
-  >
-    {#snippet children({ Instance: BiomeInstance }: { Instance: any })}
-      {#each landTiles as tile, i}
-        <BiomeInstance
-          animationName={getBiomeAnimationOrFallback(tile, biomeAnimations)}
-          position={[
-            tile.position[0],
-            tile.position[1] - 0.01,
-            tile.position[2],
-          ]}
-          id={i}
-        />
-      {/each}
-    {/snippet}
-  </InstancedSprite>
+  <!-- Biome sprites (background layer) with custom outline shader -->
+  <!-- Check if biomeOutlineMaterial is ready before rendering this InstancedSprite -->
+  {#if biomeOutlineMaterial}
+    <InstancedSprite
+      count={gridSize * gridSize}
+      {billboarding}
+      spritesheet={biomeSpritesheet}
+      material={biomeOutlineMaterial} <!-- Apply the custom material here -->
+      bind:ref={biomeSprite}
+    >
+      {#snippet children({ Instance: BiomeInstance }: { Instance: any })}
+        {#each landTiles as tile, i}
+          <BiomeInstance
+            animationName={getBiomeAnimationOrFallback(tile, biomeAnimations)}
+            position={[
+              tile.position[0],
+              tile.position[1] - 0.01,
+              tile.position[2],
+            ]}
+            id={i}
+          />
+        {/each}
+      {/snippet}
+    </InstancedSprite>
+  {/if}
 
   <!-- Building sprites (foreground layer) -->
   <InstancedSprite
     count={gridSize * gridSize}
     {billboarding}
     spritesheet={buildingSpritesheet}
-    fps={10}
     bind:ref={buildingSprite}
   >
     {#snippet children({ Instance }: { Instance: any })}
@@ -361,13 +358,9 @@
           )}
           position={tile.position}
           id={i}
-          offset={100 * i}
-          on:click={() => {
-            console.log('Clicked tile:', tile);
-            console.log('Token:', tile.tokenName, 'Level:', tile.level);
-          }}
         />
       {/each}
     {/snippet}
   </InstancedSprite>
+
 {/await}
