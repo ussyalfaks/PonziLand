@@ -15,13 +15,24 @@
 
   let { billboarding = true } = $props();
 
-  const lords3animationAtlasMeta = [
+  const lordsSpriteMeta = [
+    {
+      url: '/tokens/+global/buildings.png',
+      type: 'rowColumn',
+      width: 12,
+      height: 21,
+      animations: [
+        { name: '1', frameRange: [0, 0] },
+        { name: '2', frameRange: [12, 12] },
+        { name: '3', frameRange: [24, 24] },
+      ],
+    },
     {
       url: '/tokens/eLORDS/3-animated.png',
       type: 'rowColumn',
       width: 5,
       height: 2,
-      animations: [{ name: 'default', frameRange: [0, 9] }],
+      animations: [{ name: '3_animated', frameRange: [0, 9] }],
     },
   ] as const satisfies SpritesheetMetadata;
 
@@ -59,9 +70,8 @@
     buildSpritesheet.from<typeof buildingAtlasMeta>(buildingAtlasMeta);
   const biomeAtlas =
     buildSpritesheet.from<typeof biomeAtlasMeta>(biomeAtlasMeta);
-  const lords3animationAtlas = buildSpritesheet.from<
-    typeof lords3animationAtlasMeta
-  >(lords3animationAtlasMeta);
+  const lords3animationAtlas =
+    buildSpritesheet.from<typeof lordsSpriteMeta>(lordsSpriteMeta);
 
   let buildingSprite: any = $state();
   let biomeSprite: any = $state();
@@ -105,6 +115,7 @@
       biomeSprite.update();
     }
     if (lords3Sprite) {
+      lords3Sprite.offset.setAt(1, 500);
       lords3Sprite.update();
     }
   });
@@ -155,20 +166,14 @@
   <!-- Building sprites (foreground layer) -->
   <InstancedSprite
     count={gridSize * gridSize}
-    autoUpdate={true}
     {billboarding}
     spritesheet={lords3Spritesheet}
+    fps={10}
     bind:ref={lords3Sprite}
   >
     {#snippet children({ Instance }: { Instance: any })}
       {#each gridPositions as position, i}
-        <Instance
-          animationName={'default'}
-          {position}
-          id={i}
-          playmode={'PINGPONG'}
-          offset={1000}
-        />
+        <Instance animationName={'1'} {position} id={i} offset={100 * i} />
       {/each}
     {/snippet}
   </InstancedSprite>
