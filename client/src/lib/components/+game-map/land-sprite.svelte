@@ -12,7 +12,6 @@
     buildSpritesheet,
     type SpritesheetMetadata,
   } from '@threlte/extras';
-  import { onMount } from 'svelte';
 
   let { billboarding = true } = $props();
 
@@ -22,14 +21,37 @@
       type: 'rowColumn',
       width: 12,
       height: 21,
-      animations: [{ name: 'lords_1', frameRange: [0, 0] }],
+      animations: [
+        { name: 'lords_1', frameRange: [0, 0] },
+        { name: 'lords_2', frameRange: [12, 12] },
+        { name: 'lords_3', frameRange: [24, 24] },
+        { name: 'pal_1', frameRange: [36, 36] },
+        { name: 'pal_2', frameRange: [48, 48] },
+        { name: 'pal_3', frameRange: [60, 60] },
+      ],
+    },
+  ] as const satisfies SpritesheetMetadata;
+
+  const biomeAtlasMeta = [
+    {
+      url: '/tokens/+global/biomes.png',
+      type: 'rowColumn',
+      width: 4,
+      height: 5,
+      animations: [
+        { name: 'biome_1', frameRange: [0, 0] },
+        { name: 'biome_2', frameRange: [2, 2] },
+      ],
     },
   ] as const satisfies SpritesheetMetadata;
 
   const buildingAtlas =
     buildSpritesheet.from<typeof buildingAtlasMeta>(buildingAtlasMeta);
+  const biomeAtlas =
+    buildSpritesheet.from<typeof biomeAtlasMeta>(biomeAtlasMeta);
 
-  let sprite: any = $state();
+  let buildingSprite: any = $state();
+  let biomeSprite: any = $state();
 
   // Generate grid positions for 64x64 sprites
   const gridSize = 64;
@@ -46,24 +68,70 @@
     },
   );
 
-  onMount(() => {
-    console.log('Sprite initialized');
-    console.log(gridPositions);
+  let buildingAnimations = buildingAtlasMeta[0].animations.map(
+    (anim) => anim.name,
+  );
+  const randomBuildingAnimations = Array.from(
+    { length: gridSize * gridSize },
+    () =>
+      buildingAnimations[Math.floor(Math.random() * buildingAnimations.length)],
+  );
+
+  let biomeAnimations = biomeAtlasMeta[0].animations.map((anim) => anim.name);
+  const randomBiomeAnimations = Array.from(
+    { length: gridSize * gridSize },
+    () => biomeAnimations[Math.floor(Math.random() * biomeAnimations.length)],
+  );
+
+  $effect(() => {
+    if (buildingSprite) {
+      buildingSprite.update();
+    }
+    if (biomeSprite) {
+      biomeSprite.update();
+    }
   });
 </script>
 
-{#await buildingAtlas.spritesheet then spritesheet}
+{#await Promise.all( [buildingAtlas.spritesheet, biomeAtlas.spritesheet], ) then [buildingSpritesheet, biomeSpritesheet]}
+  <!-- Biome sprites (background layer) -->
   <InstancedSprite
-    count={gridSize * gridSize + 1}
+    count={gridSize * gridSize}
     autoUpdate={false}
     playmode={'PAUSE'}
     {billboarding}
-    {spritesheet}
-    bind:ref={sprite}
+    spritesheet={biomeSpritesheet}
+    bind:ref={biomeSprite}
   >
     {#snippet children({ Instance }: { Instance: any })}
       {#each gridPositions as position, i}
-        <Instance animationName={'lords_1'} {position} scale={[3, 3]} id={i} />
+        <Instance
+          animationName={randomBiomeAnimations[i]}
+          position={[position[0], position[1] - 0.1, position[2]]}
+          scale={[3, 3]}
+          id={i}
+        />
+      {/each}
+    {/snippet}
+  </InstancedSprite>
+
+  <!-- Building sprites (foreground layer) -->
+  <InstancedSprite
+    count={gridSize * gridSize}
+    autoUpdate={false}
+    playmode={'PAUSE'}
+    {billboarding}
+    spritesheet={buildingSpritesheet}
+    bind:ref={buildingSprite}
+  >
+    {#snippet children({ Instance }: { Instance: any })}
+      {#each gridPositions as position, i}
+        <Instance
+          animationName={randomBuildingAnimations[i]}
+          {position}
+          scale={[3, 3]}
+          id={i}
+        />
       {/each}
     {/snippet}
   </InstancedSprite>
