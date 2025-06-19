@@ -1,6 +1,6 @@
 <script lang="ts">
   import { T, useThrelte } from '@threlte/core';
-  import { CSM, Sky, useTexture } from '@threlte/extras';
+  import { CSM, interactivity, Sky, useTexture } from '@threlte/extras';
   import { NearestFilter, RepeatWrapping } from 'three';
   import LandSprite from './three/land-sprite.svelte';
   import { DEG2RAD } from 'three/src/math/MathUtils.js';
@@ -21,20 +21,4 @@
 </script>
 
 <slot />
-<CSM
-  args={{
-    mode: 'logarithmic',
-  }}
-  lightDirection={[-1, -1, -1]}
-  lightIntensity={5}
->
-  <LandSprite {billboarding} />
-  {#if $grass}
-    <T.Mesh rotation.x={-DEG2RAD * 90} receiveShadow>
-      <T.CircleGeometry args={[300]} />
-      <T.MeshLambertMaterial map={$grass} />
-    </T.Mesh>
-  {/if}
-</CSM>
-<Sky elevation={13.35} />
-<T.AmbientLight intensity={1} />
+<LandSprite {billboarding} />

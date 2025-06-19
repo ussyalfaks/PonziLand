@@ -1,11 +1,3 @@
-<!--
-	-	Example of using animations as a static sprite atlas
-	- each frame is named and used as a different tree randomly
-	- to achieve this playmode is "PAUSE" and autoUpdate={false}
-	- the instanced sprite has to be updated once when initialized
-		and then, each time the atlas changes
-	- uses <Instance/> component instead of hook to set positions and frames
- -->
 <script lang="ts">
   import { AuctionLand } from '$lib/api/land/auction_land';
   import { BuildingLand } from '$lib/api/land/building_land';
@@ -13,10 +5,12 @@
   import {
     InstancedSprite,
     buildSpritesheet,
+    interactivity,
     type SpritesheetMetadata,
   } from '@threlte/extras';
   import { onMount } from 'svelte';
-
+  // Import Three.js
+  import { OutlineSpriteMaterial } from '$lib/materials/OutlineSpriteMaterial'; // Adjust path
   let { billboarding = true } = $props();
 
   // LandTile class to hold token metadata
@@ -31,6 +25,7 @@
       level: number,
     ) {
       this.position = position;
+      tokenName = tokenName || 'empty'; // Ensure tokenName is not null/undefined
       this.tokenName = tokenName;
       this.level = level;
     }
@@ -213,7 +208,6 @@
     if (availableAnimations.includes(derivedName)) {
       return derivedName;
     }
-    // Fallback to a random available animation
     return 'empty';
   }
 
@@ -245,9 +239,7 @@
         let tokenSymbol = 'empty';
 
         if (BuildingLand.is(tile)) {
-          tokenSymbol =
-            tile?.token?.symbol ??
-            console.warn('BuildingLand without token', tile);
+          tokenSymbol = tile?.token?.symbol ?? 'empty'; // Default to 'empty' instead of console.warn
         }
 
         if (AuctionLand.is(tile)) {
@@ -264,6 +256,7 @@
   });
 
   $effect(() => {
+    // Update sprite instances when landTiles or other relevant data changes
     if (buildingSprite) {
       buildingSprite.update();
     }
@@ -278,9 +271,28 @@
   let roadSprite: any = $state();
   let biomeSprite: any = $state();
   let buildingSprite: any = $state();
+
+  let getBiomeMaterial = (resolvedBiomeSpritesheet: any) => {
+    return new OutlineSpriteMaterial(
+      resolvedBiomeSpritesheet, // This is the correct spritesheet object
+      2.0, // Outline width in pixels
+      0xffff00, // Yellow color (0xRRGGBB)
+    );
+  };
+
+  interactivity({
+    filter: (hits, state) => {
+      // Only return the first hit
+      return hits.slice(0, 1);
+    },
+  });
+
+  import { useInteractivity } from '@threlte/extras';
+  const { pointer, pointerOverTarget } = useInteractivity();
+  $inspect($pointer, $pointerOverTarget);
 </script>
 
-{#await Promise.all( [buildingAtlas.spritesheet, biomeAtlas.spritesheet, roadAtlas.spritesheet], ) then [buildingSpritesheet, biomeSpritesheet, roadSpritesheet]}
+{#await Promise.all( [buildingAtlas.spritesheet, biomeAtlas.spritesheet, roadAtlas.spritesheet], ) then [buildingSpritesheet, resolvedBiomeSpritesheet, roadSpritesheet]}
   <!-- Road sprites-->
   <InstancedSprite
     count={gridSize * gridSize}
@@ -305,6 +317,29 @@
     {/snippet}
   </InstancedSprite>
 
+  <!-- Biome sprites (background layer) with custom outline shader -->
+  <!-- Only render if biomeOutlineMaterial is ready -->
+  <InstancedSprite
+    count={gridSize * gridSize}
+    {billboarding}
+    spritesheet={resolvedBiomeSpritesheet}
+    bind:ref={biomeSprite}
+  >
+    {#snippet children({ Instance: BiomeInstance }: { Instance: any })}
+      {#each landTiles as tile, i}
+        <BiomeInstance
+          animationName={getBiomeAnimationOrFallback(tile, biomeAnimations)}
+          position={[
+            tile.position[0],
+            tile.position[1] - 0.01,
+            tile.position[2],
+          ]}
+          id={i}
+        />
+      {/each}
+    {/snippet}
+  </InstancedSprite>
+
   <!-- Building sprites (foreground layer) -->
   <InstancedSprite
     count={gridSize * gridSize}
@@ -320,28 +355,6 @@
             buildingAnimations,
           )}
           position={tile.position}
-          id={i}
-        />
-      {/each}
-    {/snippet}
-  </InstancedSprite>
-
-  <!-- Biome sprites (background layer) -->
-  <InstancedSprite
-    count={gridSize * gridSize}
-    {billboarding}
-    spritesheet={biomeSpritesheet}
-    bind:ref={biomeSprite}
-  >
-    {#snippet children({ Instance: BiomeInstance }: { Instance: any })}
-      {#each landTiles as tile, i}
-        <BiomeInstance
-          animationName={getBiomeAnimationOrFallback(tile, biomeAnimations)}
-          position={[
-            tile.position[0],
-            tile.position[1] - 0.01,
-            tile.position[2],
-          ]}
           id={i}
         />
       {/each}

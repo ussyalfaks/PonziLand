@@ -278,11 +278,6 @@ export class LandTileStore {
     const pendingStake = this.pendingStake.get(pendingStakeKey);
 
     if (pendingStake) {
-      console.log(
-        'Applying pending stake for location',
-        location,
-        pendingStake,
-      );
       land.updateStake(pendingStake);
       this.pendingStake.delete(pendingStakeKey);
     }
@@ -293,8 +288,6 @@ export class LandTileStore {
   public updateLand(entity: ParsedEntity<SchemaType>): void {
     const location = getLocationFromEntity(entity);
     if (location === undefined) return;
-
-    console.log('Updating land', entity);
 
     const landStore = this.store[location.x][location.y];
     const pendingStakeKey = this.getPendingStakeKey(location);
@@ -321,11 +314,6 @@ export class LandTileStore {
       if (EmptyLand.is(previousLand) && landModel == undefined) {
         // If we only have a stake update for an empty land, store it as pending
         if (landStakeModel !== undefined) {
-          console.log(
-            'Storing stake for empty land at location',
-            location,
-            landStakeModel,
-          );
           this.pendingStake.set(pendingStakeKey, landStakeModel as LandStake);
         }
 
@@ -381,7 +369,6 @@ export class LandTileStore {
 
           // Then, if we have a current stake update, apply it (this will override pending stake)
           if (landStakeModel !== undefined) {
-            console.log('Applying current stake update', landStakeModel);
             (newLand as BuildingLand).updateStake(landStakeModel as LandStake);
           } else if (
             BuildingLand.is(previousLand) &&
@@ -394,26 +381,14 @@ export class LandTileStore {
               last_pay_time: previousLand.lastPayTime.getTime(),
             } as LandStake);
           }
-
-          console.log('New land created', newLand);
         }
       } else if (landStakeModel !== undefined) {
         // We only have a stake update
         if (BuildingLand.is(newLand)) {
           // Apply stake to existing BuildingLand
-          console.log(
-            'Updating stake on existing BuildingLand',
-            landStakeModel,
-          );
           newLand.updateStake(landStakeModel as LandStake);
           newLand = BuildingLand.fromBuildingLand(newLand);
         } else {
-          // Store stake as pending since we don't have a BuildingLand yet
-          console.log(
-            'Storing pending stake for non-BuildingLand',
-            location,
-            landStakeModel,
-          );
           this.pendingStake.set(pendingStakeKey, landStakeModel as LandStake);
           // Return early, no land change needed
           return { value: previousLand };
