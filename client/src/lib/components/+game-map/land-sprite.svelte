@@ -15,6 +15,16 @@
 
   let { billboarding = true } = $props();
 
+  const lords3animationAtlasMeta = [
+    {
+      url: '/tokens/eLORDS/3-animated.png',
+      type: 'rowColumn',
+      width: 5,
+      height: 2,
+      animations: [{ name: 'default', frameRange: [0, 9] }],
+    },
+  ] as const satisfies SpritesheetMetadata;
+
   const buildingAtlasMeta = [
     {
       url: '/tokens/+global/buildings.png',
@@ -49,13 +59,17 @@
     buildSpritesheet.from<typeof buildingAtlasMeta>(buildingAtlasMeta);
   const biomeAtlas =
     buildSpritesheet.from<typeof biomeAtlasMeta>(biomeAtlasMeta);
+  const lords3animationAtlas = buildSpritesheet.from<
+    typeof lords3animationAtlasMeta
+  >(lords3animationAtlasMeta);
 
   let buildingSprite: any = $state();
   let biomeSprite: any = $state();
+  let lords3Sprite: any = $state();
 
   // Generate grid positions for 64x64 sprites
   const gridSize = 64;
-  const spacing = 4; // Distance between sprites
+  const spacing = 1; // Distance between sprites
 
   const gridPositions: [number, number, number][] = Array.from(
     { length: gridSize * gridSize },
@@ -90,10 +104,13 @@
     if (biomeSprite) {
       biomeSprite.update();
     }
+    if (lords3Sprite) {
+      lords3Sprite.update();
+    }
   });
 </script>
 
-{#await Promise.all( [buildingAtlas.spritesheet, biomeAtlas.spritesheet], ) then [buildingSpritesheet, biomeSpritesheet]}
+{#await Promise.all( [buildingAtlas.spritesheet, biomeAtlas.spritesheet, lords3animationAtlas.spritesheet], ) then [buildingSpritesheet, biomeSpritesheet, lords3Spritesheet]}
   <!-- Biome sprites (background layer) -->
   <InstancedSprite
     count={gridSize * gridSize}
@@ -108,7 +125,6 @@
         <Instance
           animationName={randomBiomeAnimations[i]}
           position={[position[0], position[1] - 0.1, position[2]]}
-          scale={[3, 3]}
           id={i}
         />
       {/each}
@@ -116,7 +132,7 @@
   </InstancedSprite>
 
   <!-- Building sprites (foreground layer) -->
-  <InstancedSprite
+  <!-- <InstancedSprite
     count={gridSize * gridSize}
     autoUpdate={false}
     playmode={'PAUSE'}
@@ -131,6 +147,27 @@
           {position}
           scale={[3, 3]}
           id={i}
+        />
+      {/each}
+    {/snippet}
+  </InstancedSprite> -->
+
+  <!-- Building sprites (foreground layer) -->
+  <InstancedSprite
+    count={gridSize * gridSize}
+    autoUpdate={true}
+    {billboarding}
+    spritesheet={lords3Spritesheet}
+    bind:ref={lords3Sprite}
+  >
+    {#snippet children({ Instance }: { Instance: any })}
+      {#each gridPositions as position, i}
+        <Instance
+          animationName={'default'}
+          {position}
+          id={i}
+          playmode={'PINGPONG'}
+          offset={1000}
         />
       {/each}
     {/snippet}
